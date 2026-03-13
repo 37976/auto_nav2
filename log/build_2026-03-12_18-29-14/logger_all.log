@@ -1,0 +1,402 @@
+[0.231s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.232s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=2, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0x78c1b5e18730>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x78c1b5f69ba0>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x78c1b5f69ba0>>)
+[0.593s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.593s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.594s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.594s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.594s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.594s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.594s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/xu/automatic-navigation'
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.594s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.595s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.595s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.618s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.619s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.619s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.619s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.619s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.620s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.620s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.620s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.621s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.621s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.622s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.622s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.623s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.623s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.623s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.624s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.624s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.625s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.625s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.625s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.625s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extensions ['ignore', 'ignore_ament_install']
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extension 'ignore'
+[0.626s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extension 'ignore_ament_install'
+[0.627s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extensions ['colcon_pkg']
+[0.627s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extension 'colcon_pkg'
+[0.627s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extensions ['colcon_meta']
+[0.627s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extension 'colcon_meta'
+[0.628s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extensions ['ros']
+[0.628s] Level 1:colcon.colcon_core.package_identification:_identify(src/dynamicvoronoi) by extension 'ros'
+[0.632s] DEBUG:colcon.colcon_core.package_identification:Package 'src/dynamicvoronoi' with type 'ros.ament_cmake' and name 'dynamicvoronoi'
+[0.633s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extensions ['ignore', 'ignore_ament_install']
+[0.633s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extension 'ignore'
+[0.633s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extension 'ignore_ament_install'
+[0.634s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extensions ['colcon_pkg']
+[0.634s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extension 'colcon_pkg'
+[0.634s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extensions ['colcon_meta']
+[0.634s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extension 'colcon_meta'
+[0.634s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extensions ['ros']
+[0.635s] Level 1:colcon.colcon_core.package_identification:_identify(src/gazebo_modele) by extension 'ros'
+[0.637s] DEBUG:colcon.colcon_core.package_identification:Package 'src/gazebo_modele' with type 'ros.ament_python' and name 'gazebo_modele'
+[0.637s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extensions ['ignore', 'ignore_ament_install']
+[0.637s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extension 'ignore'
+[0.637s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extension 'ignore_ament_install'
+[0.637s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extensions ['colcon_pkg']
+[0.638s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extension 'colcon_pkg'
+[0.638s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extensions ['colcon_meta']
+[0.638s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extension 'colcon_meta'
+[0.638s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extensions ['ros']
+[0.638s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_costmap_2d) by extension 'ros'
+[0.641s] DEBUG:colcon.colcon_core.package_identification:Package 'src/nav2_costmap_2d' with type 'ros.ament_cmake' and name 'nav2_costmap_2d'
+[0.641s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extensions ['ignore', 'ignore_ament_install']
+[0.641s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extension 'ignore'
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extension 'ignore_ament_install'
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extensions ['colcon_pkg']
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extension 'colcon_pkg'
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extensions ['colcon_meta']
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extension 'colcon_meta'
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extensions ['ros']
+[0.642s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav2_voronoi_planner) by extension 'ros'
+[0.645s] DEBUG:colcon.colcon_core.package_identification:Package 'src/nav2_voronoi_planner' with type 'ros.ament_cmake' and name 'nav2_voronoi_planner'
+[0.645s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extensions ['ignore', 'ignore_ament_install']
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extension 'ignore'
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extension 'ignore_ament_install'
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extensions ['colcon_pkg']
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extension 'colcon_pkg'
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extensions ['colcon_meta']
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extension 'colcon_meta'
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extensions ['ros']
+[0.647s] Level 1:colcon.colcon_core.package_identification:_identify(src/nav_slam) by extension 'ros'
+[0.649s] DEBUG:colcon.colcon_core.package_identification:Package 'src/nav_slam' with type 'ros.ament_python' and name 'nav_slam'
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.649s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.717s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.717s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.721s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 5 installed packages in /home/xu/automatic-navigation/install
+[0.725s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 370 installed packages in /opt/ros/humble
+[0.729s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.825s] WARNING:colcon.colcon_core.package_selection:Some selected packages are already built in one or more underlay workspaces:
+	'nav2_costmap_2d' is in: /home/xu/automatic-navigation/install/nav2_costmap_2d, /opt/ros/humble
+If a package in a merged underlay workspace is overridden and it installs headers, then all packages in the overlay must sort their include directories by workspace order. Failure to do so may result in build failures or undefined behavior at run time.
+If the overridden package is used by another package in any underlay, then the overriding package in the overlay must be API and ABI compatible or undefined behavior at run time may occur.
+
+If you understand the risks and want to override a package anyways, add the following to the command line:
+	--allow-overriding nav2_costmap_2d
+
+This may be promoted to an error in a future release of colcon-override-check.
+[0.827s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_args' from command line to 'None'
+[0.827s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_target' from command line to 'None'
+[0.827s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.827s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_clean_cache' from command line to 'False'
+[0.828s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_clean_first' from command line to 'False'
+[0.828s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'cmake_force_configure' from command line to 'False'
+[0.828s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'ament_cmake_args' from command line to 'None'
+[0.828s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'catkin_cmake_args' from command line to 'None'
+[0.828s] Level 5:colcon.colcon_core.verb:set package 'dynamicvoronoi' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.828s] DEBUG:colcon.colcon_core.verb:Building package 'dynamicvoronoi' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/xu/automatic-navigation/build/dynamicvoronoi', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/xu/automatic-navigation/install/dynamicvoronoi', 'merge_install': False, 'path': '/home/xu/automatic-navigation/src/dynamicvoronoi', 'symlink_install': False, 'test_result_base': None}
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_args' from command line to 'None'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_target' from command line to 'None'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_clean_cache' from command line to 'False'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_clean_first' from command line to 'False'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'cmake_force_configure' from command line to 'False'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'ament_cmake_args' from command line to 'None'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'catkin_cmake_args' from command line to 'None'
+[0.829s] Level 5:colcon.colcon_core.verb:set package 'gazebo_modele' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.829s] DEBUG:colcon.colcon_core.verb:Building package 'gazebo_modele' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/xu/automatic-navigation/build/gazebo_modele', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/xu/automatic-navigation/install/gazebo_modele', 'merge_install': False, 'path': '/home/xu/automatic-navigation/src/gazebo_modele', 'symlink_install': False, 'test_result_base': None}
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_args' from command line to 'None'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_target' from command line to 'None'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_clean_cache' from command line to 'False'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_clean_first' from command line to 'False'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'cmake_force_configure' from command line to 'False'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'ament_cmake_args' from command line to 'None'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'catkin_cmake_args' from command line to 'None'
+[0.830s] Level 5:colcon.colcon_core.verb:set package 'nav_slam' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.830s] DEBUG:colcon.colcon_core.verb:Building package 'nav_slam' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/xu/automatic-navigation/build/nav_slam', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/xu/automatic-navigation/install/nav_slam', 'merge_install': False, 'path': '/home/xu/automatic-navigation/src/nav_slam', 'symlink_install': False, 'test_result_base': None}
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_args' from command line to 'None'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_target' from command line to 'None'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_clean_cache' from command line to 'False'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_clean_first' from command line to 'False'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'cmake_force_configure' from command line to 'False'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'ament_cmake_args' from command line to 'None'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'catkin_cmake_args' from command line to 'None'
+[0.831s] Level 5:colcon.colcon_core.verb:set package 'nav2_costmap_2d' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.831s] DEBUG:colcon.colcon_core.verb:Building package 'nav2_costmap_2d' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/xu/automatic-navigation/build/nav2_costmap_2d', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/xu/automatic-navigation/install/nav2_costmap_2d', 'merge_install': False, 'path': '/home/xu/automatic-navigation/src/nav2_costmap_2d', 'symlink_install': False, 'test_result_base': None}
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_args' from command line to 'None'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_target' from command line to 'None'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_clean_cache' from command line to 'False'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_clean_first' from command line to 'False'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'cmake_force_configure' from command line to 'False'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'ament_cmake_args' from command line to 'None'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'catkin_cmake_args' from command line to 'None'
+[0.832s] Level 5:colcon.colcon_core.verb:set package 'nav2_voronoi_planner' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.832s] DEBUG:colcon.colcon_core.verb:Building package 'nav2_voronoi_planner' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/xu/automatic-navigation/build/nav2_voronoi_planner', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/xu/automatic-navigation/install/nav2_voronoi_planner', 'merge_install': False, 'path': '/home/xu/automatic-navigation/src/nav2_voronoi_planner', 'symlink_install': False, 'test_result_base': None}
+[0.832s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.836s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.838s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/xu/automatic-navigation/src/dynamicvoronoi' with build type 'ament_cmake'
+[0.838s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/xu/automatic-navigation/src/dynamicvoronoi'
+[0.841s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.842s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.842s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.851s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/xu/automatic-navigation/src/gazebo_modele' with build type 'ament_python'
+[0.851s] Level 1:colcon.colcon_core.shell:create_environment_hook('gazebo_modele', 'ament_prefix_path')
+[0.851s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/ament_prefix_path.ps1'
+[0.852s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/ament_prefix_path.dsv'
+[0.856s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/ament_prefix_path.sh'
+[0.860s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.860s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.893s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/dynamicvoronoi': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --build /home/xu/automatic-navigation/build/dynamicvoronoi -- -j2 -l2
+[1.627s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/xu/automatic-navigation/src/gazebo_modele'
+[1.628s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.628s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.646s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/dynamicvoronoi' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --build /home/xu/automatic-navigation/build/dynamicvoronoi -- -j2 -l2
+[1.669s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/dynamicvoronoi': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --install /home/xu/automatic-navigation/build/dynamicvoronoi
+[1.704s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dynamicvoronoi)
+[1.706s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/dynamicvoronoi' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --install /home/xu/automatic-navigation/build/dynamicvoronoi
+[1.712s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi' for CMake module files
+[1.714s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi' for CMake config files
+[1.716s] Level 1:colcon.colcon_core.shell:create_environment_hook('dynamicvoronoi', 'cmake_prefix_path')
+[1.717s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.ps1'
+[1.719s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.dsv'
+[1.719s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.sh'
+[1.722s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib'
+[1.722s] Level 1:colcon.colcon_core.shell:create_environment_hook('dynamicvoronoi', 'ld_library_path_lib')
+[1.723s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.ps1'
+[1.724s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.dsv'
+[1.726s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.sh'
+[1.727s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/bin'
+[1.728s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib/pkgconfig/dynamicvoronoi.pc'
+[1.728s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib/python3.10/site-packages'
+[1.729s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/bin'
+[1.730s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.ps1'
+[1.732s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.dsv'
+[1.734s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.sh'
+[1.736s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.bash'
+[1.739s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.zsh'
+[1.741s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/dynamicvoronoi/share/colcon-core/packages/dynamicvoronoi)
+[1.741s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dynamicvoronoi)
+[1.742s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi' for CMake module files
+[1.743s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi' for CMake config files
+[1.744s] Level 1:colcon.colcon_core.shell:create_environment_hook('dynamicvoronoi', 'cmake_prefix_path')
+[1.744s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.ps1'
+[1.746s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.dsv'
+[1.749s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/cmake_prefix_path.sh'
+[1.750s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib'
+[1.750s] Level 1:colcon.colcon_core.shell:create_environment_hook('dynamicvoronoi', 'ld_library_path_lib')
+[1.751s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.ps1'
+[1.752s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.dsv'
+[1.753s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/hook/ld_library_path_lib.sh'
+[1.754s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/bin'
+[1.754s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib/pkgconfig/dynamicvoronoi.pc'
+[1.754s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/lib/python3.10/site-packages'
+[1.755s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/dynamicvoronoi/bin'
+[1.755s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.ps1'
+[1.757s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.dsv'
+[1.758s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.sh'
+[1.759s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.bash'
+[1.760s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.zsh'
+[1.761s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/dynamicvoronoi/share/colcon-core/packages/dynamicvoronoi)
+[1.764s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/xu/automatic-navigation/src/nav2_costmap_2d' with build type 'ament_cmake'
+[1.764s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/xu/automatic-navigation/src/nav2_costmap_2d'
+[1.764s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.764s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.806s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/nav2_costmap_2d': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_costmap_2d -- -j2 -l2
+[2.672s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/src/gazebo_modele': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data
+[3.528s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele' for CMake module files
+[3.529s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/src/gazebo_modele' returned '0': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data
+[3.530s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele' for CMake config files
+[3.532s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele/lib'
+[3.533s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele/bin'
+[3.534s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele/lib/pkgconfig/gazebo_modele.pc'
+[3.535s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages'
+[3.535s] Level 1:colcon.colcon_core.shell:create_environment_hook('gazebo_modele', 'pythonpath')
+[3.536s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/pythonpath.ps1'
+[3.545s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/pythonpath.dsv'
+[3.547s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/hook/pythonpath.sh'
+[3.553s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/gazebo_modele/bin'
+[3.553s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(gazebo_modele)
+[3.554s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/package.ps1'
+[3.558s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/package.dsv'
+[3.561s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/package.sh'
+[3.563s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/package.bash'
+[3.565s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/package.zsh'
+[3.567s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/gazebo_modele/share/colcon-core/packages/gazebo_modele)
+[3.569s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/xu/automatic-navigation/src/nav_slam' with build type 'ament_python'
+[3.570s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav_slam', 'ament_prefix_path')
+[3.571s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/ament_prefix_path.ps1'
+[3.577s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/ament_prefix_path.dsv'
+[3.580s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/ament_prefix_path.sh'
+[3.585s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[3.587s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.383s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/xu/automatic-navigation/src/nav_slam'
+[4.384s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[4.384s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.796s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/nav2_costmap_2d' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_costmap_2d -- -j2 -l2
+[4.805s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/nav2_costmap_2d': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_costmap_2d
+[4.869s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(nav2_costmap_2d)
+[4.869s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d' for CMake module files
+[4.870s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d' for CMake config files
+[4.871s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/nav2_costmap_2d' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_costmap_2d
+[4.873s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_costmap_2d', 'cmake_prefix_path')
+[4.874s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.ps1'
+[4.877s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.dsv'
+[4.879s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.sh'
+[4.885s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib'
+[4.885s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_costmap_2d', 'ld_library_path_lib')
+[4.885s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.ps1'
+[4.886s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.dsv'
+[4.889s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.sh'
+[4.889s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/bin'
+[4.890s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib/pkgconfig/nav2_costmap_2d.pc'
+[4.890s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib/python3.10/site-packages'
+[4.891s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/bin'
+[4.892s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.ps1'
+[4.894s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.dsv'
+[4.896s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.sh'
+[4.898s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.bash'
+[4.899s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.zsh'
+[4.900s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/nav2_costmap_2d/share/colcon-core/packages/nav2_costmap_2d)
+[4.903s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(nav2_costmap_2d)
+[4.903s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d' for CMake module files
+[4.904s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d' for CMake config files
+[4.906s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_costmap_2d', 'cmake_prefix_path')
+[4.906s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.ps1'
+[4.908s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.dsv'
+[4.909s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/cmake_prefix_path.sh'
+[4.911s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib'
+[4.911s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_costmap_2d', 'ld_library_path_lib')
+[4.912s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.ps1'
+[4.913s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.dsv'
+[4.915s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/hook/ld_library_path_lib.sh'
+[4.917s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/bin'
+[4.917s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib/pkgconfig/nav2_costmap_2d.pc'
+[4.918s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib/python3.10/site-packages'
+[4.918s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_costmap_2d/bin'
+[4.919s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.ps1'
+[4.921s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.dsv'
+[4.922s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.sh'
+[4.924s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.bash'
+[4.926s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.zsh'
+[4.927s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/nav2_costmap_2d/share/colcon-core/packages/nav2_costmap_2d)
+[4.929s] INFO:colcon.colcon_ros.task.ament_cmake.build:Building ROS package in '/home/xu/automatic-navigation/src/nav2_voronoi_planner' with build type 'ament_cmake'
+[4.929s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/xu/automatic-navigation/src/nav2_voronoi_planner'
+[4.930s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[4.931s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[4.997s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_voronoi_planner -- -j2 -l2
+[5.464s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_voronoi_planner -- -j2 -l2
+[5.468s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_voronoi_planner
+[5.494s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/xu/automatic-navigation/src/nav_slam': PYTHONPATH=/home/xu/automatic-navigation/build/nav_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_slam build --build-base /home/xu/automatic-navigation/build/nav_slam/build install --record /home/xu/automatic-navigation/build/nav_slam/install.log --single-version-externally-managed install_data
+[5.529s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(nav2_voronoi_planner)
+[5.529s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner' for CMake module files
+[5.532s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner' for CMake config files
+[5.532s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_voronoi_planner', 'cmake_prefix_path')
+[5.533s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_voronoi_planner
+[5.534s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.ps1'
+[5.537s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.dsv'
+[5.538s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.sh'
+[5.540s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib'
+[5.540s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_voronoi_planner', 'ld_library_path_lib')
+[5.540s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.ps1'
+[5.542s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.dsv'
+[5.543s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.sh'
+[5.544s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/bin'
+[5.544s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/pkgconfig/nav2_voronoi_planner.pc'
+[5.545s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/python3.10/site-packages'
+[5.545s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/bin'
+[5.546s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.ps1'
+[5.548s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.dsv'
+[5.549s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.sh'
+[5.551s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.bash'
+[5.552s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.zsh'
+[5.554s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/colcon-core/packages/nav2_voronoi_planner)
+[5.555s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(nav2_voronoi_planner)
+[5.557s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner' for CMake module files
+[5.558s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner' for CMake config files
+[5.558s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_voronoi_planner', 'cmake_prefix_path')
+[5.562s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.ps1'
+[5.563s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.dsv'
+[5.564s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/cmake_prefix_path.sh'
+[5.567s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib'
+[5.567s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav2_voronoi_planner', 'ld_library_path_lib')
+[5.567s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.ps1'
+[5.568s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.dsv'
+[5.570s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/hook/ld_library_path_lib.sh'
+[5.572s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/bin'
+[5.572s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/pkgconfig/nav2_voronoi_planner.pc'
+[5.572s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/python3.10/site-packages'
+[5.573s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav2_voronoi_planner/bin'
+[5.574s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.ps1'
+[5.575s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.dsv'
+[5.577s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.sh'
+[5.578s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.bash'
+[5.580s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.zsh'
+[5.581s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/nav2_voronoi_planner/share/colcon-core/packages/nav2_voronoi_planner)
+[6.195s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam' for CMake module files
+[6.196s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/xu/automatic-navigation/src/nav_slam' returned '0': PYTHONPATH=/home/xu/automatic-navigation/build/nav_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_slam build --build-base /home/xu/automatic-navigation/build/nav_slam/build install --record /home/xu/automatic-navigation/build/nav_slam/install.log --single-version-externally-managed install_data
+[6.198s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam' for CMake config files
+[6.199s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam/lib'
+[6.199s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam/bin'
+[6.199s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam/lib/pkgconfig/nav_slam.pc'
+[6.199s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages'
+[6.200s] Level 1:colcon.colcon_core.shell:create_environment_hook('nav_slam', 'pythonpath')
+[6.200s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/pythonpath.ps1'
+[6.201s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/pythonpath.dsv'
+[6.203s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/hook/pythonpath.sh'
+[6.204s] Level 1:colcon.colcon_core.environment:checking '/home/xu/automatic-navigation/install/nav_slam/bin'
+[6.204s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(nav_slam)
+[6.205s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/package.ps1'
+[6.209s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/package.dsv'
+[6.210s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/package.sh'
+[6.211s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/package.bash'
+[6.212s] INFO:colcon.colcon_core.shell:Creating package script '/home/xu/automatic-navigation/install/nav_slam/share/nav_slam/package.zsh'
+[6.213s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/xu/automatic-navigation/install/nav_slam/share/colcon-core/packages/nav_slam)
+[6.215s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[6.217s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[6.218s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[6.218s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[6.230s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[6.230s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[6.231s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[6.268s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[6.270s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/xu/automatic-navigation/install/local_setup.ps1'
+[6.277s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/xu/automatic-navigation/install/_local_setup_util_ps1.py'
+[6.280s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/xu/automatic-navigation/install/setup.ps1'
+[6.284s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/xu/automatic-navigation/install/local_setup.sh'
+[6.286s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/xu/automatic-navigation/install/_local_setup_util_sh.py'
+[6.287s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/xu/automatic-navigation/install/setup.sh'
+[6.290s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/xu/automatic-navigation/install/local_setup.bash'
+[6.291s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/xu/automatic-navigation/install/setup.bash'
+[6.293s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/xu/automatic-navigation/install/local_setup.zsh'
+[6.294s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/xu/automatic-navigation/install/setup.zsh'

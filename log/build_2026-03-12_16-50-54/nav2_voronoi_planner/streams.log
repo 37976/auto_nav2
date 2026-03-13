@@ -1,0 +1,102 @@
+[0.028s] Invoking command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/xu/automatic-navigation/src/nav2_voronoi_planner -DCMAKE_INSTALL_PREFIX=/home/xu/automatic-navigation/install/nav2_voronoi_planner
+[0.157s] -- The C compiler identification is GNU 11.4.0
+[0.309s] -- The CXX compiler identification is GNU 11.4.0
+[0.326s] -- Detecting C compiler ABI info
+[0.565s] -- Detecting C compiler ABI info - done
+[0.577s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.579s] -- Detecting C compile features
+[0.579s] -- Detecting C compile features - done
+[0.586s] -- Detecting CXX compiler ABI info
+[0.816s] -- Detecting CXX compiler ABI info - done
+[0.827s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.828s] -- Detecting CXX compile features
+[0.830s] -- Detecting CXX compile features - done
+[0.833s] -- Found ament_cmake: 1.3.13 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.158s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.372s] -- Found rclcpp: 16.0.18 (/opt/ros/humble/share/rclcpp/cmake)
+[1.472s] -- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)
+[1.480s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[1.499s] -- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)
+[1.521s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[1.552s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[1.627s] -- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)
+[1.631s] -- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)
+[1.835s] -- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  
+[1.894s] -- Found FastRTPS: /opt/ros/humble/include  
+[1.983s] -- Using RMW implementation 'rmw_fastrtps_cpp' as default
+[2.002s] -- Looking for pthread.h
+[2.211s] -- Looking for pthread.h - found
+[2.211s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+[2.407s] -- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+[2.409s] -- Found Threads: TRUE  
+[2.506s] -- Found rclcpp_action: 16.0.18 (/opt/ros/humble/share/rclcpp_action/cmake)
+[2.570s] -- Found rclcpp_lifecycle: 16.0.18 (/opt/ros/humble/share/rclcpp_lifecycle/cmake)
+[2.606s] -- Found visualization_msgs: 4.9.1 (/opt/ros/humble/share/visualization_msgs/cmake)
+[2.706s] -- Found nav2_util: 1.1.20 (/opt/ros/humble/share/nav2_util/cmake)
+[2.933s] -- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)
+[2.936s] -- Found Eigen3: TRUE (found version "3.4.0") 
+[2.936s] -- Ensuring Eigen3 include directory is part of orocos-kdl CMake target
+[2.999s] -- Found nav2_costmap_2d: 1.1.20 (/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake)
+[3.160s] -- Found nav2_core: 1.1.20 (/opt/ros/humble/share/nav2_core/cmake)
+[3.194s] -- Found dynamicvoronoi: 0.0.0 (/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake)
+[3.563s] -- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[3.755s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[3.755s] -- Configured cppcheck include dirs: /home/xu/automatic-navigation/src/nav2_voronoi_planner/include;/home/xu/automatic-navigation/src/nav2_voronoi_planner/include/nav2_voronoi_planner
+[3.755s] -- Configured cppcheck exclude dirs and/or files: 
+[3.761s] -- Added test 'lint_cmake' to check CMake code style
+[3.761s] -- Added test 'uncrustify' to check C / C++ code style
+[3.761s] -- Configured uncrustify additional arguments: 
+[3.762s] -- Added test 'xmllint' to check XML markup files
+[3.772s] -- Configuring done
+[3.986s] -- Generating done
+[4.005s] -- Build files have been written to: /home/xu/automatic-navigation/build/nav2_voronoi_planner
+[4.040s] Invoked command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner' returned '0': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake /home/xu/automatic-navigation/src/nav2_voronoi_planner -DCMAKE_INSTALL_PREFIX=/home/xu/automatic-navigation/install/nav2_voronoi_planner
+[4.041s] Invoking command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_voronoi_planner -- -j2 -l2
+[4.200s] [ 16%] [32mBuilding CXX object CMakeFiles/nav2_voronoi_planner.dir/src/voronoi.cpp.o[0m
+[6.182s] [ 33%] [32mBuilding CXX object CMakeFiles/nav2_voronoi_planner.dir/src/voronoi_planner.cpp.o[0m
+[19.937s] [ 50%] [32mBuilding CXX object CMakeFiles/nav2_voronoi_planner.dir/src/heap.cpp.o[0m
+[20.745s] [ 66%] [32m[1mLinking CXX shared library libnav2_voronoi_planner.so[0m
+[22.064s] [ 66%] Built target nav2_voronoi_planner
+[22.123s] [ 83%] [32mBuilding CXX object CMakeFiles/voronoi_planner_tf_broadcaster.dir/src/tf_broadcaster.cpp.o[0m
+[39.597s] [100%] [32m[1mLinking CXX executable voronoi_planner_tf_broadcaster[0m
+[41.010s] [100%] Built target voronoi_planner_tf_broadcaster
+[41.042s] Invoked command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner' returned '0': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_voronoi_planner -- -j2 -l2
+[41.043s] Invoking command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_voronoi_planner
+[41.062s] -- Install configuration: ""
+[41.062s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/voronoi_planner_plugin.xml
+[41.062s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/libnav2_voronoi_planner.so
+[41.068s] -- Set runtime path of "/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/libnav2_voronoi_planner.so" to ""
+[41.068s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/nav2_voronoi_planner/voronoi_planner_tf_broadcaster
+[41.076s] -- Set runtime path of "/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/nav2_voronoi_planner/voronoi_planner_tf_broadcaster" to ""
+[41.076s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include/
+[41.076s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/node.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/node2d.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/heap.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/voronoi.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/util.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/voronoi_planner.hpp
+[41.080s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/constants.hpp
+[41.081s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/voronoi_planner_plugin.xml
+[41.081s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/library_path.sh
+[41.081s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/library_path.dsv
+[41.086s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/package_run_dependencies/nav2_voronoi_planner
+[41.087s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/parent_prefix_path/nav2_voronoi_planner
+[41.087s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/ament_prefix_path.sh
+[41.088s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/ament_prefix_path.dsv
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/path.sh
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/path.dsv
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.bash
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.sh
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.zsh
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.dsv
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.dsv
+[41.089s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/packages/nav2_voronoi_planner
+[41.090s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/nav2_core__pluginlib__plugin/nav2_voronoi_planner
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_include_directories-extras.cmake
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_libraries-extras.cmake
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_dependencies-extras.cmake
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/nav2_voronoi_plannerConfig.cmake
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/nav2_voronoi_plannerConfig-version.cmake
+[41.091s] -- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.xml
+[41.099s] Invoked command in '/home/xu/automatic-navigation/build/nav2_voronoi_planner' returned '0': AMENT_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:${LD_LIBRARY_PATH} /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_voronoi_planner

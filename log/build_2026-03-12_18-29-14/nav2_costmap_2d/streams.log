@@ -1,0 +1,103 @@
+[0.041s] Invoking command in '/home/xu/automatic-navigation/build/nav2_costmap_2d': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_costmap_2d -- -j2 -l2
+[0.278s] [ 16%] Built target nav2_costmap_2d_core
+[0.351s] [ 19%] Built target gtest_main
+[0.412s] [ 21%] Built target gtest
+[0.519s] [ 24%] Built target order_layer
+[0.660s] [ 34%] Built target layers
+[0.754s] [ 39%] Built target filters
+[0.840s] [ 44%] Built target nav2_costmap_2d_client
+[0.915s] [ 46%] Built target nav2_costmap_2d_markers
+[0.994s] [ 49%] Built target nav2_costmap_2d_cloud
+[1.079s] [ 51%] Built target nav2_costmap_2d
+[1.174s] [ 54%] Built target array_parser_test
+[1.266s] [ 56%] Built target collision_footprint_test
+[1.353s] [ 59%] Built target costmap_convesion_test
+[1.437s] [ 61%] Built target declare_parameter_test
+[1.505s] [ 63%] Built target costmap_filter_test
+[1.598s] [ 66%] Built target keepout_filter_test
+[1.684s] [ 68%] Built target speed_filter_test
+[1.775s] [ 71%] Built target binary_filter_test
+[1.949s] [ 73%] Built target copy_window_test
+[2.096s] [ 75%] Built target costmap_filter_service_test
+[2.182s] [ 80%] Built target denoise_layer_test
+[2.275s] [ 83%] Built target footprint_tests_exec
+[2.370s] [ 85%] Built target test_collision_checker_exec
+[2.496s] [ 87%] Built target inflation_tests_exec
+[2.597s] [ 90%] Built target obstacle_tests_exec
+[2.688s] [ 92%] Built target range_tests_exec
+[2.769s] [ 95%] Built target dyn_params_tests
+[2.833s] [ 97%] Built target costmap_bresenham_2d
+[2.982s] [100%] Built target plugin_api_order
+[3.032s] Invoked command in '/home/xu/automatic-navigation/build/nav2_costmap_2d' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --build /home/xu/automatic-navigation/build/nav2_costmap_2d -- -j2 -l2
+[3.040s] Invoking command in '/home/xu/automatic-navigation/build/nav2_costmap_2d': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_costmap_2d
+[3.059s] -- Install configuration: "Release"
+[3.060s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/liblayers.so
+[3.061s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libfilters.so
+[3.062s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libnav2_costmap_2d_core.so
+[3.063s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libnav2_costmap_2d_client.so
+[3.065s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d_markers
+[3.066s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d_cloud
+[3.066s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d
+[3.066s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/costmap_plugins.xml
+[3.067s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d
+[3.067s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d
+[3.067s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/clear_costmap_service.hpp
+[3.068s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/range_sensor_layer.hpp
+[3.068s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise
+[3.068s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise/image.hpp
+[3.069s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise/image_processing.hpp
+[3.069s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_topic_collision_checker.hpp
+[3.072s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint_collision_checker.hpp
+[3.072s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/inflation_layer.hpp
+[3.072s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/observation_buffer.hpp
+[3.074s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/array_parser.hpp
+[3.074s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_subscriber.hpp
+[3.076s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_math.hpp
+[3.077s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/voronoi_layer.hpp
+[3.077s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/layer.hpp
+[3.077s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/obstacle_layer.hpp
+[3.077s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/observation.hpp
+[3.078s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint.hpp
+[3.078s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/voxel_layer.hpp
+[3.078s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/static_layer.hpp
+[3.078s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/cost_values.hpp
+[3.078s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d_publisher.hpp
+[3.081s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise_layer.hpp
+[3.082s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/layered_costmap.hpp
+[3.082s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d_ros.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/exceptions.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint_subscriber.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_layer.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/speed_filter.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/costmap_filter.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/filter_values.hpp
+[3.085s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/binary_filter.hpp
+[3.086s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/keepout_filter.hpp
+[3.086s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d.hpp
+[3.086s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/test/regression/order_layer.xml
+[3.086s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/library_path.sh
+[3.092s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/library_path.dsv
+[3.092s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/costmap_plugins.xml
+[3.092s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/package_run_dependencies/nav2_costmap_2d
+[3.092s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/parent_prefix_path/nav2_costmap_2d
+[3.092s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/ament_prefix_path.sh
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/ament_prefix_path.dsv
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/path.sh
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/path.dsv
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.bash
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.sh
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.zsh
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.dsv
+[3.093s] -- Installing: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.dsv
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/packages/nav2_costmap_2d
+[3.093s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/nav2_costmap_2d__pluginlib__plugin/nav2_costmap_2d
+[3.097s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/export_nav2_costmap_2dExport.cmake
+[3.097s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/export_nav2_costmap_2dExport-release.cmake
+[3.097s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/ament_cmake_export_targets-extras.cmake
+[3.098s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/ament_cmake_export_dependencies-extras.cmake
+[3.098s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/nav2_costmap_2dConfig.cmake
+[3.098s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/nav2_costmap_2dConfig-version.cmake
+[3.098s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.xml
+[3.102s] -- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/liborder_layer.so
+[3.106s] Invoked command in '/home/xu/automatic-navigation/build/nav2_costmap_2d' returned '0': CMAKE_PREFIX_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav2_voronoi_planner:/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble LD_LIBRARY_PATH=/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib:/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib /usr/bin/cmake --install /home/xu/automatic-navigation/build/nav2_costmap_2d

@@ -1,0 +1,38 @@
+running egg_info
+creating ../../build/gazebo_modele/gazebo_modele.egg-info
+writing ../../build/gazebo_modele/gazebo_modele.egg-info/PKG-INFO
+writing dependency_links to ../../build/gazebo_modele/gazebo_modele.egg-info/dependency_links.txt
+writing entry points to ../../build/gazebo_modele/gazebo_modele.egg-info/entry_points.txt
+writing requirements to ../../build/gazebo_modele/gazebo_modele.egg-info/requires.txt
+writing top-level names to ../../build/gazebo_modele/gazebo_modele.egg-info/top_level.txt
+writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+reading manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/xu/automatic-navigation/build/gazebo_modele/build
+creating /home/xu/automatic-navigation/build/gazebo_modele/build/lib
+creating /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele
+copying gazebo_modele/__init__.py -> /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele
+running install
+running install_lib
+creating /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele
+copying /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele/__init__.py -> /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele
+byte-compiling /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index/packages
+copying resource/gazebo_modele -> /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index/packages
+copying package.xml -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/launch
+copying launch/gazebo.launch.py -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/launch
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/urdf
+copying urdf/model.urdf -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/urdf
+creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+copying world/2d.world -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+copying world/3d.world -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+running install_egg_info
+Copying ../../build/gazebo_modele/gazebo_modele.egg-info to /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info
+running install_scripts
+writing list of installed files to '/home/xu/automatic-navigation/build/gazebo_modele/install.log'

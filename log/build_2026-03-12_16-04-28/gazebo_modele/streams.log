@@ -1,0 +1,40 @@
+[1.794s] Invoking command in '/home/xu/automatic-navigation/src/gazebo_modele': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data
+[2.215s] running egg_info
+[2.220s] creating ../../build/gazebo_modele/gazebo_modele.egg-info
+[2.221s] writing ../../build/gazebo_modele/gazebo_modele.egg-info/PKG-INFO
+[2.221s] writing dependency_links to ../../build/gazebo_modele/gazebo_modele.egg-info/dependency_links.txt
+[2.221s] writing entry points to ../../build/gazebo_modele/gazebo_modele.egg-info/entry_points.txt
+[2.221s] writing requirements to ../../build/gazebo_modele/gazebo_modele.egg-info/requires.txt
+[2.221s] writing top-level names to ../../build/gazebo_modele/gazebo_modele.egg-info/top_level.txt
+[2.221s] writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+[2.222s] reading manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+[2.226s] writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+[2.226s] running build
+[2.226s] running build_py
+[2.226s] creating /home/xu/automatic-navigation/build/gazebo_modele/build
+[2.226s] creating /home/xu/automatic-navigation/build/gazebo_modele/build/lib
+[2.226s] creating /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele
+[2.226s] copying gazebo_modele/__init__.py -> /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele
+[2.226s] running install
+[2.226s] running install_lib
+[2.228s] creating /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele
+[2.231s] copying /home/xu/automatic-navigation/build/gazebo_modele/build/lib/gazebo_modele/__init__.py -> /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele
+[2.231s] byte-compiling /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele/__init__.py to __init__.cpython-310.pyc
+[2.231s] running install_data
+[2.231s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index
+[2.233s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index
+[2.234s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index/packages
+[2.234s] copying resource/gazebo_modele -> /home/xu/automatic-navigation/install/gazebo_modele/share/ament_index/resource_index/packages
+[2.234s] copying package.xml -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele
+[2.238s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/launch
+[2.239s] copying launch/gazebo.launch.py -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/launch
+[2.239s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/urdf
+[2.239s] copying urdf/model.urdf -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/urdf
+[2.239s] creating /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+[2.239s] copying world/2d.world -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+[2.239s] copying world/3d.world -> /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world
+[2.239s] running install_egg_info
+[2.240s] Copying ../../build/gazebo_modele/gazebo_modele.egg-info to /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info
+[2.241s] running install_scripts
+[2.281s] writing list of installed files to '/home/xu/automatic-navigation/build/gazebo_modele/install.log'
+[2.320s] Invoked command in '/home/xu/automatic-navigation/src/gazebo_modele' returned '0': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data

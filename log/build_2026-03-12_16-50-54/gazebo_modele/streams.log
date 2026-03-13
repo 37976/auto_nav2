@@ -1,0 +1,20 @@
+[1.294s] Invoking command in '/home/xu/automatic-navigation/src/gazebo_modele': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data
+[1.763s] running egg_info
+[1.765s] writing ../../build/gazebo_modele/gazebo_modele.egg-info/PKG-INFO
+[1.766s] writing dependency_links to ../../build/gazebo_modele/gazebo_modele.egg-info/dependency_links.txt
+[1.766s] writing entry points to ../../build/gazebo_modele/gazebo_modele.egg-info/entry_points.txt
+[1.766s] writing requirements to ../../build/gazebo_modele/gazebo_modele.egg-info/requires.txt
+[1.766s] writing top-level names to ../../build/gazebo_modele/gazebo_modele.egg-info/top_level.txt
+[1.767s] reading manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+[1.770s] writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'
+[1.770s] running build
+[1.770s] running build_py
+[1.770s] running install
+[1.772s] running install_lib
+[1.775s] running install_data
+[1.776s] running install_egg_info
+[1.778s] removing '/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info' (and everything under it)
+[1.783s] Copying ../../build/gazebo_modele/gazebo_modele.egg-info to /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info
+[1.784s] running install_scripts
+[1.815s] writing list of installed files to '/home/xu/automatic-navigation/build/gazebo_modele/install.log'
+[1.856s] Invoked command in '/home/xu/automatic-navigation/src/gazebo_modele' returned '0': PYTHONPATH=/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/gazebo_modele build --build-base /home/xu/automatic-navigation/build/gazebo_modele/build install --record /home/xu/automatic-navigation/build/gazebo_modele/install.log --single-version-externally-managed install_data

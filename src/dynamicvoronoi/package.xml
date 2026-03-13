@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>dynamicvoronoi</name>
+  <version>0.0.0</version>
+  <description>
+    This package provides software to compute and update Euclidean distance maps (DM)
+    and Euclidean Voronoi diagrams (GVD) on 2D grid maps.
+    The program is initialized with a binary occupancy grid map and computes the corresponding
+    DM and GVD. When provided with points that mark newly occupied or freed cells, the DM and
+    GVD can be updated efficiently to reflect the changes in the environment.
+    Reference: B. Lau, C. Sprunk and W. Burgard, Improved Updating of Euclidean Distance Maps
+    and Voronoi Diagrams, IEEE IROS, Taipei, Taiwan, 2010.
+    See also http://www.informatik.uni-freiburg.de/~lau/dynamicvoronoi
+  </description>
+
+  <maintainer email="op@todo.todo">op</maintainer>
+  <author>Boris Lau, Christoph Sprunk, Wolfram Burgard</author>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

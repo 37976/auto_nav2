@@ -1,0 +1,25 @@
+[1.656s] Invoking command in '/home/xu/automatic-navigation/src/nav_slam': PYTHONPATH=/home/xu/automatic-navigation/build/nav_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_slam build --build-base /home/xu/automatic-navigation/build/nav_slam/build install --record /home/xu/automatic-navigation/build/nav_slam/install.log --single-version-externally-managed install_data
+[2.331s] running egg_info
+[2.332s] writing ../../build/nav_slam/nav_slam.egg-info/PKG-INFO
+[2.334s] writing dependency_links to ../../build/nav_slam/nav_slam.egg-info/dependency_links.txt
+[2.338s] writing entry points to ../../build/nav_slam/nav_slam.egg-info/entry_points.txt
+[2.338s] writing requirements to ../../build/nav_slam/nav_slam.egg-info/requires.txt
+[2.338s] writing top-level names to ../../build/nav_slam/nav_slam.egg-info/top_level.txt
+[2.339s] reading manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'
+[2.343s] writing manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'
+[2.343s] running build
+[2.343s] running build_py
+[2.343s] running install
+[2.343s] running install_lib
+[2.349s] running install_data
+[2.352s] running install_egg_info
+[2.355s] removing '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam-0.0.0-py3.10.egg-info' (and everything under it)
+[2.357s] Copying ../../build/nav_slam/nav_slam.egg-info to /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam-0.0.0-py3.10.egg-info
+[2.362s] running install_scripts
+[2.420s] Installing astar script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+[2.420s] Installing map_pub script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+[2.420s] Installing odom_map_tf script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+[2.425s] Installing points_pub_map script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+[2.426s] Installing start_nav script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+[2.430s] writing list of installed files to '/home/xu/automatic-navigation/build/nav_slam/install.log'
+[2.479s] Invoked command in '/home/xu/automatic-navigation/src/nav_slam' returned '0': PYTHONPATH=/home/xu/automatic-navigation/build/nav_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/nav_slam build --build-base /home/xu/automatic-navigation/build/nav_slam/build install --record /home/xu/automatic-navigation/build/nav_slam/install.log --single-version-externally-managed install_data

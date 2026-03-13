@@ -1,0 +1,55 @@
+running egg_info
+creating ../../build/nav_slam/nav_slam.egg-info
+writing ../../build/nav_slam/nav_slam.egg-info/PKG-INFO
+writing dependency_links to ../../build/nav_slam/nav_slam.egg-info/dependency_links.txt
+writing entry points to ../../build/nav_slam/nav_slam.egg-info/entry_points.txt
+writing requirements to ../../build/nav_slam/nav_slam.egg-info/requires.txt
+writing top-level names to ../../build/nav_slam/nav_slam.egg-info/top_level.txt
+writing manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'
+reading manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'
+writing manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/xu/automatic-navigation/build/nav_slam/build
+creating /home/xu/automatic-navigation/build/nav_slam/build/lib
+creating /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/points_pub_map.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/start_nav.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/odom_map_tf.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/map_pub.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/astar.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+copying nav_slam/__init__.py -> /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam
+running install
+running install_lib
+creating /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/points_pub_map.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/start_nav.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/odom_map_tf.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/map_pub.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/astar.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+copying /home/xu/automatic-navigation/build/nav_slam/build/lib/nav_slam/__init__.py -> /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/points_pub_map.py to points_pub_map.cpython-310.pyc
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/start_nav.py to start_nav.cpython-310.pyc
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/odom_map_tf.py to odom_map_tf.cpython-310.pyc
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/map_pub.py to map_pub.cpython-310.pyc
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/astar.py to astar.cpython-310.pyc
+byte-compiling /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam/__init__.py to __init__.cpython-310.pyc
+running install_data
+creating /home/xu/automatic-navigation/install/nav_slam/share/ament_index
+creating /home/xu/automatic-navigation/install/nav_slam/share/ament_index/resource_index
+creating /home/xu/automatic-navigation/install/nav_slam/share/ament_index/resource_index/packages
+copying resource/nav_slam -> /home/xu/automatic-navigation/install/nav_slam/share/ament_index/resource_index/packages
+copying package.xml -> /home/xu/automatic-navigation/install/nav_slam/share/nav_slam
+creating /home/xu/automatic-navigation/install/nav_slam/share/nav_slam/launch
+copying launch/2dpoints.launch.py -> /home/xu/automatic-navigation/install/nav_slam/share/nav_slam/launch
+creating /home/xu/automatic-navigation/install/nav_slam/share/nav_slam/config
+copying config/rviz.rviz -> /home/xu/automatic-navigation/install/nav_slam/share/nav_slam/config
+running install_egg_info
+Copying ../../build/nav_slam/nav_slam.egg-info to /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam-0.0.0-py3.10.egg-info
+running install_scripts
+Installing astar script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+Installing map_pub script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+Installing odom_map_tf script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+Installing points_pub_map script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+Installing start_nav script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam
+writing list of installed files to '/home/xu/automatic-navigation/build/nav_slam/install.log'

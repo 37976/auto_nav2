@@ -1,0 +1,679 @@
+[0.000000] (-) TimerEvent: {}
+[0.008480] (dynamicvoronoi) JobQueued: {'identifier': 'dynamicvoronoi', 'dependencies': OrderedDict()}
+[0.008747] (gazebo_modele) JobQueued: {'identifier': 'gazebo_modele', 'dependencies': OrderedDict()}
+[0.008909] (nav_slam) JobQueued: {'identifier': 'nav_slam', 'dependencies': OrderedDict()}
+[0.009061] (nav2_costmap_2d) JobQueued: {'identifier': 'nav2_costmap_2d', 'dependencies': OrderedDict([('dynamicvoronoi', '/home/xu/automatic-navigation/install/dynamicvoronoi')])}
+[0.009240] (nav2_voronoi_planner) JobQueued: {'identifier': 'nav2_voronoi_planner', 'dependencies': OrderedDict([('dynamicvoronoi', '/home/xu/automatic-navigation/install/dynamicvoronoi'), ('nav2_costmap_2d', '/home/xu/automatic-navigation/install/nav2_costmap_2d')])}
+[0.009404] (dynamicvoronoi) JobStarted: {'identifier': 'dynamicvoronoi'}
+[0.022834] (gazebo_modele) JobStarted: {'identifier': 'gazebo_modele'}
+[0.039400] (dynamicvoronoi) JobProgress: {'identifier': 'dynamicvoronoi', 'progress': 'cmake'}
+[0.040217] (dynamicvoronoi) JobProgress: {'identifier': 'dynamicvoronoi', 'progress': 'build'}
+[0.052563] (dynamicvoronoi) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/xu/automatic-navigation/build/dynamicvoronoi', '--', '-j2', '-l2'], 'cwd': '/home/xu/automatic-navigation/build/dynamicvoronoi', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/dynamicvoronoi'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[0.099838] (-) TimerEvent: {}
+[0.198759] (dynamicvoronoi) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target dynamicvoronoi\x1b[0m\n'}
+[0.200347] (-) TimerEvent: {}
+[0.254919] (dynamicvoronoi) StdoutLine: {'line': b'[100%] Built target dynamicvoronoi\n'}
+[0.300741] (-) TimerEvent: {}
+[0.401920] (-) TimerEvent: {}
+[0.503811] (-) TimerEvent: {}
+[0.606252] (-) TimerEvent: {}
+[0.630295] (dynamicvoronoi) CommandEnded: {'returncode': 0}
+[0.631569] (dynamicvoronoi) JobProgress: {'identifier': 'dynamicvoronoi', 'progress': 'install'}
+[0.655329] (dynamicvoronoi) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/xu/automatic-navigation/build/dynamicvoronoi'], 'cwd': '/home/xu/automatic-navigation/build/dynamicvoronoi', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/dynamicvoronoi'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[0.684854] (dynamicvoronoi) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[0.686987] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/lib/libdynamicvoronoi.so\n'}
+[0.687626] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include/\n'}
+[0.688231] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi\n'}
+[0.688889] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/point.h\n'}
+[0.689496] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/dynamicvoronoi.h\n'}
+[0.690264] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/bucketedqueue.h\n'}
+[0.691959] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/library_path.sh\n'}
+[0.692592] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/library_path.dsv\n'}
+[0.693853] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/package_run_dependencies/dynamicvoronoi\n'}
+[0.698654] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/parent_prefix_path/dynamicvoronoi\n'}
+[0.698783] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/ament_prefix_path.sh\n'}
+[0.698879] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/ament_prefix_path.dsv\n'}
+[0.698969] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/path.sh\n'}
+[0.699058] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/path.dsv\n'}
+[0.699202] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.bash\n'}
+[0.699310] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.sh\n'}
+[0.699399] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.zsh\n'}
+[0.699486] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.dsv\n'}
+[0.699570] (dynamicvoronoi) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.dsv\n'}
+[0.699655] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/packages/dynamicvoronoi\n'}
+[0.699740] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiTargetsExport.cmake\n'}
+[0.699825] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiTargetsExport-noconfig.cmake\n'}
+[0.699909] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[0.699994] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[0.700077] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiConfig.cmake\n'}
+[0.702630] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiConfig-version.cmake\n'}
+[0.702742] (dynamicvoronoi) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.xml\n'}
+[0.702830] (dynamicvoronoi) CommandEnded: {'returncode': 0}
+[0.706342] (-) TimerEvent: {}
+[0.736237] (dynamicvoronoi) JobEnded: {'identifier': 'dynamicvoronoi', 'rc': 0}
+[0.738177] (nav2_costmap_2d) JobStarted: {'identifier': 'nav2_costmap_2d'}
+[0.758776] (nav2_costmap_2d) JobProgress: {'identifier': 'nav2_costmap_2d', 'progress': 'cmake'}
+[0.760780] (nav2_costmap_2d) JobProgress: {'identifier': 'nav2_costmap_2d', 'progress': 'build'}
+[0.761443] (nav2_costmap_2d) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/xu/automatic-navigation/build/nav2_costmap_2d', '--', '-j2', '-l2'], 'cwd': '/home/xu/automatic-navigation/build/nav2_costmap_2d', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/nav2_costmap_2d'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[0.806496] (-) TimerEvent: {}
+[0.880772] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_costmap_2d_core\x1b[0m\n'}
+[0.906605] (-) TimerEvent: {}
+[0.971371] (nav2_costmap_2d) StdoutLine: {'line': b'[ 16%] Built target nav2_costmap_2d_core\n'}
+[0.995552] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target gtest_main\x1b[0m\n'}
+[1.006718] (-) TimerEvent: {}
+[1.025804] (nav2_costmap_2d) StdoutLine: {'line': b'[ 19%] Built target gtest_main\n'}
+[1.057417] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target gtest\x1b[0m\n'}
+[1.098269] (nav2_costmap_2d) StdoutLine: {'line': b'[ 21%] Built target gtest\n'}
+[1.106825] (-) TimerEvent: {}
+[1.126352] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target order_layer\x1b[0m\n'}
+[1.169460] (nav2_costmap_2d) StdoutLine: {'line': b'[ 24%] Built target order_layer\n'}
+[1.205919] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target layers\x1b[0m\n'}
+[1.207169] (-) TimerEvent: {}
+[1.290378] (nav2_costmap_2d) StdoutLine: {'line': b'[ 34%] Built target layers\n'}
+[1.307302] (-) TimerEvent: {}
+[1.319641] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target filters\x1b[0m\n'}
+[1.384072] (nav2_costmap_2d) StdoutLine: {'line': b'[ 39%] Built target filters\n'}
+[1.409282] (-) TimerEvent: {}
+[1.427944] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_costmap_2d_client\x1b[0m\n'}
+[1.482512] (nav2_costmap_2d) StdoutLine: {'line': b'[ 44%] Built target nav2_costmap_2d_client\n'}
+[1.510865] (-) TimerEvent: {}
+[1.511374] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_costmap_2d_markers\x1b[0m\n'}
+[1.530293] (gazebo_modele) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/gazebo_modele', 'build', '--build-base', '/home/xu/automatic-navigation/build/gazebo_modele/build', 'install', '--record', '/home/xu/automatic-navigation/build/gazebo_modele/install.log', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/xu/automatic-navigation/src/gazebo_modele', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'LANGUAGE': 'zh_CN:en', 'USER': 'xu', 'LC_TIME': 'zh_CN.UTF-8', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/xu', 'DESKTOP_SESSION': 'ubuntu', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'LC_MONETARY': 'zh_CN.UTF-8', 'DBUS_STARTER_BUS_TYPE': 'session', 'SYSTEMD_EXEC_PID': '1628', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d', 'COLORTERM': 'truecolor', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'COLCON_PREFIX_PATH': '/home/xu/automatic-navigation/install', 'ROS_DISTRO': 'humble', 'LOGNAME': 'xu', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'xu', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin', 'SESSION_MANAGER': 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628', 'PAPERSIZE': 'a4', 'XDG_MENU_PREFIX': 'gnome-', 'LC_ADDRESS': 'zh_CN.UTF-8', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'LANG': 'zh_CN.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'LC_TELEPHONE': 'zh_CN.UTF-8', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.S3QGM3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'GNOME_TERMINAL_SERVICE': ':1.117', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble', 'SHELL': '/bin/bash', 'LC_NAME': 'zh_CN.UTF-8', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'LC_MEASUREMENT': 'zh_CN.UTF-8', 'LC_IDENTIFICATION': 'zh_CN.UTF-8', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/xu/automatic-navigation/build/gazebo_modele', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'DBUS_STARTER_ADDRESS': 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/xu/automatic-navigation/build/gazebo_modele/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'LC_NUMERIC': 'zh_CN.UTF-8', 'LC_PAPER': 'zh_CN.UTF-8', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[1.560203] (nav2_costmap_2d) StdoutLine: {'line': b'[ 46%] Built target nav2_costmap_2d_markers\n'}
+[1.606834] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_costmap_2d_cloud\x1b[0m\n'}
+[1.611186] (-) TimerEvent: {}
+[1.661585] (nav2_costmap_2d) StdoutLine: {'line': b'[ 49%] Built target nav2_costmap_2d_cloud\n'}
+[1.695317] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_costmap_2d\x1b[0m\n'}
+[1.711292] (-) TimerEvent: {}
+[1.751839] (nav2_costmap_2d) StdoutLine: {'line': b'[ 51%] Built target nav2_costmap_2d\n'}
+[1.782215] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target array_parser_test\x1b[0m\n'}
+[1.811414] (-) TimerEvent: {}
+[1.821198] (nav2_costmap_2d) StdoutLine: {'line': b'[ 54%] Built target array_parser_test\n'}
+[1.865792] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target collision_footprint_test\x1b[0m\n'}
+[1.911888] (-) TimerEvent: {}
+[1.912585] (nav2_costmap_2d) StdoutLine: {'line': b'[ 56%] Built target collision_footprint_test\n'}
+[1.936038] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target costmap_convesion_test\x1b[0m\n'}
+[1.978031] (nav2_costmap_2d) StdoutLine: {'line': b'[ 59%] Built target costmap_convesion_test\n'}
+[2.003429] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target declare_parameter_test\x1b[0m\n'}
+[2.013193] (-) TimerEvent: {}
+[2.021328] (gazebo_modele) StdoutLine: {'line': b'running egg_info\n'}
+[2.022483] (gazebo_modele) StdoutLine: {'line': b'writing ../../build/gazebo_modele/gazebo_modele.egg-info/PKG-INFO\n'}
+[2.024518] (gazebo_modele) StdoutLine: {'line': b'writing dependency_links to ../../build/gazebo_modele/gazebo_modele.egg-info/dependency_links.txt\n'}
+[2.025701] (gazebo_modele) StdoutLine: {'line': b'writing entry points to ../../build/gazebo_modele/gazebo_modele.egg-info/entry_points.txt\n'}
+[2.027351] (gazebo_modele) StdoutLine: {'line': b'writing requirements to ../../build/gazebo_modele/gazebo_modele.egg-info/requires.txt\n'}
+[2.028643] (gazebo_modele) StdoutLine: {'line': b'writing top-level names to ../../build/gazebo_modele/gazebo_modele.egg-info/top_level.txt\n'}
+[2.031865] (gazebo_modele) StdoutLine: {'line': b"reading manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'\n"}
+[2.034670] (gazebo_modele) StdoutLine: {'line': b"writing manifest file '../../build/gazebo_modele/gazebo_modele.egg-info/SOURCES.txt'\n"}
+[2.035810] (gazebo_modele) StdoutLine: {'line': b'running build\n'}
+[2.035970] (gazebo_modele) StdoutLine: {'line': b'running build_py\n'}
+[2.037330] (gazebo_modele) StdoutLine: {'line': b'running install\n'}
+[2.037483] (gazebo_modele) StdoutLine: {'line': b'running install_lib\n'}
+[2.042933] (gazebo_modele) StdoutLine: {'line': b'running install_data\n'}
+[2.045979] (gazebo_modele) StdoutLine: {'line': b'running install_egg_info\n'}
+[2.049187] (gazebo_modele) StdoutLine: {'line': b"removing '/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[2.055209] (gazebo_modele) StdoutLine: {'line': b'Copying ../../build/gazebo_modele/gazebo_modele.egg-info to /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info\n'}
+[2.057547] (nav2_costmap_2d) StdoutLine: {'line': b'[ 61%] Built target declare_parameter_test\n'}
+[2.057788] (gazebo_modele) StdoutLine: {'line': b'running install_scripts\n'}
+[2.106511] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target costmap_filter_test\x1b[0m\n'}
+[2.114494] (gazebo_modele) StdoutLine: {'line': b"writing list of installed files to '/home/xu/automatic-navigation/build/gazebo_modele/install.log'\n"}
+[2.114697] (-) TimerEvent: {}
+[2.161083] (gazebo_modele) CommandEnded: {'returncode': 0}
+[2.167876] (nav2_costmap_2d) StdoutLine: {'line': b'[ 63%] Built target costmap_filter_test\n'}
+[2.180235] (gazebo_modele) JobEnded: {'identifier': 'gazebo_modele', 'rc': 0}
+[2.182513] (nav_slam) JobStarted: {'identifier': 'nav_slam'}
+[2.199939] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target keepout_filter_test\x1b[0m\n'}
+[2.216219] (-) TimerEvent: {}
+[2.250327] (nav2_costmap_2d) StdoutLine: {'line': b'[ 66%] Built target keepout_filter_test\n'}
+[2.280037] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target speed_filter_test\x1b[0m\n'}
+[2.317220] (-) TimerEvent: {}
+[2.320474] (nav2_costmap_2d) StdoutLine: {'line': b'[ 68%] Built target speed_filter_test\n'}
+[2.352932] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target binary_filter_test\x1b[0m\n'}
+[2.408320] (nav2_costmap_2d) StdoutLine: {'line': b'[ 71%] Built target binary_filter_test\n'}
+[2.419449] (-) TimerEvent: {}
+[2.445196] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target copy_window_test\x1b[0m\n'}
+[2.484320] (nav2_costmap_2d) StdoutLine: {'line': b'[ 73%] Built target copy_window_test\n'}
+[2.508594] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target costmap_filter_service_test\x1b[0m\n'}
+[2.519542] (-) TimerEvent: {}
+[2.552343] (nav2_costmap_2d) StdoutLine: {'line': b'[ 75%] Built target costmap_filter_service_test\n'}
+[2.580806] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target denoise_layer_test\x1b[0m\n'}
+[2.619723] (-) TimerEvent: {}
+[2.650357] (nav2_costmap_2d) StdoutLine: {'line': b'[ 80%] Built target denoise_layer_test\n'}
+[2.682309] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target footprint_tests_exec\x1b[0m\n'}
+[2.719853] (-) TimerEvent: {}
+[2.739993] (nav2_costmap_2d) StdoutLine: {'line': b'[ 83%] Built target footprint_tests_exec\n'}
+[2.772724] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target test_collision_checker_exec\x1b[0m\n'}
+[2.819971] (-) TimerEvent: {}
+[2.857336] (nav2_costmap_2d) StdoutLine: {'line': b'[ 85%] Built target test_collision_checker_exec\n'}
+[2.908005] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target inflation_tests_exec\x1b[0m\n'}
+[2.920073] (-) TimerEvent: {}
+[2.974925] (nav2_costmap_2d) StdoutLine: {'line': b'[ 87%] Built target inflation_tests_exec\n'}
+[3.001867] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target obstacle_tests_exec\x1b[0m\n'}
+[3.020181] (-) TimerEvent: {}
+[3.071212] (nav2_costmap_2d) StdoutLine: {'line': b'[ 90%] Built target obstacle_tests_exec\n'}
+[3.106974] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target range_tests_exec\x1b[0m\n'}
+[3.120290] (-) TimerEvent: {}
+[3.173425] (nav2_costmap_2d) StdoutLine: {'line': b'[ 92%] Built target range_tests_exec\n'}
+[3.200264] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target dyn_params_tests\x1b[0m\n'}
+[3.221279] (-) TimerEvent: {}
+[3.271403] (nav2_costmap_2d) StdoutLine: {'line': b'[ 95%] Built target dyn_params_tests\n'}
+[3.298191] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target costmap_bresenham_2d\x1b[0m\n'}
+[3.322209] (-) TimerEvent: {}
+[3.334767] (nav2_costmap_2d) StdoutLine: {'line': b'[ 97%] Built target costmap_bresenham_2d\n'}
+[3.381554] (nav2_costmap_2d) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target plugin_api_order\x1b[0m\n'}
+[3.422378] (-) TimerEvent: {}
+[3.447271] (nav2_costmap_2d) StdoutLine: {'line': b'[100%] Built target plugin_api_order\n'}
+[3.486501] (nav_slam) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', '../../build/nav_slam', 'build', '--build-base', '/home/xu/automatic-navigation/build/nav_slam/build', 'install', '--record', '/home/xu/automatic-navigation/build/nav_slam/install.log', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/xu/automatic-navigation/src/nav_slam', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'LANGUAGE': 'zh_CN:en', 'USER': 'xu', 'LC_TIME': 'zh_CN.UTF-8', 'XDG_SESSION_TYPE': 'wayland', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib', 'HOME': '/home/xu', 'DESKTOP_SESSION': 'ubuntu', 'ROS_PYTHON_VERSION': '3', 'GNOME_SHELL_SESSION_MODE': 'ubuntu', 'GTK_MODULES': 'gail:atk-bridge', 'LC_MONETARY': 'zh_CN.UTF-8', 'DBUS_STARTER_BUS_TYPE': 'session', 'SYSTEMD_EXEC_PID': '1628', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d', 'COLORTERM': 'truecolor', 'IM_CONFIG_PHASE': '1', 'WAYLAND_DISPLAY': 'wayland-0', 'COLCON_PREFIX_PATH': '/home/xu/automatic-navigation/install', 'ROS_DISTRO': 'humble', 'LOGNAME': 'xu', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'USERNAME': 'xu', 'TERM': 'xterm-256color', 'GNOME_DESKTOP_SESSION_ID': 'this-is-deprecated', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin', 'SESSION_MANAGER': 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628', 'PAPERSIZE': 'a4', 'XDG_MENU_PREFIX': 'gnome-', 'LC_ADDRESS': 'zh_CN.UTF-8', 'GNOME_TERMINAL_SCREEN': '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1', 'GNOME_SETUP_DISPLAY': ':1', 'XDG_RUNTIME_DIR': '/run/user/1000', 'DISPLAY': ':0', 'LANG': 'zh_CN.UTF-8', 'XDG_CURRENT_DESKTOP': 'ubuntu:GNOME', 'LC_TELEPHONE': 'zh_CN.UTF-8', 'XMODIFIERS': '@im=ibus', 'XDG_SESSION_DESKTOP': 'ubuntu', 'XAUTHORITY': '/run/user/1000/.mutter-Xwaylandauth.S3QGM3', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'GNOME_TERMINAL_SERVICE': ':1.117', 'SSH_AGENT_LAUNCHER': 'gnome-keyring', 'SSH_AUTH_SOCK': '/run/user/1000/keyring/ssh', 'AMENT_PREFIX_PATH': '/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble', 'SHELL': '/bin/bash', 'LC_NAME': 'zh_CN.UTF-8', 'QT_ACCESSIBILITY': '1', 'GDMSESSION': 'ubuntu', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'LC_MEASUREMENT': 'zh_CN.UTF-8', 'LC_IDENTIFICATION': 'zh_CN.UTF-8', 'QT_IM_MODULE': 'ibus', 'PWD': '/home/xu/automatic-navigation/build/nav_slam', 'XDG_CONFIG_DIRS': '/etc/xdg/xdg-ubuntu:/etc/xdg', 'DBUS_STARTER_ADDRESS': 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d', 'XDG_DATA_DIRS': '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop', 'PYTHONPATH': '/home/xu/automatic-navigation/build/nav_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'LC_NUMERIC': 'zh_CN.UTF-8', 'LC_PAPER': 'zh_CN.UTF-8', 'COLCON': '1', 'VTE_VERSION': '6800'}, 'shell': False}
+[3.495007] (nav2_costmap_2d) CommandEnded: {'returncode': 0}
+[3.500997] (nav2_costmap_2d) JobProgress: {'identifier': 'nav2_costmap_2d', 'progress': 'install'}
+[3.501088] (nav2_costmap_2d) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/xu/automatic-navigation/build/nav2_costmap_2d'], 'cwd': '/home/xu/automatic-navigation/build/nav2_costmap_2d', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/nav2_costmap_2d'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[3.522994] (nav2_costmap_2d) StdoutLine: {'line': b'-- Install configuration: "Release"\n'}
+[3.523874] (-) TimerEvent: {}
+[3.524821] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/liblayers.so\n'}
+[3.526067] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libfilters.so\n'}
+[3.528551] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libnav2_costmap_2d_core.so\n'}
+[3.529625] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/libnav2_costmap_2d_client.so\n'}
+[3.529744] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d_markers\n'}
+[3.532365] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d_cloud\n'}
+[3.533746] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/nav2_costmap_2d/nav2_costmap_2d\n'}
+[3.535035] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/costmap_plugins.xml\n'}
+[3.536149] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d\n'}
+[3.537176] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d\n'}
+[3.538220] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/clear_costmap_service.hpp\n'}
+[3.538372] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/range_sensor_layer.hpp\n'}
+[3.539793] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise\n'}
+[3.539928] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise/image.hpp\n'}
+[3.540020] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise/image_processing.hpp\n'}
+[3.540111] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_topic_collision_checker.hpp\n'}
+[3.541764] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint_collision_checker.hpp\n'}
+[3.541908] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/inflation_layer.hpp\n'}
+[3.542001] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/observation_buffer.hpp\n'}
+[3.542093] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/array_parser.hpp\n'}
+[3.542221] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_subscriber.hpp\n'}
+[3.542312] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_math.hpp\n'}
+[3.542475] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/voronoi_layer.hpp\n'}
+[3.542569] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/layer.hpp\n'}
+[3.545208] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/obstacle_layer.hpp\n'}
+[3.545357] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/observation.hpp\n'}
+[3.545447] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint.hpp\n'}
+[3.545533] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/voxel_layer.hpp\n'}
+[3.545619] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/static_layer.hpp\n'}
+[3.545704] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/cost_values.hpp\n'}
+[3.545789] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d_publisher.hpp\n'}
+[3.545873] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/denoise_layer.hpp\n'}
+[3.545971] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/layered_costmap.hpp\n'}
+[3.546056] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d_ros.hpp\n'}
+[3.552235] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/exceptions.hpp\n'}
+[3.552391] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/footprint_subscriber.hpp\n'}
+[3.552543] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_layer.hpp\n'}
+[3.552639] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters\n'}
+[3.554281] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/speed_filter.hpp\n'}
+[3.554409] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/costmap_filter.hpp\n'}
+[3.554554] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/filter_values.hpp\n'}
+[3.554646] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/binary_filter.hpp\n'}
+[3.554733] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_filters/keepout_filter.hpp\n'}
+[3.554819] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/include/nav2_costmap_2d/nav2_costmap_2d/costmap_2d.hpp\n'}
+[3.554903] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/test/regression/order_layer.xml\n'}
+[3.554987] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/library_path.sh\n'}
+[3.555072] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/library_path.dsv\n'}
+[3.561269] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/costmap_plugins.xml\n'}
+[3.561385] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/package_run_dependencies/nav2_costmap_2d\n'}
+[3.561487] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/parent_prefix_path/nav2_costmap_2d\n'}
+[3.561574] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/ament_prefix_path.sh\n'}
+[3.561659] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/ament_prefix_path.dsv\n'}
+[3.561743] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/path.sh\n'}
+[3.561827] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/environment/path.dsv\n'}
+[3.561920] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.bash\n'}
+[3.562004] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.sh\n'}
+[3.562086] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.zsh\n'}
+[3.565299] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/local_setup.dsv\n'}
+[3.565417] (nav2_costmap_2d) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.dsv\n'}
+[3.565508] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/packages/nav2_costmap_2d\n'}
+[3.565595] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/ament_index/resource_index/nav2_costmap_2d__pluginlib__plugin/nav2_costmap_2d\n'}
+[3.566788] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/export_nav2_costmap_2dExport.cmake\n'}
+[3.566958] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/export_nav2_costmap_2dExport-release.cmake\n'}
+[3.567052] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/ament_cmake_export_targets-extras.cmake\n'}
+[3.567161] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[3.567254] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/nav2_costmap_2dConfig.cmake\n'}
+[3.567339] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake/nav2_costmap_2dConfig-version.cmake\n'}
+[3.567423] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/package.xml\n'}
+[3.567508] (nav2_costmap_2d) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_costmap_2d/lib/liborder_layer.so\n'}
+[3.579321] (nav2_costmap_2d) CommandEnded: {'returncode': 0}
+[3.624543] (-) TimerEvent: {}
+[3.644067] (nav2_costmap_2d) JobEnded: {'identifier': 'nav2_costmap_2d', 'rc': 0}
+[3.646631] (nav2_voronoi_planner) JobStarted: {'identifier': 'nav2_voronoi_planner'}
+[3.687389] (nav2_voronoi_planner) JobProgress: {'identifier': 'nav2_voronoi_planner', 'progress': 'cmake'}
+[3.689760] (nav2_voronoi_planner) JobProgress: {'identifier': 'nav2_voronoi_planner', 'progress': 'build'}
+[3.690446] (nav2_voronoi_planner) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/xu/automatic-navigation/build/nav2_voronoi_planner', '--', '-j2', '-l2'], 'cwd': '/home/xu/automatic-navigation/build/nav2_voronoi_planner', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/nav2_voronoi_planner'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[3.726235] (-) TimerEvent: {}
+[3.763268] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.13 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[3.826365] (-) TimerEvent: {}
+[3.927020] (-) TimerEvent: {}
+[3.977645] (nav_slam) StdoutLine: {'line': b'running egg_info\n'}
+[3.978968] (nav_slam) StdoutLine: {'line': b'writing ../../build/nav_slam/nav_slam.egg-info/PKG-INFO\n'}
+[3.981510] (nav_slam) StdoutLine: {'line': b'writing dependency_links to ../../build/nav_slam/nav_slam.egg-info/dependency_links.txt\n'}
+[3.982831] (nav_slam) StdoutLine: {'line': b'writing entry points to ../../build/nav_slam/nav_slam.egg-info/entry_points.txt\n'}
+[3.982952] (nav_slam) StdoutLine: {'line': b'writing requirements to ../../build/nav_slam/nav_slam.egg-info/requires.txt\n'}
+[3.983049] (nav_slam) StdoutLine: {'line': b'writing top-level names to ../../build/nav_slam/nav_slam.egg-info/top_level.txt\n'}
+[3.984946] (nav_slam) StdoutLine: {'line': b"reading manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'\n"}
+[3.986199] (nav_slam) StdoutLine: {'line': b"writing manifest file '../../build/nav_slam/nav_slam.egg-info/SOURCES.txt'\n"}
+[3.988235] (nav_slam) StdoutLine: {'line': b'running build\n'}
+[3.988911] (nav_slam) StdoutLine: {'line': b'running build_py\n'}
+[3.989028] (nav_slam) StdoutLine: {'line': b'running install\n'}
+[3.990220] (nav_slam) StdoutLine: {'line': b'running install_lib\n'}
+[3.992466] (nav_slam) StdoutLine: {'line': b'running install_data\n'}
+[3.993876] (nav_slam) StdoutLine: {'line': b'copying launch/2dpoints.launch.py -> /home/xu/automatic-navigation/install/nav_slam/share/nav_slam/launch\n'}
+[3.995767] (nav_slam) StdoutLine: {'line': b'running install_egg_info\n'}
+[3.997226] (nav_slam) StdoutLine: {'line': b"removing '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam-0.0.0-py3.10.egg-info' (and everything under it)\n"}
+[3.999579] (nav_slam) StdoutLine: {'line': b'Copying ../../build/nav_slam/nav_slam.egg-info to /home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages/nav_slam-0.0.0-py3.10.egg-info\n'}
+[4.000930] (nav_slam) StdoutLine: {'line': b'running install_scripts\n'}
+[4.022704] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rclcpp: 16.0.18 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[4.028179] (-) TimerEvent: {}
+[4.036703] (nav_slam) StdoutLine: {'line': b'Installing astar script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam\n'}
+[4.037856] (nav_slam) StdoutLine: {'line': b'Installing map_pub script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam\n'}
+[4.040259] (nav_slam) StdoutLine: {'line': b'Installing odom_map_tf script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam\n'}
+[4.040718] (nav_slam) StdoutLine: {'line': b'Installing points_pub_map script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam\n'}
+[4.042516] (nav_slam) StdoutLine: {'line': b'Installing start_nav script to /home/xu/automatic-navigation/install/nav_slam/lib/nav_slam\n'}
+[4.043170] (nav_slam) StdoutLine: {'line': b"writing list of installed files to '/home/xu/automatic-navigation/build/nav_slam/install.log'\n"}
+[4.076487] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.8 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[4.083149] (nav_slam) CommandEnded: {'returncode': 0}
+[4.085185] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[4.094299] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.8 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[4.104348] (nav_slam) JobEnded: {'identifier': 'nav_slam', 'rc': 0}
+[4.111322] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[4.128632] (-) TimerEvent: {}
+[4.141169] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[4.199037] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[4.202057] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.10 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[4.229286] (-) TimerEvent: {}
+[4.329728] (-) TimerEvent: {}
+[4.402403] (nav2_voronoi_planner) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[4.430524] (-) TimerEvent: {}
+[4.489757] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rclcpp_action: 16.0.18 (/opt/ros/humble/share/rclcpp_action/cmake)\n'}
+[4.531391] (-) TimerEvent: {}
+[4.537430] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found rclcpp_lifecycle: 16.0.18 (/opt/ros/humble/share/rclcpp_lifecycle/cmake)\n'}
+[4.563394] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found visualization_msgs: 4.9.1 (/opt/ros/humble/share/visualization_msgs/cmake)\n'}
+[4.632227] (-) TimerEvent: {}
+[4.648876] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found nav2_util: 1.1.20 (/opt/ros/humble/share/nav2_util/cmake)\n'}
+[4.733712] (-) TimerEvent: {}
+[4.819765] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found eigen3_cmake_module: 0.1.1 (/opt/ros/humble/share/eigen3_cmake_module/cmake)\n'}
+[4.822615] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Ensuring Eigen3 include directory is part of orocos-kdl CMake target\n'}
+[4.834637] (-) TimerEvent: {}
+[4.868241] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found nav2_costmap_2d: 1.1.20 (/home/xu/automatic-navigation/install/nav2_costmap_2d/share/nav2_costmap_2d/cmake)\n'}
+[4.935107] (-) TimerEvent: {}
+[4.988020] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found nav2_core: 1.1.20 (/opt/ros/humble/share/nav2_core/cmake)\n'}
+[5.011899] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found dynamicvoronoi: 0.0.0 (/home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake)\n'}
+[5.035856] (-) TimerEvent: {}
+[5.138294] (-) TimerEvent: {}
+[5.239424] (-) TimerEvent: {}
+[5.340365] (-) TimerEvent: {}
+[5.441114] (-) TimerEvent: {}
+[5.444170] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)\n'}
+[5.541290] (-) TimerEvent: {}
+[5.587687] (nav2_voronoi_planner) StdoutLine: {'line': b"-- Added test 'cppcheck' to perform static code analysis on C / C++ code\n"}
+[5.588907] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Configured cppcheck include dirs: /home/xu/automatic-navigation/src/nav2_voronoi_planner/include;/home/xu/automatic-navigation/src/nav2_voronoi_planner/include/nav2_voronoi_planner;$<BUILD_INTERFACE:/home/xu/automatic-navigation/src/nav2_voronoi_planner/include>\n'}
+[5.589303] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Configured cppcheck exclude dirs and/or files: \n'}
+[5.590497] (nav2_voronoi_planner) StdoutLine: {'line': b"-- Added test 'lint_cmake' to check CMake code style\n"}
+[5.595233] (nav2_voronoi_planner) StdoutLine: {'line': b"-- Added test 'uncrustify' to check C / C++ code style\n"}
+[5.595403] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Configured uncrustify additional arguments: \n'}
+[5.595509] (nav2_voronoi_planner) StdoutLine: {'line': b"-- Added test 'xmllint' to check XML markup files\n"}
+[5.601435] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Configuring done\n'}
+[5.641720] (-) TimerEvent: {}
+[5.742627] (-) TimerEvent: {}
+[5.823645] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Generating done\n'}
+[5.843245] (-) TimerEvent: {}
+[5.850274] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Build files have been written to: /home/xu/automatic-navigation/build/nav2_voronoi_planner\n'}
+[5.944272] (-) TimerEvent: {}
+[5.952480] (nav2_voronoi_planner) StdoutLine: {'line': b'[ 10%] \x1b[32mBuilding CXX object CMakeFiles/voronoi_node.dir/src/voronoi_node.cpp.o\x1b[0m\n'}
+[6.045038] (-) TimerEvent: {}
+[6.148421] (-) TimerEvent: {}
+[6.249537] (-) TimerEvent: {}
+[6.351078] (-) TimerEvent: {}
+[6.453990] (-) TimerEvent: {}
+[6.554780] (-) TimerEvent: {}
+[6.655418] (-) TimerEvent: {}
+[6.756696] (-) TimerEvent: {}
+[6.857287] (-) TimerEvent: {}
+[6.958264] (-) TimerEvent: {}
+[7.058945] (-) TimerEvent: {}
+[7.161427] (-) TimerEvent: {}
+[7.264885] (-) TimerEvent: {}
+[7.366452] (-) TimerEvent: {}
+[7.468952] (-) TimerEvent: {}
+[7.569578] (-) TimerEvent: {}
+[7.671254] (-) TimerEvent: {}
+[7.772072] (-) TimerEvent: {}
+[7.873231] (-) TimerEvent: {}
+[7.974279] (-) TimerEvent: {}
+[8.075660] (-) TimerEvent: {}
+[8.176606] (-) TimerEvent: {}
+[8.277672] (-) TimerEvent: {}
+[8.379565] (-) TimerEvent: {}
+[8.481687] (-) TimerEvent: {}
+[8.584247] (-) TimerEvent: {}
+[8.684961] (-) TimerEvent: {}
+[8.785596] (-) TimerEvent: {}
+[8.887956] (-) TimerEvent: {}
+[8.989257] (-) TimerEvent: {}
+[9.090270] (-) TimerEvent: {}
+[9.191077] (-) TimerEvent: {}
+[9.292948] (-) TimerEvent: {}
+[9.394046] (-) TimerEvent: {}
+[9.495740] (-) TimerEvent: {}
+[9.598519] (-) TimerEvent: {}
+[9.699583] (-) TimerEvent: {}
+[9.800403] (-) TimerEvent: {}
+[9.902108] (-) TimerEvent: {}
+[10.004646] (-) TimerEvent: {}
+[10.106058] (-) TimerEvent: {}
+[10.207941] (-) TimerEvent: {}
+[10.309238] (-) TimerEvent: {}
+[10.411400] (-) TimerEvent: {}
+[10.514276] (-) TimerEvent: {}
+[10.615342] (-) TimerEvent: {}
+[10.716324] (-) TimerEvent: {}
+[10.817701] (-) TimerEvent: {}
+[10.918458] (-) TimerEvent: {}
+[10.979335] (nav2_voronoi_planner) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target nav2_voronoi_planner\x1b[0m\n'}
+[11.018599] (-) TimerEvent: {}
+[11.040634] (nav2_voronoi_planner) StdoutLine: {'line': b'[ 50%] Built target nav2_voronoi_planner\n'}
+[11.077960] (nav2_voronoi_planner) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target voronoi_planner_tf_broadcaster\x1b[0m\n'}
+[11.118750] (-) TimerEvent: {}
+[11.130270] (nav2_voronoi_planner) StdoutLine: {'line': b'[ 70%] Built target voronoi_planner_tf_broadcaster\n'}
+[11.158373] (nav2_voronoi_planner) StdoutLine: {'line': b'[ 80%] \x1b[32mBuilding CXX object CMakeFiles/voronoi_node.dir/src/voronoi.cpp.o\x1b[0m\n'}
+[11.218898] (-) TimerEvent: {}
+[11.319660] (-) TimerEvent: {}
+[11.422347] (-) TimerEvent: {}
+[11.523060] (-) TimerEvent: {}
+[11.623967] (-) TimerEvent: {}
+[11.724793] (-) TimerEvent: {}
+[11.827433] (-) TimerEvent: {}
+[11.928478] (-) TimerEvent: {}
+[12.029347] (-) TimerEvent: {}
+[12.130172] (-) TimerEvent: {}
+[12.232714] (-) TimerEvent: {}
+[12.333610] (-) TimerEvent: {}
+[12.435416] (-) TimerEvent: {}
+[12.536562] (-) TimerEvent: {}
+[12.637722] (-) TimerEvent: {}
+[12.739785] (-) TimerEvent: {}
+[12.840621] (-) TimerEvent: {}
+[12.942183] (-) TimerEvent: {}
+[13.025223] (nav2_voronoi_planner) StdoutLine: {'line': b'[ 90%] \x1b[32mBuilding CXX object CMakeFiles/voronoi_node.dir/src/heap.cpp.o\x1b[0m\n'}
+[13.043448] (-) TimerEvent: {}
+[13.144271] (-) TimerEvent: {}
+[13.246773] (-) TimerEvent: {}
+[13.347607] (-) TimerEvent: {}
+[13.448467] (-) TimerEvent: {}
+[13.551349] (-) TimerEvent: {}
+[13.652290] (-) TimerEvent: {}
+[13.753118] (-) TimerEvent: {}
+[13.854668] (-) TimerEvent: {}
+[13.956852] (-) TimerEvent: {}
+[14.057726] (-) TimerEvent: {}
+[14.158379] (-) TimerEvent: {}
+[14.258874] (-) TimerEvent: {}
+[14.360452] (-) TimerEvent: {}
+[14.462236] (-) TimerEvent: {}
+[14.563349] (-) TimerEvent: {}
+[14.665829] (-) TimerEvent: {}
+[14.766649] (-) TimerEvent: {}
+[14.867511] (-) TimerEvent: {}
+[14.969308] (-) TimerEvent: {}
+[15.070656] (-) TimerEvent: {}
+[15.172911] (-) TimerEvent: {}
+[15.273615] (-) TimerEvent: {}
+[15.375865] (-) TimerEvent: {}
+[15.477232] (-) TimerEvent: {}
+[15.580540] (-) TimerEvent: {}
+[15.681030] (-) TimerEvent: {}
+[15.783275] (-) TimerEvent: {}
+[15.886220] (-) TimerEvent: {}
+[15.988005] (-) TimerEvent: {}
+[16.090524] (-) TimerEvent: {}
+[16.191183] (-) TimerEvent: {}
+[16.291995] (-) TimerEvent: {}
+[16.393347] (-) TimerEvent: {}
+[16.494521] (-) TimerEvent: {}
+[16.596221] (-) TimerEvent: {}
+[16.696982] (-) TimerEvent: {}
+[16.797853] (-) TimerEvent: {}
+[16.898746] (-) TimerEvent: {}
+[16.999492] (-) TimerEvent: {}
+[17.100644] (-) TimerEvent: {}
+[17.202383] (-) TimerEvent: {}
+[17.303435] (-) TimerEvent: {}
+[17.403949] (-) TimerEvent: {}
+[17.505385] (-) TimerEvent: {}
+[17.608695] (-) TimerEvent: {}
+[17.709522] (-) TimerEvent: {}
+[17.811477] (-) TimerEvent: {}
+[17.912103] (-) TimerEvent: {}
+[18.013770] (-) TimerEvent: {}
+[18.114827] (-) TimerEvent: {}
+[18.216721] (-) TimerEvent: {}
+[18.317650] (-) TimerEvent: {}
+[18.419326] (-) TimerEvent: {}
+[18.521247] (-) TimerEvent: {}
+[18.622424] (-) TimerEvent: {}
+[18.723505] (-) TimerEvent: {}
+[18.825935] (-) TimerEvent: {}
+[18.928252] (-) TimerEvent: {}
+[19.033960] (-) TimerEvent: {}
+[19.134561] (-) TimerEvent: {}
+[19.235738] (-) TimerEvent: {}
+[19.336390] (-) TimerEvent: {}
+[19.437052] (-) TimerEvent: {}
+[19.538452] (-) TimerEvent: {}
+[19.639069] (-) TimerEvent: {}
+[19.740066] (-) TimerEvent: {}
+[19.841972] (-) TimerEvent: {}
+[19.943844] (-) TimerEvent: {}
+[20.046546] (-) TimerEvent: {}
+[20.147552] (-) TimerEvent: {}
+[20.248825] (-) TimerEvent: {}
+[20.350833] (-) TimerEvent: {}
+[20.452415] (-) TimerEvent: {}
+[20.553574] (-) TimerEvent: {}
+[20.654803] (-) TimerEvent: {}
+[20.756796] (-) TimerEvent: {}
+[20.858993] (-) TimerEvent: {}
+[20.960339] (-) TimerEvent: {}
+[21.061557] (-) TimerEvent: {}
+[21.162416] (-) TimerEvent: {}
+[21.263904] (-) TimerEvent: {}
+[21.367024] (-) TimerEvent: {}
+[21.467792] (-) TimerEvent: {}
+[21.569502] (-) TimerEvent: {}
+[21.671070] (-) TimerEvent: {}
+[21.772310] (-) TimerEvent: {}
+[21.874329] (-) TimerEvent: {}
+[21.978364] (-) TimerEvent: {}
+[22.079814] (-) TimerEvent: {}
+[22.180486] (-) TimerEvent: {}
+[22.282581] (-) TimerEvent: {}
+[22.384459] (-) TimerEvent: {}
+[22.485314] (-) TimerEvent: {}
+[22.586770] (-) TimerEvent: {}
+[22.688701] (-) TimerEvent: {}
+[22.790587] (-) TimerEvent: {}
+[22.894776] (-) TimerEvent: {}
+[22.997440] (-) TimerEvent: {}
+[23.098390] (-) TimerEvent: {}
+[23.200295] (-) TimerEvent: {}
+[23.301095] (-) TimerEvent: {}
+[23.403396] (-) TimerEvent: {}
+[23.505241] (-) TimerEvent: {}
+[23.605828] (-) TimerEvent: {}
+[23.708698] (-) TimerEvent: {}
+[23.810519] (-) TimerEvent: {}
+[23.912389] (-) TimerEvent: {}
+[24.014018] (-) TimerEvent: {}
+[24.115954] (-) TimerEvent: {}
+[24.216793] (-) TimerEvent: {}
+[24.317744] (-) TimerEvent: {}
+[24.419621] (-) TimerEvent: {}
+[24.520788] (-) TimerEvent: {}
+[24.621692] (-) TimerEvent: {}
+[24.722699] (-) TimerEvent: {}
+[24.823337] (-) TimerEvent: {}
+[24.924371] (-) TimerEvent: {}
+[25.026355] (-) TimerEvent: {}
+[25.128418] (-) TimerEvent: {}
+[25.230733] (-) TimerEvent: {}
+[25.331552] (-) TimerEvent: {}
+[25.432654] (-) TimerEvent: {}
+[25.533981] (-) TimerEvent: {}
+[25.636290] (-) TimerEvent: {}
+[25.736993] (-) TimerEvent: {}
+[25.838462] (-) TimerEvent: {}
+[25.939778] (-) TimerEvent: {}
+[26.042028] (-) TimerEvent: {}
+[26.143506] (-) TimerEvent: {}
+[26.245518] (-) TimerEvent: {}
+[26.346395] (-) TimerEvent: {}
+[26.448301] (-) TimerEvent: {}
+[26.548852] (-) TimerEvent: {}
+[26.650285] (-) TimerEvent: {}
+[26.750904] (-) TimerEvent: {}
+[26.852439] (-) TimerEvent: {}
+[26.953573] (-) TimerEvent: {}
+[27.055427] (-) TimerEvent: {}
+[27.156038] (-) TimerEvent: {}
+[27.258328] (-) TimerEvent: {}
+[27.359513] (-) TimerEvent: {}
+[27.461498] (-) TimerEvent: {}
+[27.562248] (-) TimerEvent: {}
+[27.663794] (-) TimerEvent: {}
+[27.764392] (-) TimerEvent: {}
+[27.866630] (-) TimerEvent: {}
+[27.972424] (-) TimerEvent: {}
+[28.073732] (-) TimerEvent: {}
+[28.175245] (-) TimerEvent: {}
+[28.276939] (-) TimerEvent: {}
+[28.377540] (-) TimerEvent: {}
+[28.479363] (-) TimerEvent: {}
+[28.581826] (-) TimerEvent: {}
+[28.684406] (-) TimerEvent: {}
+[28.785204] (-) TimerEvent: {}
+[28.886400] (-) TimerEvent: {}
+[28.988272] (-) TimerEvent: {}
+[29.089447] (-) TimerEvent: {}
+[29.191418] (-) TimerEvent: {}
+[29.292613] (-) TimerEvent: {}
+[29.394385] (-) TimerEvent: {}
+[29.496383] (-) TimerEvent: {}
+[29.597533] (-) TimerEvent: {}
+[29.698583] (-) TimerEvent: {}
+[29.800324] (-) TimerEvent: {}
+[29.901613] (-) TimerEvent: {}
+[30.004598] (-) TimerEvent: {}
+[30.105411] (-) TimerEvent: {}
+[30.206207] (-) TimerEvent: {}
+[30.307940] (-) TimerEvent: {}
+[30.410345] (-) TimerEvent: {}
+[30.511934] (-) TimerEvent: {}
+[30.613814] (-) TimerEvent: {}
+[30.715461] (-) TimerEvent: {}
+[30.816877] (-) TimerEvent: {}
+[30.917909] (-) TimerEvent: {}
+[31.021210] (-) TimerEvent: {}
+[31.123442] (-) TimerEvent: {}
+[31.225060] (-) TimerEvent: {}
+[31.326363] (-) TimerEvent: {}
+[31.428454] (-) TimerEvent: {}
+[31.529799] (-) TimerEvent: {}
+[31.632264] (-) TimerEvent: {}
+[31.733539] (-) TimerEvent: {}
+[31.835335] (-) TimerEvent: {}
+[31.935899] (-) TimerEvent: {}
+[32.037965] (-) TimerEvent: {}
+[32.142451] (-) TimerEvent: {}
+[32.243928] (-) TimerEvent: {}
+[32.344571] (-) TimerEvent: {}
+[32.445310] (-) TimerEvent: {}
+[32.547392] (-) TimerEvent: {}
+[32.647850] (-) TimerEvent: {}
+[32.749234] (-) TimerEvent: {}
+[32.850700] (-) TimerEvent: {}
+[32.952445] (-) TimerEvent: {}
+[33.053236] (-) TimerEvent: {}
+[33.155274] (-) TimerEvent: {}
+[33.256763] (-) TimerEvent: {}
+[33.358463] (-) TimerEvent: {}
+[33.459719] (-) TimerEvent: {}
+[33.561818] (-) TimerEvent: {}
+[33.662914] (-) TimerEvent: {}
+[33.763629] (-) TimerEvent: {}
+[33.865052] (-) TimerEvent: {}
+[33.965948] (-) TimerEvent: {}
+[34.067343] (-) TimerEvent: {}
+[34.168169] (-) TimerEvent: {}
+[34.270407] (-) TimerEvent: {}
+[34.371829] (-) TimerEvent: {}
+[34.472704] (-) TimerEvent: {}
+[34.573233] (-) TimerEvent: {}
+[34.675399] (-) TimerEvent: {}
+[34.776663] (-) TimerEvent: {}
+[34.878394] (-) TimerEvent: {}
+[34.979604] (-) TimerEvent: {}
+[35.081452] (-) TimerEvent: {}
+[35.142253] (nav2_voronoi_planner) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable voronoi_node\x1b[0m\n'}
+[35.181943] (-) TimerEvent: {}
+[35.283924] (-) TimerEvent: {}
+[35.384668] (-) TimerEvent: {}
+[35.485941] (-) TimerEvent: {}
+[35.587042] (-) TimerEvent: {}
+[35.687821] (-) TimerEvent: {}
+[35.788963] (-) TimerEvent: {}
+[35.890690] (-) TimerEvent: {}
+[35.992261] (-) TimerEvent: {}
+[36.092901] (-) TimerEvent: {}
+[36.195314] (-) TimerEvent: {}
+[36.296421] (-) TimerEvent: {}
+[36.399266] (-) TimerEvent: {}
+[36.501699] (-) TimerEvent: {}
+[36.559980] (nav2_voronoi_planner) StdoutLine: {'line': b'[100%] Built target voronoi_node\n'}
+[36.587474] (nav2_voronoi_planner) CommandEnded: {'returncode': 0}
+[36.588018] (nav2_voronoi_planner) JobProgress: {'identifier': 'nav2_voronoi_planner', 'progress': 'install'}
+[36.588060] (nav2_voronoi_planner) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/xu/automatic-navigation/build/nav2_voronoi_planner'], 'cwd': '/home/xu/automatic-navigation/build/nav2_voronoi_planner', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'zh_CN:en'), ('USER', 'xu'), ('LC_TIME', 'zh_CN.UTF-8'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d/lib:/home/xu/automatic-navigation/install/dynamicvoronoi/lib:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/xu'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('LC_MONETARY', 'zh_CN.UTF-8'), ('DBUS_STARTER_BUS_TYPE', 'session'), ('SYSTEMD_EXEC_PID', '1628'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/xu/automatic-navigation/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'xu'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'xu'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/xu-virtual-machine:@/tmp/.ICE-unix/1628,unix/xu-virtual-machine:/tmp/.ICE-unix/1628'), ('PAPERSIZE', 'a4'), ('XDG_MENU_PREFIX', 'gnome-'), ('LC_ADDRESS', 'zh_CN.UTF-8'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/9f7a689a_eda4_4f09_8c42_6df64802f2d1'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'zh_CN.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('LC_TELEPHONE', 'zh_CN.UTF-8'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.S3QGM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.117'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('LC_NAME', 'zh_CN.UTF-8'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('LC_MEASUREMENT', 'zh_CN.UTF-8'), ('LC_IDENTIFICATION', 'zh_CN.UTF-8'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/xu/automatic-navigation/build/nav2_voronoi_planner'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('DBUS_STARTER_ADDRESS', 'unix:path=/run/user/1000/bus,guid=98409c1e3c6a370833c576cb69b2168d'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/xu/automatic-navigation/install/nav_slam/lib/python3.10/site-packages:/home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('LC_NUMERIC', 'zh_CN.UTF-8'), ('LC_PAPER', 'zh_CN.UTF-8'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/xu/automatic-navigation/install/nav2_costmap_2d:/home/xu/automatic-navigation/install/dynamicvoronoi:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble')]), 'shell': False}
+[36.602243] (-) TimerEvent: {}
+[36.604390] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[36.605082] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/nav2_voronoi_planner/voronoi_node\n'}
+[36.622794] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Set runtime path of "/home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/nav2_voronoi_planner/voronoi_node" to ""\n'}
+[36.623029] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/voronoi_planner_plugin.xml\n'}
+[36.623157] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/libnav2_voronoi_planner.so\n'}
+[36.625303] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/lib/nav2_voronoi_planner/voronoi_planner_tf_broadcaster\n'}
+[36.625434] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include/\n'}
+[36.625577] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner\n'}
+[36.627514] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/node.hpp\n'}
+[36.627634] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/node2d.hpp\n'}
+[36.627722] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/heap.hpp\n'}
+[36.627826] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/voronoi.hpp\n'}
+[36.627910] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/util.hpp\n'}
+[36.627993] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/voronoi_planner.hpp\n'}
+[36.629085] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/include//nav2_voronoi_planner/constants.hpp\n'}
+[36.629245] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/voronoi_planner_plugin.xml\n'}
+[36.629345] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/library_path.sh\n'}
+[36.629436] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/library_path.dsv\n'}
+[36.629523] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/package_run_dependencies/nav2_voronoi_planner\n'}
+[36.629671] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/parent_prefix_path/nav2_voronoi_planner\n'}
+[36.629762] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/ament_prefix_path.sh\n'}
+[36.629860] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/ament_prefix_path.dsv\n'}
+[36.629946] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/path.sh\n'}
+[36.630030] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/environment/path.dsv\n'}
+[36.630113] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.bash\n'}
+[36.630237] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.sh\n'}
+[36.630322] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.zsh\n'}
+[36.630406] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/local_setup.dsv\n'}
+[36.630489] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Installing: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.dsv\n'}
+[36.630575] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/packages/nav2_voronoi_planner\n'}
+[36.630657] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/ament_index/resource_index/nav2_core__pluginlib__plugin/nav2_voronoi_planner\n'}
+[36.630739] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_include_directories-extras.cmake\n'}
+[36.630822] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_libraries-extras.cmake\n'}
+[36.630904] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[36.630986] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/nav2_voronoi_plannerConfig.cmake\n'}
+[36.631068] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/cmake/nav2_voronoi_plannerConfig-version.cmake\n'}
+[36.631172] (nav2_voronoi_planner) StdoutLine: {'line': b'-- Up-to-date: /home/xu/automatic-navigation/install/nav2_voronoi_planner/share/nav2_voronoi_planner/package.xml\n'}
+[36.633600] (nav2_voronoi_planner) CommandEnded: {'returncode': 0}
+[36.663422] (nav2_voronoi_planner) JobEnded: {'identifier': 'nav2_voronoi_planner', 'rc': 0}
+[36.667521] (-) EventReactorShutdown: {}

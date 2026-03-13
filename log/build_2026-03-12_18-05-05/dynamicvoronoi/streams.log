@@ -1,0 +1,33 @@
+[0.049s] Invoking command in '/home/xu/automatic-navigation/build/dynamicvoronoi': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --build /home/xu/automatic-navigation/build/dynamicvoronoi -- -j2 -l2
+[0.284s] [100%] Built target dynamicvoronoi
+[0.681s] Invoked command in '/home/xu/automatic-navigation/build/dynamicvoronoi' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --build /home/xu/automatic-navigation/build/dynamicvoronoi -- -j2 -l2
+[0.706s] Invoking command in '/home/xu/automatic-navigation/build/dynamicvoronoi': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --install /home/xu/automatic-navigation/build/dynamicvoronoi
+[0.724s] -- Install configuration: ""
+[0.724s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/lib/libdynamicvoronoi.so
+[0.725s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include/
+[0.726s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi
+[0.727s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/point.h
+[0.727s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/dynamicvoronoi.h
+[0.728s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/include//dynamicvoronoi/bucketedqueue.h
+[0.731s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/library_path.sh
+[0.731s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/library_path.dsv
+[0.731s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/package_run_dependencies/dynamicvoronoi
+[0.731s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/parent_prefix_path/dynamicvoronoi
+[0.731s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/ament_prefix_path.sh
+[0.732s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/ament_prefix_path.dsv
+[0.732s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/path.sh
+[0.733s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/environment/path.dsv
+[0.733s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.bash
+[0.740s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.sh
+[0.740s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.zsh
+[0.740s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/local_setup.dsv
+[0.740s] -- Installing: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.dsv
+[0.740s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/ament_index/resource_index/packages/dynamicvoronoi
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiTargetsExport.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiTargetsExport-noconfig.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/ament_cmake_export_include_directories-extras.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/ament_cmake_export_targets-extras.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiConfig.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/cmake/dynamicvoronoiConfig-version.cmake
+[0.741s] -- Up-to-date: /home/xu/automatic-navigation/install/dynamicvoronoi/share/dynamicvoronoi/package.xml
+[0.756s] Invoked command in '/home/xu/automatic-navigation/build/dynamicvoronoi' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/xu/automatic-navigation/install/nav_slam:/home/xu/automatic-navigation/install/gazebo_modele:/opt/ros/humble /usr/bin/cmake --install /home/xu/automatic-navigation/build/dynamicvoronoi
