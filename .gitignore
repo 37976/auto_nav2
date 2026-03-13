@@ -1,2 +1,5 @@
 sync.sh
 .vscode
+build
+install
+log

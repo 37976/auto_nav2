@@ -5,6 +5,7 @@
 /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/launch/gazebo.launch.py
 /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/urdf/model.urdf
 /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world/fixroom.world
+/home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world/3dnew.world
 /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world/2d.world
 /home/xu/automatic-navigation/install/gazebo_modele/share/gazebo_modele/world/3d.world
 /home/xu/automatic-navigation/install/gazebo_modele/lib/python3.10/site-packages/gazebo_modele-0.0.0-py3.10.egg-info/SOURCES.txt
