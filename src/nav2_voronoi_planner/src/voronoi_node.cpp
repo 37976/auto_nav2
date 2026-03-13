@@ -16,6 +16,7 @@
 #include "nav_msgs/msg/path.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 
 #include "nav2_voronoi_planner/voronoi.hpp"
 #include "nav2_voronoi_planner/util.hpp"
@@ -35,6 +36,7 @@ public:
     unknown_is_obstacle_ = this->declare_parameter<bool>("unknown_is_obstacle", true);
     publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);
     goal_tolerance_ = this->declare_parameter<double>("goal_tolerance", 0.2);
+    cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
 
     // 订阅 / 发布，尽量对齐你现有 astar 节点接口
     map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -102,6 +104,7 @@ private:
     if (last_goal_.header.frame_id.empty() && has_map_) {
       last_goal_.header.frame_id = map_->header.frame_id;
     }
+    goal_reached_ = false;
     has_goal_ = true;
 
     tryPlan();
@@ -304,8 +307,29 @@ private:
     return output_path;
   }
 
+  void publishStopCmd()
+  {
+    geometry_msgs::msg::Twist stop_cmd;
+    stop_cmd.linear.x = 0.0;
+    stop_cmd.linear.y = 0.0;
+    stop_cmd.linear.z = 0.0;
+    stop_cmd.angular.x = 0.0;
+    stop_cmd.angular.y = 0.0;
+    stop_cmd.angular.z = 0.0;
+
+    // 连续发几次，避免底盘/仿真继续沿用上一帧速度
+    for (int i = 0; i < 5; ++i) {
+      cmd_vel_pub_->publish(stop_cmd);
+      cout<<"wocaonimade!!!!!!!!"<<endl;
+    }
+  }
+  
   void tryPlan()
   {
+    if (goal_reached_) {
+      return;
+    }
+
     if (!has_map_) {
       RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "No /combined_grid received yet.");
       return;
@@ -325,6 +349,18 @@ private:
     double distance = std::hypot(dx, dy);
 
     if (distance <= goal_tolerance_) {
+      goal_reached_ = true;
+      has_goal_ = false;
+
+      nav_msgs::msg::Path empty_path;
+      empty_path.header.frame_id = map_->header.frame_id;
+      empty_path.header.stamp = this->now();
+      path_pub_->publish(empty_path);
+      path2_pub_->publish(empty_path);
+
+      publishStopCmd();
+
+      RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
       return;
     }
 
@@ -610,6 +646,7 @@ private:
   bool has_map_ {false};
   bool has_odom_ {false};
   bool has_goal_ {false};
+  bool goal_reached_ {false};
 
   double robot_radius_ {0.20};
   int occ_threshold_ {50};
@@ -623,6 +660,7 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path2_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
 
   std::unique_ptr<Voronoi> voronoi_planner_;
 };

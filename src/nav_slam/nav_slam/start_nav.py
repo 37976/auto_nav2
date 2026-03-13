@@ -75,7 +75,10 @@ class PathFollowingNode(Node):
         self.path_points_list = [[p.pose.position.x, p.pose.position.y] for p in msg.poses]
 
         if len(self.path_points_list) < 2:
-            self.get_logger().warn("Received path is too short.")
+            self.get_logger().warn("Received path is too short. Stop robot.")
+            self.path_points = None
+            self.path_received = False
+            self.stop_robot()
             return
 
         self.path_points = np.array(self.path_points_list)
@@ -112,9 +115,23 @@ class PathFollowingNode(Node):
             return min(target, current + step)
         else:
             return max(target, current - step)
+    
+    def stop_robot(self):
+        cmd_vel_msg = Twist()
+        cmd_vel_msg.linear.x = 0.0
+        cmd_vel_msg.angular.z = 0.0
+
+        # 清零内部平滑状态，避免残留速度
+        self.last_linear_x = 0.0
+        self.last_angular_z = 0.0
+
+        # 连续发几次零速度，更稳
+        for _ in range(5):
+            self.cmd_vel_publisher.publish(cmd_vel_msg)
 
     def odometry_callback(self, msg):
         if not self.path_received or self.path_points is None:
+            self.stop_robot()
             return
 
         self.current_odom = msg
