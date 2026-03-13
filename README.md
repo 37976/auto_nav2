@@ -1,4 +1,4 @@
-# Pure-tracking-slam-automatic-navigation-system
+# AUTO_NAV2_VORONOI
 simulate，ros2，gazebo，navigation，slam，voronoi
 
 
