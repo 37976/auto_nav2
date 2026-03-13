@@ -23,10 +23,7 @@ git clone https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-sy
 ```
 ros2 launch gazebo_modele gazebo.launch.py
 ```
-###  启动阿克曼su7仿真
-```
-ros2 launch four_wheeled_vehicle vehicle_gazebo_ok.launch.py
-```
+
 ###  启动导航
 ```
 ros2 launch nav_slam 2dpoints.launch.py
