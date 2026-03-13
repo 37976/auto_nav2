@@ -1,13 +1,7 @@
 # Pure-tracking-slam-automatic-navigation-system
-simulate，ros2，gazebo，navigation，slam
+simulate，ros2，gazebo，navigation，slam, voronoi
 
 
-
-<!--
- * @作者: boxing
- * @b号: 喵了个水蓝蓝
- * @描述: README
--->
 ## 注意当前分支代码为humble版本
 
 # 基于ROS2实现的差速机器人，slam（建图定位），导航控制（纯追踪）,实现用voronoi全局规划路径
