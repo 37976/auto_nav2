@@ -12,15 +12,6 @@ simulate，ros2，gazebo，navigation，slam
 
 # 基于ROS2实现的差速机器人，slam（建图定位），导航控制（纯追踪）,实现用voronoi全局规划路径
 
-![image](https://github.com/user-attachments/assets/baac6889-d251-4891-8d21-c47fa4b45a33)
-
-
-# 还包含su7模型的阿克曼底盘
-<img width="2344" height="1400" alt="image" src="https://github.com/user-attachments/assets/9a933d84-e864-4fbf-98d5-312a79838130" />
-此模型放在：
-链接: https://pan.baidu.com/s/1geyZbNclzaeNOMe9bcLUvg?pwd=rwqb 提取码: rwqb
-
-
 ## 安装运行
 
 ```
