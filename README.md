@@ -1,5 +1,5 @@
 # Pure-tracking-slam-automatic-navigation-system
-simulate，ros2，gazebo，navigation，slam, voronoi
+simulate，ros2，gazebo，navigation，slam，voronoi
 
 
 ## 注意当前分支代码为humble版本
@@ -9,7 +9,7 @@ simulate，ros2，gazebo，navigation，slam, voronoi
 ## 安装运行
 
 ```
-git clone https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-system.git
+git clone https://github.com/37976/auto_nav2.git
 ```
 
 ## 运行测试
