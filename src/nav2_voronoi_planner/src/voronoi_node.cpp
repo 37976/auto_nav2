@@ -8,6 +8,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
+#include <functional>
+#include <iostream>
 
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -37,6 +41,7 @@ public:
     publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);
     goal_tolerance_ = this->declare_parameter<double>("goal_tolerance", 0.2);
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
+    skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
 
     // 订阅 / 发布，尽量对齐你现有 astar 节点接口
     map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -67,6 +72,333 @@ private:
     int ox;
     int oy;
   };
+
+  struct GridPoint
+  {
+    int x;
+    int y;
+
+    bool operator==(const GridPoint & other) const
+    {
+      return x == other.x && y == other.y;
+    }
+  };
+
+  struct GridPointHash
+  {
+    std::size_t operator()(const GridPoint & p) const
+    {
+      return std::hash<int>()(p.x * 73856093 ^ p.y * 19349663);
+    }
+  };
+
+  using GridPath = std::vector<GridPoint>;
+
+  int toIndex(int x, int y, int w) const
+  {
+    return y * w + x;
+  }
+
+  GridPoint fromIndex(int idx, int w) const
+  {
+    GridPoint p;
+    p.x = idx % w;
+    p.y = idx / w;
+    return p;
+  }
+
+  bool isFreeCell(int x, int y, const nav_msgs::msg::OccupancyGrid & grid) const
+  {
+    const int w = static_cast<int>(grid.info.width);
+    const int h = static_cast<int>(grid.info.height);
+
+    if (!isInside(x, y, w, h)) {
+      return false;
+    }
+
+    const int8_t v = grid.data[x + y * w];
+    return !isObstacle(v);
+  }
+
+  bool lineOfSightFree(int x0, int y0, int x1, int y1, const nav_msgs::msg::OccupancyGrid & grid) const
+  {
+    int dx = std::abs(x1 - x0);
+    int dy = std::abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+
+    int x = x0;
+    int y = y0;
+
+    while (true) {
+      if (!isFreeCell(x, y, grid)) {
+        return false;
+      }
+
+      if (x == x1 && y == y1) {
+        break;
+      }
+
+      int e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y += sy;
+      }
+    }
+
+    return true;
+  }
+
+  GridPath reconstructGridPath(
+    const std::unordered_map<int, int> & parent,
+    int start_idx,
+    int goal_idx,
+    int w) const
+  {
+    GridPath path;
+    int cur = goal_idx;
+    path.push_back(fromIndex(cur, w));
+
+    while (cur != start_idx) {
+      auto it = parent.find(cur);
+      if (it == parent.end()) {
+        return {};
+      }
+      cur = it->second;
+      path.push_back(fromIndex(cur, w));
+    }
+
+    std::reverse(path.begin(), path.end());
+    return path;
+  }
+
+  bool findNearestReachableVoronoiPoint(
+  const GridPoint & start,
+  const std::vector<std::vector<VoronoiData>> & gvd_map,
+  const nav_msgs::msg::OccupancyGrid & grid,
+  GridPoint & voronoi_pt,
+  GridPath & connector_path)
+  {
+    const int w = static_cast<int>(grid.info.width);
+    const int h = static_cast<int>(grid.info.height);
+
+    if (!isInside(start.x, start.y, w, h) || !isFreeCell(start.x, start.y, grid)) {
+      return false;
+    }
+
+    using QNode = std::pair<double, int>;  // cost, idx
+    std::priority_queue<QNode, std::vector<QNode>, std::greater<QNode>> open;
+
+    std::vector<double> g_score(w * h, std::numeric_limits<double>::infinity());
+    std::unordered_map<int, int> parent;
+
+    const int start_idx = toIndex(start.x, start.y, w);
+    g_score[start_idx] = 0.0;
+    open.push({0.0, start_idx});
+
+    const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+    const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+    while (!open.empty()) {
+      auto [cur_cost, cur_idx] = open.top();
+      open.pop();
+
+      if (cur_cost > g_score[cur_idx]) {
+        continue;
+      }
+
+      GridPoint cur = fromIndex(cur_idx, w);
+
+      // 起点自己如果就在骨架上，也允许直接返回
+      if (gvd_map[cur.x][cur.y].is_voronoi) {
+        voronoi_pt = cur;
+        connector_path = reconstructGridPath(parent, start_idx, cur_idx, w);
+        return !connector_path.empty();
+      }
+
+      for (int k = 0; k < 8; ++k) {
+        int nx = cur.x + dx[k];
+        int ny = cur.y + dy[k];
+
+        if (!isInside(nx, ny, w, h)) {
+          continue;
+        }
+        if (!isFreeCell(nx, ny, grid)) {
+          continue;
+        }
+
+        double step = (k < 4) ? 1.0 : std::sqrt(2.0);
+        int nidx = toIndex(nx, ny, w);
+        double ng = cur_cost + step;
+
+        if (ng < g_score[nidx]) {
+          g_score[nidx] = ng;
+          parent[nidx] = cur_idx;
+          open.push({ng, nidx});
+        }
+      }
+    }
+
+    return false;
+  }
+
+  bool searchVoronoiOnly(
+  const GridPoint & start_v,
+  const GridPoint & goal_v,
+  const std::vector<std::vector<VoronoiData>> & gvd_map,
+  GridPath & voronoi_path)
+  {
+    if (gvd_map.empty()) {
+      return false;
+    }
+
+    const int w = static_cast<int>(gvd_map.size());
+    const int h = static_cast<int>(gvd_map[0].size());
+
+    if (!isInside(start_v.x, start_v.y, w, h) || !isInside(goal_v.x, goal_v.y, w, h)) {
+      return false;
+    }
+    if (!gvd_map[start_v.x][start_v.y].is_voronoi || !gvd_map[goal_v.x][goal_v.y].is_voronoi) {
+      return false;
+    }
+
+    using QNode = std::pair<double, int>;  // f, idx
+    std::priority_queue<QNode, std::vector<QNode>, std::greater<QNode>> open;
+
+    std::vector<double> g_score(w * h, std::numeric_limits<double>::infinity());
+    std::unordered_map<int, int> parent;
+
+    auto heuristic = [&](int x, int y) {
+      return std::hypot(static_cast<double>(x - goal_v.x), static_cast<double>(y - goal_v.y));
+    };
+
+    const int start_idx = toIndex(start_v.x, start_v.y, w);
+    const int goal_idx = toIndex(goal_v.x, goal_v.y, w);
+
+    g_score[start_idx] = 0.0;
+    open.push({heuristic(start_v.x, start_v.y), start_idx});
+
+    const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+    const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+    while (!open.empty()) {
+      auto [f, cur_idx] = open.top();
+      open.pop();
+
+      if (cur_idx == goal_idx) {
+        voronoi_path = reconstructGridPath(parent, start_idx, goal_idx, w);
+        return !voronoi_path.empty();
+      }
+
+      GridPoint cur = fromIndex(cur_idx, w);
+
+      for (int k = 0; k < 8; ++k) {
+        int nx = cur.x + dx[k];
+        int ny = cur.y + dy[k];
+
+        if (!isInside(nx, ny, w, h)) {
+          continue;
+        }
+
+        // 只允许骨架点
+        if (!gvd_map[nx][ny].is_voronoi) {
+          continue;
+        }
+
+        double move_cost = (k < 4) ? 1.0 : std::sqrt(2.0);
+
+        // 可选：鼓励远离障碍，dist 越大越安全，代价越小
+        double clearance = gvd_map[nx][ny].dist;
+        double safety_penalty = 0.0;
+        if (clearance > 1e-6) {
+          safety_penalty = 0.15 / clearance;
+        } else {
+          safety_penalty = 1000.0;
+        }
+
+        double tentative_g = g_score[cur_idx] + move_cost + safety_penalty;
+        int nidx = toIndex(nx, ny, w);
+
+        if (tentative_g < g_score[nidx]) {
+          g_score[nidx] = tentative_g;
+          parent[nidx] = cur_idx;
+          double f_score = tentative_g + heuristic(nx, ny);
+          open.push({f_score, nidx});
+        }
+      }
+    }
+
+    return false;
+  }
+
+  void appendPathNoDuplicate(GridPath & dst, const GridPath & src)
+  {
+    if (src.empty()) {
+      return;
+    }
+
+    if (dst.empty()) {
+      dst = src;
+      return;
+    }
+
+    size_t start_i = 0;
+    if (dst.back() == src.front()) {
+      start_i = 1;
+    }
+
+    for (size_t i = start_i; i < src.size(); ++i) {
+      dst.push_back(src[i]);
+    }
+  }
+
+  void PopulateGridPath(
+  const GridPath & searched_result,
+  const std_msgs::msg::Header & header,
+  double resolution,
+  double origin_x,
+  double origin_y,
+  nav_msgs::msg::Path & plan)
+  {
+    plan.poses.clear();
+    plan.header = header;
+
+    if (searched_result.empty()) {
+      return;
+    }
+
+    for (size_t i = 0; i < searched_result.size(); ++i) {
+      geometry_msgs::msg::PoseStamped pose_stamped;
+      pose_stamped.header = header;
+      pose_stamped.pose.position.x = DiscXY2Cont(searched_result[i].x, resolution) + origin_x;
+      pose_stamped.pose.position.y = DiscXY2Cont(searched_result[i].y, resolution) + origin_y;
+      pose_stamped.pose.position.z = 0.0;
+
+      double yaw = 0.0;
+      if (i + 1 < searched_result.size()) {
+        double dx = static_cast<double>(searched_result[i + 1].x - searched_result[i].x);
+        double dy = static_cast<double>(searched_result[i + 1].y - searched_result[i].y);
+        yaw = std::atan2(dy, dx);
+      } else if (i > 0) {
+        double dx = static_cast<double>(searched_result[i].x - searched_result[i - 1].x);
+        double dy = static_cast<double>(searched_result[i].y - searched_result[i - 1].y);
+        yaw = std::atan2(dy, dx);
+      }
+
+      tf2::Quaternion quaternion;
+      quaternion.setRPY(0.0, 0.0, yaw);
+      pose_stamped.pose.orientation = tf2::toMsg(quaternion);
+
+      plan.poses.push_back(pose_stamped);
+    }
+  }
+
+
 
   void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
   {
@@ -288,6 +620,42 @@ private:
     return output_path;
   }
 
+  void publishVoronoiSkeleton(
+  const std::vector<std::vector<VoronoiData>> & gvd_map,
+  const nav_msgs::msg::OccupancyGrid & src_grid)
+  {
+    nav_msgs::msg::OccupancyGrid skeleton;
+    skeleton.header.frame_id = src_grid.header.frame_id;
+    skeleton.header.stamp = this->now();
+    skeleton.info = src_grid.info;
+
+    const int w = static_cast<int>(src_grid.info.width);
+    const int h = static_cast<int>(src_grid.info.height);
+
+    skeleton.data.assign(w * h, -1);
+
+    for (int x = 0; x < w; ++x) {
+      for (int y = 0; y < h; ++y) {
+        int idx = x + y * w;
+
+        // 障碍物显示为 100
+        if (isObstacle(src_grid.data[idx])) {
+          skeleton.data[idx] = 100;
+        }
+        // 骨架显示为 0 或 50 都行，这里设成 0 方便和障碍区分
+        else if (gvd_map[x][y].is_voronoi) {
+          skeleton.data[idx] = 0;
+        }
+        // 其他自由区设成 -1，表示不显示或透明
+        else {
+          skeleton.data[idx] = -1;
+        }
+      }
+    }
+
+    skeleton_pub_->publish(skeleton);
+  }
+
   static nav_msgs::msg::Path downsamplePath(const nav_msgs::msg::Path& input_path, int step = 2)
   {
     nav_msgs::msg::Path output_path;
@@ -320,7 +688,7 @@ private:
     // 连续发几次，避免底盘/仿真继续沿用上一帧速度
     for (int i = 0; i < 5; ++i) {
       cmd_vel_pub_->publish(stop_cmd);
-      cout<<"wocaonimade!!!!!!!!"<<endl;
+      //cout<<"wocaonimade!!!!!!!!"<<endl;
     }
   }
   
@@ -363,6 +731,8 @@ private:
       RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
       return;
     }
+
+    
 
     geometry_msgs::msg::PoseStamped start;
     start.header.frame_id = map_->header.frame_id;
@@ -407,25 +777,35 @@ private:
     const double resolution = map_->info.resolution;
     const double origin_x = map_->info.origin.position.x;
     const double origin_y = map_->info.origin.position.y;
-    const unsigned int size_x = map_->info.width;
-    const unsigned int size_y = map_->info.height;
+    const int size_x = static_cast<int>(map_->info.width);
+    const int size_y = static_cast<int>(map_->info.height);
 
     int start_x = 0;
     int start_y = 0;
-    int end_x = 0;
-    int end_y = 0;
+    int goal_x = 0;
+    int goal_y = 0;
 
     GetStartAndEndConfigurations(
-      start, goal, resolution, origin_x, origin_y,
-      &start_x, &start_y, &end_x, &end_y);
+    start, goal, resolution, origin_x, origin_y,
+    &start_x, &start_y, &goal_x, &goal_y);
 
-    if (!isInside(start_x, start_y, static_cast<int>(size_x), static_cast<int>(size_y))) {
+    if (!isInside(start_x, start_y, size_x, size_y)) {
       RCLCPP_WARN(this->get_logger(), "Start out of map: (%d, %d)", start_x, start_y);
       return false;
     }
 
-    if (!isInside(end_x, end_y, static_cast<int>(size_x), static_cast<int>(size_y))) {
-      RCLCPP_WARN(this->get_logger(), "Goal out of map: (%d, %d)", end_x, end_y);
+    if (!isInside(goal_x, goal_y, size_x, size_y)) {
+      RCLCPP_WARN(this->get_logger(), "Goal out of map: (%d, %d)", goal_x, goal_y);
+      return false;
+    }
+
+    if (!isFreeCell(start_x, start_y, *map_)) {
+      RCLCPP_WARN(this->get_logger(), "Start is occupied or unknown.");
+      return false;
+    }
+
+    if (!isFreeCell(goal_x, goal_y, *map_)) {
+      RCLCPP_WARN(this->get_logger(), "Goal is occupied or unknown.");
       return false;
     }
 
@@ -437,27 +817,66 @@ private:
       return false;
     }
 
-    std::vector<std::pair<int, int>> path;
-    if (!voronoi_planner_->Search(start_x, start_y, end_x, end_y, std::move(gvd_map), &path)) {
-      RCLCPP_WARN(this->get_logger(), "Voronoi::Search failed.");
+    publishVoronoiSkeleton(gvd_map, *map_);
+
+    GridPoint S{start_x, start_y};
+    GridPoint G{goal_x, goal_y};
+
+    GridPoint Vs, Vg;
+    GridPath path_s, path_g, path_v;
+
+    // 起点接入骨架
+    if (!findNearestReachableVoronoiPoint(S, gvd_map, *map_, Vs, path_s)) {
+      RCLCPP_WARN(this->get_logger(), "Cannot connect start to Voronoi skeleton.");
       return false;
     }
 
-    if (path.empty()) {
-      RCLCPP_WARN(this->get_logger(), "Voronoi path is empty.");
+    // 终点接入骨架
+    if (!findNearestReachableVoronoiPoint(G, gvd_map, *map_, Vg, path_g)) {
+      RCLCPP_WARN(this->get_logger(), "Cannot connect goal to Voronoi skeleton.");
       return false;
     }
 
-    PopulateVoronoiPath(path, plan.header, resolution, origin_x, origin_y, plan);
+    // 特殊情况：如果起点和终点直线可达，而且距离很近，可以直接走
+    double sg_dist = std::hypot(static_cast<double>(goal_x - start_x), static_cast<double>(goal_y - start_y));
+    if (sg_dist < 6.0 && lineOfSightFree(start_x, start_y, goal_x, goal_y, *map_)) {
+      GridPath direct_path;
+      direct_path.push_back(S);
+      direct_path.push_back(G);
+      PopulateGridPath(direct_path, plan.header, resolution, origin_x, origin_y, plan);
+      return !plan.poses.empty();
+    }
 
-    // 保证目标点被加进去
-    plan.poses.push_back(goal);
+    // 骨架主干搜索
+    if (!searchVoronoiOnly(Vs, Vg, gvd_map, path_v)) {
+      RCLCPP_WARN(this->get_logger(), "Cannot find Voronoi trunk path from start skeleton to goal skeleton.");
+      return false;
+    }
 
-    // 兼容你原插件里的额外标记点
-    geometry_msgs::msg::PoseStamped mark_pose;
-    mark_pose.header = plan.header;
-    mark_pose.pose = goal.pose;
-    plan.poses.push_back(mark_pose);
+    // path_g 当前是 G -> Vg，需要翻转成 Vg -> G
+    std::reverse(path_g.begin(), path_g.end());
+
+    GridPath full_path;
+    appendPathNoDuplicate(full_path, path_s);
+    appendPathNoDuplicate(full_path, path_v);
+    appendPathNoDuplicate(full_path, path_g);
+
+    if (full_path.empty()) {
+      RCLCPP_WARN(this->get_logger(), "Merged final path is empty.");
+      return false;
+    }
+
+    PopulateGridPath(full_path, plan.header, resolution, origin_x, origin_y, plan);
+
+    // 强制末点与原始 goal 一致，避免栅格中心和目标点有小偏差
+    if (!plan.poses.empty()) {
+      plan.poses.back() = goal;
+    }
+
+    RCLCPP_INFO(
+      this->get_logger(),
+      "Voronoi 3-stage plan success: start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu",
+      path_s.size(), path_v.size(), path_g.size(), full_path.size());
 
     return true;
   }
@@ -661,6 +1080,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path2_pub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
+  rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr skeleton_pub_;
 
   std::unique_ptr<Voronoi> voronoi_planner_;
 };
