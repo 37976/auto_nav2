@@ -47,6 +47,10 @@ def generate_launch_description():
         executable='map_pub',
         name='map_pub',
         output='screen',
+        parameters=[{
+            'use_static_map': True,
+            'static_map_yaml': '/home/xu/automatic-navigation/src/nav_slam/map/gpt.yaml'
+        }]
     )
     odom_map_tf = Node(# 发布odom到map的坐标转换
         package='nav_slam',

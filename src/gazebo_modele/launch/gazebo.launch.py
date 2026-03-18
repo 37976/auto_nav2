@@ -38,7 +38,7 @@ def generate_launch_description():
     pkg_share = FindPackageShare(package=package_name).find(package_name) 
     urdf_model_path = os.path.join(pkg_share, f'urdf/{urdf_name}')
     
-    gazebo_world_path = os.path.join(pkg_share, 'world/3d.world')
+    gazebo_world_path = os.path.join(pkg_share, 'world/gpt.world')
 
 
     start_gazebo_cmd = ExecuteProcess(
