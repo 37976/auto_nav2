@@ -882,7 +882,7 @@ private:
   }
 
   std::vector<std::vector<VoronoiData>> buildVoronoiDiagramFromOccupancyGrid(
-    const nav_msgs::msg::OccupancyGrid & grid)
+  const nav_msgs::msg::OccupancyGrid & grid)
   {
     const int w = static_cast<int>(grid.info.width);
     const int h = static_cast<int>(grid.info.height);
@@ -895,73 +895,122 @@ private:
 
     gvd_map.resize(w, std::vector<VoronoiData>(h));
 
-    // 记录每个栅格最近障碍源
-    std::vector<std::vector<float>> dist_map(
-      w, std::vector<float>(h, std::numeric_limits<float>::infinity()));
-    std::vector<std::vector<ObstacleSeed>> seed_map(
-      w, std::vector<ObstacleSeed>(h, {-1, -1}));
+    struct SeedInfo
+    {
+      int ox;
+      int oy;
+    };
 
-    std::queue<std::pair<int, int>> q;
+    struct QueueNode
+    {
+      double dist;
+      int x;
+      int y;
+      int seed_x;
+      int seed_y;
 
-    // 初始化：把所有障碍作为 BFS 源点
+      bool operator>(const QueueNode & other) const
+      {
+        return dist > other.dist;
+      }
+    };
+
+    const double INF = std::numeric_limits<double>::infinity();
+
+    // 最近障碍距离
+    std::vector<std::vector<double>> dist_map(
+      w, std::vector<double>(h, INF));
+
+    // 最近障碍源
+    std::vector<std::vector<SeedInfo>> seed_map(
+      w, std::vector<SeedInfo>(h, {-1, -1}));
+
+    // 多源 Dijkstra 小根堆
+    std::priority_queue<
+      QueueNode,
+      std::vector<QueueNode>,
+      std::greater<QueueNode>> open;
+
+    // 8邻域
+    const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+    const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+    // 1) 所有障碍点作为源点
     for (int x = 0; x < w; ++x) {
       for (int y = 0; y < h; ++y) {
-        const int8_t v = grid.data[x + y * w];
+        const int idx = x + y * w;
+        const int8_t v = grid.data[idx];
+
         if (isObstacle(v)) {
-          dist_map[x][y] = 0.0f;
+          dist_map[x][y] = 0.0;
           seed_map[x][y] = {x, y};
-          q.push({x, y});
+          open.push({0.0, x, y, x, y});
         }
       }
     }
 
-    // 如果没有障碍物，无法构造有效 Voronoi 图
-    if (q.empty()) {
+    if (open.empty()) {
       RCLCPP_WARN(this->get_logger(), "No obstacle cell found in /combined_grid.");
       return {};
     }
 
-    // 8邻域传播最近障碍种子
-    const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
-    const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+    // 2) 多源 Dijkstra：为每个自由格找最近障碍源
+    while (!open.empty()) {
+      QueueNode cur = open.top();
+      open.pop();
 
-    while (!q.empty()) {
-      auto [cx, cy] = q.front();
-      q.pop();
+      if (cur.dist > dist_map[cur.x][cur.y]) {
+        continue;
+      }
 
       for (int k = 0; k < 8; ++k) {
-        const int nx = cx + dx[k];
-        const int ny = cy + dy[k];
+        const int nx = cur.x + dx[k];
+        const int ny = cur.y + dy[k];
+
         if (!isInside(nx, ny, w, h)) {
           continue;
         }
 
-        const auto & seed = seed_map[cx][cy];
-        if (seed.ox < 0 || seed.oy < 0) {
-          continue;
-        }
-
-        float nd = std::hypot(
-          static_cast<float>(nx - seed.ox),
-          static_cast<float>(ny - seed.oy));
+        // 注意：这里不是累加 step，而是直接算“邻居点到该 seed 的欧氏距离”
+        // 用 Dijkstra 的扩展顺序保证最近 seed 归属更稳定
+        const double nd = std::hypot(
+          static_cast<double>(nx - cur.seed_x),
+          static_cast<double>(ny - cur.seed_y));
 
         if (nd < dist_map[nx][ny]) {
           dist_map[nx][ny] = nd;
-          seed_map[nx][ny] = seed;
-          q.push({nx, ny});
+          seed_map[nx][ny] = {cur.seed_x, cur.seed_y};
+          open.push({nd, nx, ny, cur.seed_x, cur.seed_y});
         }
       }
     }
 
-    // 依据邻居是否对应不同最近障碍，粗略提取 Voronoi 骨架
+    // 3) 先填 dist，默认不是骨架
     for (int x = 0; x < w; ++x) {
       for (int y = 0; y < h; ++y) {
-        gvd_map[x][y].dist = static_cast<double>(dist_map[x][y]) * resolution;
+        gvd_map[x][y].dist = dist_map[x][y] * resolution;
         gvd_map[x][y].is_voronoi = false;
+      }
+    }
 
-        const int8_t v = grid.data[x + y * w];
+    // 安全距离阈值：离障碍太近的点，不参与骨架
+    // 你也可以改成 robot_radius_ + resolution
+    const double min_clearance = std::max(robot_radius_, resolution * 1.5);
+
+    // 4) 粗骨架提取：
+    // 若某点周围出现“多个不同最近障碍源”，且自身离障碍足够远，则判成骨架候选点
+    std::vector<std::vector<uint8_t>> candidate(w, std::vector<uint8_t>(h, 0));
+
+    for (int x = 0; x < w; ++x) {
+      for (int y = 0; y < h; ++y) {
+        const int idx = x + y * w;
+        const int8_t v = grid.data[idx];
+
         if (isObstacle(v)) {
-          gvd_map[x][y].is_voronoi = false;
+          continue;
+        }
+
+        if (gvd_map[x][y].dist < min_clearance) {
           continue;
         }
 
@@ -971,10 +1020,22 @@ private:
         }
 
         int different_seed_neighbors = 0;
+        int valid_neighbors = 0;
+
         for (int k = 0; k < 8; ++k) {
           const int nx = x + dx[k];
           const int ny = y + dy[k];
+
           if (!isInside(nx, ny, w, h)) {
+            continue;
+          }
+
+          const int nidx = nx + ny * w;
+          if (isObstacle(grid.data[nidx])) {
+            continue;
+          }
+
+          if (gvd_map[nx][ny].dist < min_clearance) {
             continue;
           }
 
@@ -983,15 +1044,74 @@ private:
             continue;
           }
 
+          valid_neighbors++;
+
           if (neigh_seed.ox != center_seed.ox || neigh_seed.oy != center_seed.oy) {
             different_seed_neighbors++;
           }
         }
 
-        // 一个简单、稳一点的经验阈值
-        if (different_seed_neighbors >= 2) {
-          gvd_map[x][y].is_voronoi = true;
+        // 阈值比你原来更严一点，减少厚骨架和毛刺
+        if (valid_neighbors >= 2 && different_seed_neighbors >= 2) {
+          candidate[x][y] = 1;
         }
+      }
+    }
+
+    // 5) 轻量瘦身 / 去毛刺：
+    // 反复删除“候选骨架中度数<=1”的短刺点，但保留主干
+    auto countCandidateNeighbors = [&](int x, int y, const std::vector<std::vector<uint8_t>> & img) {
+      int c = 0;
+      for (int k = 0; k < 8; ++k) {
+        int nx = x + dx[k];
+        int ny = y + dy[k];
+        if (!isInside(nx, ny, w, h)) {
+          continue;
+        }
+        if (img[nx][ny]) {
+          c++;
+        }
+      }
+      return c;
+    };
+
+    // 迭代几轮去掉孤立点和很短的毛刺
+    for (int iter = 0; iter < 6; ++iter) {
+      std::vector<std::pair<int, int>> to_remove;
+
+      for (int x = 0; x < w; ++x) {
+        for (int y = 0; y < h; ++y) {
+          if (!candidate[x][y]) {
+            continue;
+          }
+
+          int deg = countCandidateNeighbors(x, y, candidate);
+
+          // 删除孤立点和端点附近的小刺
+          if (deg == 0) {
+            to_remove.push_back({x, y});
+          } else if (deg == 1) {
+            // 仅当该点 clearance 不够“大”时才删，避免主干末端被删光
+            if (gvd_map[x][y].dist < (min_clearance + 2.0 * resolution)) {
+              to_remove.push_back({x, y});
+            }
+          }
+        }
+      }
+
+      if (to_remove.empty()) {
+        break;
+      }
+
+      for (const auto & p : to_remove) {
+        candidate[p.first][p.second] = 0;
+      }
+    }
+
+    // 6) 写回 gvd_map
+    for (int x = 0; x < w; ++x) {
+      for (int y = 0; y < h; ++y) {
+        gvd_map[x][y].is_voronoi = (candidate[x][y] != 0);
       }
     }
 

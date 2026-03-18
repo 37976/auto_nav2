@@ -22,6 +22,7 @@ ros2 launch gazebo_modele gazebo.launch.py
 ```
 ros2 launch nav_slam 2dpoints.launch.py
 ```
+![地图](voronoi骨架.jpg)
 
 ###  参考仓库
 https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-system
