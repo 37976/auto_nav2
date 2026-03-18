@@ -22,7 +22,11 @@ ros2 launch gazebo_modele gazebo.launch.py
 ```
 ros2 launch nav_slam 2dpoints.launch.py
 ```
-![地图](voronoi骨架.jpg)
+![3d地图](voronoi骨架.jpg)
+![gpt地图](gpt.png)
+
+###  导航模式
+导航可采用提前预设静态地图导航和纯动态地图导航两种模式，可在launch启动文件中修改配置
 
 ###  参考仓库
 https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-system
