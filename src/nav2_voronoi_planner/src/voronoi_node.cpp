@@ -40,6 +40,9 @@ public:
     unknown_is_obstacle_ = this->declare_parameter<bool>("unknown_is_obstacle", true);
     publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);
     goal_tolerance_ = this->declare_parameter<double>("goal_tolerance", 0.2);
+    plan_period_ms_ = this->declare_parameter<double>("plan_period_ms", 500.0);
+    replan_min_move_ = this->declare_parameter<double>("replan_min_move", 0.15);
+
     cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
     skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
 
@@ -61,9 +64,14 @@ public:
 
     voronoi_planner_ = std::make_unique<Voronoi>();
 
+    plan_timer_ = this->create_wall_timer(
+      std::chrono::milliseconds(static_cast<int>(plan_period_ms_)),
+      std::bind(&VoronoiNode::planTimerCallback, this));
+
     RCLCPP_INFO(this->get_logger(), "VoronoiNode started.");
     RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
-    RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2");
+    RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
+    RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);
   }
 
 private:
@@ -405,6 +413,7 @@ private:
     std::lock_guard<std::mutex> lock(data_mutex_);
     map_ = msg;
     has_map_ = true;
+    map_dirty_ = true;
 
     voronoi_planner_->Init(
       static_cast<int>(map_->info.width),
@@ -417,7 +426,8 @@ private:
       map_->info.width, map_->info.height, map_->info.resolution);
 
     if (has_goal_) {
-      tryPlan();
+      //tryPlan();
+      need_replan_ = true;
     }
   }
 
@@ -438,9 +448,155 @@ private:
     }
     goal_reached_ = false;
     has_goal_ = true;
-
-    tryPlan();
+    need_replan_ = true;
+    //tryPlan();
   }
+
+  void tryPlanWithSnapshot(
+  const nav_msgs::msg::OccupancyGrid::SharedPtr & map_local,
+  const nav_msgs::msg::Odometry::SharedPtr & odom_local,
+  const geometry_msgs::msg::PoseStamped & goal_local)
+  {
+    if (!map_local || !odom_local) {
+      return;
+    }
+
+    double dx = odom_local->pose.pose.position.x - goal_local.pose.position.x;
+    double dy = odom_local->pose.pose.position.y - goal_local.pose.position.y;
+    double distance = std::hypot(dx, dy);
+
+    if (distance <= goal_tolerance_) {
+      {
+        std::lock_guard<std::mutex> lock(data_mutex_);
+        goal_reached_ = true;
+        has_goal_ = false;
+        need_replan_ = false;
+        map_dirty_ = false;
+      }
+
+      nav_msgs::msg::Path empty_path;
+      empty_path.header.frame_id = map_local->header.frame_id;
+      empty_path.header.stamp = this->now();
+
+      path_pub_->publish(empty_path);
+      path2_pub_->publish(empty_path);
+      publishStopCmd();
+
+      RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
+      return;
+    }
+
+    geometry_msgs::msg::PoseStamped start;
+    start.header.frame_id = map_local->header.frame_id;
+    start.header.stamp = this->now();
+    start.pose = odom_local->pose.pose;
+
+    geometry_msgs::msg::PoseStamped goal = goal_local;
+    if (goal.header.frame_id.empty()) {
+      goal.header.frame_id = map_local->header.frame_id;
+    }
+
+    nav_msgs::msg::Path plan;
+    if (!makePlanFromMap(*map_local, start, goal, plan)) {
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(), *this->get_clock(), 2000,
+        "Voronoi replanning failed.");
+      return;
+    }
+
+    path_pub_->publish(plan);
+
+    if (publish_debug_path2_) {
+      nav_msgs::msg::Path smooth = smoothPathBSpline(plan, static_cast<int>(plan.poses.size()), 3);
+      nav_msgs::msg::Path path2 = downsamplePath(smooth, 2);
+      path2_pub_->publish(path2);
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      need_replan_ = false;
+      map_dirty_ = false;
+      last_plan_x_ = odom_local->pose.pose.position.x;
+      last_plan_y_ = odom_local->pose.pose.position.y;
+      has_last_plan_pose_ = true;
+    }
+
+    RCLCPP_INFO_THROTTLE(
+      this->get_logger(), *this->get_clock(), 2000,
+      "Published Voronoi path, size = %zu", plan.poses.size());
+  }
+
+  void planTimerCallback()
+  {
+    nav_msgs::msg::OccupancyGrid::SharedPtr map_local;
+    nav_msgs::msg::Odometry::SharedPtr odom_local;
+    geometry_msgs::msg::PoseStamped goal_local;
+
+    bool goal_reached_local = false;
+    bool has_map_local = false;
+    bool has_odom_local = false;
+    bool has_goal_local = false;
+    bool need_replan_local = false;
+    bool map_dirty_local = false;
+
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+
+      goal_reached_local = goal_reached_;
+      has_map_local = has_map_;
+      has_odom_local = has_odom_;
+      has_goal_local = has_goal_;
+      need_replan_local = need_replan_;
+      map_dirty_local = map_dirty_;
+
+      if (has_map_) {
+        map_local = map_;
+      }
+      if (has_odom_) {
+        odom_local = odom_;
+      }
+      if (has_goal_) {
+        goal_local = last_goal_;
+      }
+    }
+
+    if (goal_reached_local) {
+      return;
+    }
+
+    if (!has_map_local) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 3000, "No /combined_grid received yet.");
+      return;
+    }
+
+    if (!has_odom_local) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 3000, "No /odom received yet.");
+      return;
+    }
+
+    if (!has_goal_local) {
+      return;
+    }
+
+    // 没有请求重规划，也没有地图变化，则不算
+    if (!need_replan_local && !map_dirty_local) {
+      return;
+    }
+
+    // 可选：如果机器人位移很小，而且不是地图变化，可跳过本轮
+    if (has_last_plan_pose_ && !map_dirty_local) {
+      double dx = odom_local->pose.pose.position.x - last_plan_x_;
+      double dy = odom_local->pose.pose.position.y - last_plan_y_;
+      double moved = std::hypot(dx, dy);
+      if (moved < replan_min_move_) {
+        return;
+      }
+    }
+
+    tryPlanWithSnapshot(map_local, odom_local, goal_local);
+  }
+
+
 
     // 三次B样条基函数（均匀 clamped knot 情况下，使用 de Boor 更通用）
   static double deBoorCox(int i, int k, double t, const std::vector<double>& knots)
@@ -692,93 +848,23 @@ private:
     }
   }
   
-  void tryPlan()
+  
+
+  bool makePlanFromMap(
+  const nav_msgs::msg::OccupancyGrid & map,
+  const geometry_msgs::msg::PoseStamped & start,
+  const geometry_msgs::msg::PoseStamped & goal,
+  nav_msgs::msg::Path & plan)
   {
-    if (goal_reached_) {
-      return;
-    }
-
-    if (!has_map_) {
-      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "No /combined_grid received yet.");
-      return;
-    }
-
-    if (!has_odom_) {
-      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, "No /odom received yet.");
-      return;
-    }
-
-    if (!has_goal_) {
-      return;
-    }
-
-    double dx = odom_->pose.pose.position.x - last_goal_.pose.position.x;
-    double dy = odom_->pose.pose.position.y - last_goal_.pose.position.y;
-    double distance = std::hypot(dx, dy);
-
-    if (distance <= goal_tolerance_) {
-      goal_reached_ = true;
-      has_goal_ = false;
-
-      nav_msgs::msg::Path empty_path;
-      empty_path.header.frame_id = map_->header.frame_id;
-      empty_path.header.stamp = this->now();
-      path_pub_->publish(empty_path);
-      path2_pub_->publish(empty_path);
-
-      publishStopCmd();
-
-      RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
-      return;
-    }
-
-    
-
-    geometry_msgs::msg::PoseStamped start;
-    start.header.frame_id = map_->header.frame_id;
-    start.header.stamp = this->now();
-    start.pose = odom_->pose.pose;
-
-    geometry_msgs::msg::PoseStamped goal = last_goal_;
-    if (goal.header.frame_id.empty()) {
-      goal.header.frame_id = map_->header.frame_id;
-    }
-
-    nav_msgs::msg::Path plan;
-    if (!makePlan(start, goal, plan)) {
-      RCLCPP_WARN(this->get_logger(), "Voronoi replanning failed.");
-      return;
-    }
-
-    path_pub_->publish(plan);
-
-    if (publish_debug_path2_) {
-      nav_msgs::msg::Path smooth = smoothPathBSpline(plan, static_cast<int>(plan.poses.size()), 3);
-      nav_msgs::msg::Path path2 = downsamplePath(smooth, 2);
-      path2_pub_->publish(path2);
-    }
-
-    RCLCPP_INFO(this->get_logger(), "Published Voronoi path, size = %zu", plan.poses.size());
-  }
-
-  bool makePlan(
-    const geometry_msgs::msg::PoseStamped & start,
-    const geometry_msgs::msg::PoseStamped & goal,
-    nav_msgs::msg::Path & plan)
-  {
-    if (!has_map_) {
-      return false;
-    }
-
-    plan.header.frame_id = map_->header.frame_id;
+    plan.header.frame_id = map.header.frame_id;
     plan.header.stamp = this->now();
     plan.poses.clear();
 
-    const double resolution = map_->info.resolution;
-    const double origin_x = map_->info.origin.position.x;
-    const double origin_y = map_->info.origin.position.y;
-    const int size_x = static_cast<int>(map_->info.width);
-    const int size_y = static_cast<int>(map_->info.height);
+    const double resolution = map.info.resolution;
+    const double origin_x = map.info.origin.position.x;
+    const double origin_y = map.info.origin.position.y;
+    const int size_x = static_cast<int>(map.info.width);
+    const int size_y = static_cast<int>(map.info.height);
 
     int start_x = 0;
     int start_y = 0;
@@ -786,8 +872,8 @@ private:
     int goal_y = 0;
 
     GetStartAndEndConfigurations(
-    start, goal, resolution, origin_x, origin_y,
-    &start_x, &start_y, &goal_x, &goal_y);
+      start, goal, resolution, origin_x, origin_y,
+      &start_x, &start_y, &goal_x, &goal_y);
 
     if (!isInside(start_x, start_y, size_x, size_y)) {
       RCLCPP_WARN(this->get_logger(), "Start out of map: (%d, %d)", start_x, start_y);
@@ -799,25 +885,25 @@ private:
       return false;
     }
 
-    if (!isFreeCell(start_x, start_y, *map_)) {
+    if (!isFreeCell(start_x, start_y, map)) {
       RCLCPP_WARN(this->get_logger(), "Start is occupied or unknown.");
       return false;
     }
 
-    if (!isFreeCell(goal_x, goal_y, *map_)) {
+    if (!isFreeCell(goal_x, goal_y, map)) {
       RCLCPP_WARN(this->get_logger(), "Goal is occupied or unknown.");
       return false;
     }
 
     std::vector<std::vector<VoronoiData>> gvd_map =
-      buildVoronoiDiagramFromOccupancyGrid(*map_);
+      buildVoronoiDiagramFromOccupancyGrid(map);
 
     if (gvd_map.empty()) {
       RCLCPP_WARN(this->get_logger(), "Failed to build Voronoi diagram from /combined_grid.");
       return false;
     }
 
-    publishVoronoiSkeleton(gvd_map, *map_);
+    publishVoronoiSkeleton(gvd_map, map);
 
     GridPoint S{start_x, start_y};
     GridPoint G{goal_x, goal_y};
@@ -825,35 +911,36 @@ private:
     GridPoint Vs, Vg;
     GridPath path_s, path_g, path_v;
 
-    // 起点接入骨架
-    if (!findNearestReachableVoronoiPoint(S, gvd_map, *map_, Vs, path_s)) {
+    if (!findNearestReachableVoronoiPoint(S, gvd_map, map, Vs, path_s)) {
       RCLCPP_WARN(this->get_logger(), "Cannot connect start to Voronoi skeleton.");
       return false;
     }
 
-    // 终点接入骨架
-    if (!findNearestReachableVoronoiPoint(G, gvd_map, *map_, Vg, path_g)) {
+    if (!findNearestReachableVoronoiPoint(G, gvd_map, map, Vg, path_g)) {
       RCLCPP_WARN(this->get_logger(), "Cannot connect goal to Voronoi skeleton.");
       return false;
     }
 
-    // 特殊情况：如果起点和终点直线可达，而且距离很近，可以直接走
-    double sg_dist = std::hypot(static_cast<double>(goal_x - start_x), static_cast<double>(goal_y - start_y));
-    if (sg_dist < 6.0 && lineOfSightFree(start_x, start_y, goal_x, goal_y, *map_)) {
+    double sg_dist = std::hypot(
+      static_cast<double>(goal_x - start_x),
+      static_cast<double>(goal_y - start_y));
+
+    if (sg_dist < 6.0 && lineOfSightFree(start_x, start_y, goal_x, goal_y, map)) {
       GridPath direct_path;
       direct_path.push_back(S);
       direct_path.push_back(G);
       PopulateGridPath(direct_path, plan.header, resolution, origin_x, origin_y, plan);
+      if (!plan.poses.empty()) {
+        plan.poses.back() = goal;
+      }
       return !plan.poses.empty();
     }
 
-    // 骨架主干搜索
     if (!searchVoronoiOnly(Vs, Vg, gvd_map, path_v)) {
       RCLCPP_WARN(this->get_logger(), "Cannot find Voronoi trunk path from start skeleton to goal skeleton.");
       return false;
     }
 
-    // path_g 当前是 G -> Vg，需要翻转成 Vg -> G
     std::reverse(path_g.begin(), path_g.end());
 
     GridPath full_path;
@@ -868,7 +955,6 @@ private:
 
     PopulateGridPath(full_path, plan.header, resolution, origin_x, origin_y, plan);
 
-    // 强制末点与原始 goal 一致，避免栅格中心和目标点有小偏差
     if (!plan.poses.empty()) {
       plan.poses.back() = goal;
     }
@@ -1192,6 +1278,20 @@ private:
   bool unknown_is_obstacle_ {true};
   bool publish_debug_path2_ {true};
   double goal_tolerance_ {0.2};
+
+  rclcpp::TimerBase::SharedPtr plan_timer_;
+
+  bool need_replan_ {false};
+  bool map_dirty_ {false};
+
+  // 控制定时规划频率
+  double plan_period_ms_ {500.0};   // 500ms = 2Hz，虚拟机建议先这样
+
+  // 可选：限制机器人移动很小就不必重规划
+  double replan_min_move_ {0.15};   // 单位 m
+  double last_plan_x_ {0.0};
+  double last_plan_y_ {0.0};
+  bool has_last_plan_pose_ {false};
 
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
