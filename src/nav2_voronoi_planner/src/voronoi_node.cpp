@@ -415,15 +415,22 @@ private:
     has_map_ = true;
     map_dirty_ = true;
 
-    voronoi_planner_->Init(
-      static_cast<int>(map_->info.width),
-      static_cast<int>(map_->info.height),
-      robot_radius_);
+    if (!planner_inited_) {
+      voronoi_planner_->Init(
+        static_cast<int>(map_->info.width),
+        static_cast<int>(map_->info.height),
+        robot_radius_);
+      planner_inited_ = true;
+    }
 
-    RCLCPP_INFO_THROTTLE(
-      this->get_logger(), *this->get_clock(), 3000,
-      "Received combined_grid: %u x %u, resolution=%.3f",
-      map_->info.width, map_->info.height, map_->info.resolution);
+
+    if (has_goal_) {
+      RCLCPP_INFO_THROTTLE(
+        this->get_logger(), *this->get_clock(), 3000,
+        "Received combined_grid: %u x %u, resolution=%.3f",
+        map_->info.width, map_->info.height, map_->info.resolution);
+    }
+
 
     if (has_goal_) {
       //tryPlan();
@@ -1272,6 +1279,7 @@ private:
   bool has_odom_ {false};
   bool has_goal_ {false};
   bool goal_reached_ {false};
+  bool planner_inited_ {false};
 
   double robot_radius_ {0.20};
   int occ_threshold_ {50};
