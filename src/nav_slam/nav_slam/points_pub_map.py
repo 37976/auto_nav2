@@ -41,6 +41,8 @@ class PointCloudTransformNode(Node):
         self.odom_data = None
         self.rotation_matrix = None
         self.translation = None
+        self.last_quaternion = None
+        self.last_translation = None
     
     def odom_callback(self, msg):
         quaternion = (
@@ -54,27 +56,28 @@ class PointCloudTransformNode(Node):
             msg.pose.pose.position.y,
             msg.pose.pose.position.z
         )
-        
-        # Check if the new data is different from the old one to avoid unnecessary computation
-        if (quaternion != getattr(self.odom_data, 'pose.pose.orientation', None) or 
-            translation != getattr(self.odom_data, 'pose.pose.position', None)):
-            
-            self.odom_data = msg
-            
-            qx, qy, qz, qw = quaternion
-            sqx, sqy, sqz = qx * qx, qy * qy, qz * qz
-            
-            m00, m01, m02 = 1 - 2*(sqy + sqz), 2*(qx*qy - qw*qz), 2*(qx*qz + qw*qy)
-            m10, m11, m12 = 2*(qx*qy + qw*qz), 1 - 2*(sqx + sqz), 2*(qy*qz - qw*qx)
-            m20, m21, m22 = 2*(qx*qz - qw*qy), 2*(qy*qz + qw*qx), 1 - 2*(sqx + sqy)
-            
-            self.rotation_matrix = np.array([
-                [m00, m01, m02, translation[0]],
-                [m10, m11, m12, translation[1]],
-                [m20, m21, m22, translation[2]],
-                [0, 0, 0, 1]
-            ])
-    
+
+        if quaternion == self.last_quaternion and translation == self.last_translation:
+            return
+
+        self.last_quaternion = quaternion
+        self.last_translation = translation
+        self.odom_data = msg
+
+        qx, qy, qz, qw = quaternion
+        sqx, sqy, sqz = qx * qx, qy * qy, qz * qz
+
+        m00, m01, m02 = 1 - 2 * (sqy + sqz), 2 * (qx * qy - qw * qz), 2 * (qx * qz + qw * qy)
+        m10, m11, m12 = 2 * (qx * qy + qw * qz), 1 - 2 * (sqx + sqz), 2 * (qy * qz - qw * qx)
+        m20, m21, m22 = 2 * (qx * qz - qw * qy), 2 * (qy * qz + qw * qx), 1 - 2 * (sqx + sqy)
+
+        self.rotation_matrix = np.array([
+            [m00, m01, m02, translation[0]],
+            [m10, m11, m12, translation[1]],
+            [m20, m21, m22, translation[2]],
+            [0, 0, 0, 1]
+        ], dtype=np.float32)
+
     def pointcloud_callback(self, msg):
         if self.odom_data is None or self.rotation_matrix is None:
             return

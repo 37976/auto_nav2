@@ -28,12 +28,12 @@ def generate_launch_description():
 
     ld = LaunchDescription()
     
-    rviz_config_file = '/home/boxing/di_pan_ws/src/nav_slam/config/rviz_config'
+
     package_name = 'nav_slam'
     config_dir = get_package_share_directory(package_name)
     #构建rviz配置文件的路径
     rviz_config_file = os.path.join(config_dir,'config','rviz.rviz')
-
+    static_map_yaml = os.path.join(config_dir, 'map', 'gpt.yaml')
     
     
     astar = Node( # 基于2d图规划路径
@@ -49,7 +49,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_static_map': True,
-            'static_map_yaml': '/home/xu/automatic-navigation/src/nav_slam/map/gpt.yaml'
+            'static_map_yaml': static_map_yaml
         }]
     )
     odom_map_tf = Node(# 发布odom到map的坐标转换
