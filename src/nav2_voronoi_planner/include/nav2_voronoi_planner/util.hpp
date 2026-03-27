@@ -44,4 +44,4 @@ inline int ContXY2Disc(double X, double CELLSIZE) {
                   : static_cast<int>(X / CELLSIZE) - 1;
 }
 
-}  // namespace voronoi_planner
+}  

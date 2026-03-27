@@ -12,8 +12,9 @@ find_package(tf2_geometry_msgs REQUIRED)
 
 add_executable(voronoi_node
   src/voronoi_node.cpp
-  src/voronoi.cpp
-  src/heap.cpp
+  src/voronoi_node_main.cpp
+  src/voronoi_grid_planner.cpp
+  src/voronoi_path_utils.cpp
 )
 
 target_include_directories(voronoi_node PUBLIC
