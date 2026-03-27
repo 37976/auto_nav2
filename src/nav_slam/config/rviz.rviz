@@ -134,7 +134,7 @@ Visualization Manager:
       Update Interval: 0
       Value: false
     - Alpha: 1
-      Buffer Length: 4
+      Buffer Length: 1
       Class: rviz_default_plugins/Path
       Color: 25; 255; 0
       Enabled: true

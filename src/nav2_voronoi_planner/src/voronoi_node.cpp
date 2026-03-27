@@ -128,6 +128,23 @@ private:
     return !isObstacle(v);
   }
 
+  bool canTraverseBetweenCells(
+    int x0, int y0, int x1, int y1,
+    const nav_msgs::msg::OccupancyGrid & grid) const
+  {
+    if (!isFreeCell(x1, y1, grid)) {
+      return false;
+    }
+
+    const int dx = x1 - x0;
+    const int dy = y1 - y0;
+    if (std::abs(dx) != 1 || std::abs(dy) != 1) {
+      return true;
+    }
+
+    return isFreeCell(x0 + dx, y0, grid) && isFreeCell(x0, y0 + dy, grid);
+  }
+
   bool lineOfSightFree(int x0, int y0, int x1, int y1, const nav_msgs::msg::OccupancyGrid & grid) const
   {
     int dx = std::abs(x1 - x0);
@@ -148,6 +165,8 @@ private:
         break;
       }
 
+      const int prev_x = x;
+      const int prev_y = y;
       int e2 = 2 * err;
       if (e2 > -dy) {
         err -= dy;
@@ -156,6 +175,10 @@ private:
       if (e2 < dx) {
         err += dx;
         y += sy;
+      }
+
+      if (!canTraverseBetweenCells(prev_x, prev_y, x, y, grid)) {
+        return false;
       }
     }
 
@@ -236,7 +259,7 @@ private:
         if (!isInside(nx, ny, w, h)) {
           continue;
         }
-        if (!isFreeCell(nx, ny, grid)) {
+        if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid)) {
           continue;
         }
 
@@ -259,6 +282,7 @@ private:
   const GridPoint & start_v,
   const GridPoint & goal_v,
   const std::vector<std::vector<VoronoiData>> & gvd_map,
+  const nav_msgs::msg::OccupancyGrid & grid,
   GridPath & voronoi_path)
   {
     if (gvd_map.empty()) {
@@ -315,6 +339,10 @@ private:
 
         // 只允许骨架点
         if (!gvd_map[nx][ny].is_voronoi) {
+          continue;
+        }
+
+        if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid)) {
           continue;
         }
 
@@ -455,6 +483,7 @@ private:
     }
     goal_reached_ = false;
     has_goal_ = true;
+    goal_dirty_ = true;
     need_replan_ = true;
     //tryPlan();
   }
@@ -477,6 +506,7 @@ private:
         std::lock_guard<std::mutex> lock(data_mutex_);
         goal_reached_ = true;
         has_goal_ = false;
+        goal_dirty_ = false;
         need_replan_ = false;
         map_dirty_ = false;
       }
@@ -521,6 +551,7 @@ private:
 
     {
       std::lock_guard<std::mutex> lock(data_mutex_);
+      goal_dirty_ = false;
       need_replan_ = false;
       map_dirty_ = false;
       last_plan_x_ = odom_local->pose.pose.position.x;
@@ -543,8 +574,12 @@ private:
     bool has_map_local = false;
     bool has_odom_local = false;
     bool has_goal_local = false;
+    bool goal_dirty_local = false;
     bool need_replan_local = false;
     bool map_dirty_local = false;
+    bool has_last_plan_pose_local = false;
+    double last_plan_x_local = 0.0;
+    double last_plan_y_local = 0.0;
 
     {
       std::lock_guard<std::mutex> lock(data_mutex_);
@@ -553,8 +588,12 @@ private:
       has_map_local = has_map_;
       has_odom_local = has_odom_;
       has_goal_local = has_goal_;
+      goal_dirty_local = goal_dirty_;
       need_replan_local = need_replan_;
       map_dirty_local = map_dirty_;
+      has_last_plan_pose_local = has_last_plan_pose_;
+      last_plan_x_local = last_plan_x_;
+      last_plan_y_local = last_plan_y_;
 
       if (has_map_) {
         map_local = map_;
@@ -591,9 +630,9 @@ private:
     }
 
     // 可选：如果机器人位移很小，而且不是地图变化，可跳过本轮
-    if (has_last_plan_pose_ && !map_dirty_local) {
-      double dx = odom_local->pose.pose.position.x - last_plan_x_;
-      double dy = odom_local->pose.pose.position.y - last_plan_y_;
+    if (has_last_plan_pose_local && !map_dirty_local && !goal_dirty_local) {
+      double dx = odom_local->pose.pose.position.x - last_plan_x_local;
+      double dy = odom_local->pose.pose.position.y - last_plan_y_local;
       double moved = std::hypot(dx, dy);
       if (moved < replan_min_move_) {
         return;
@@ -943,7 +982,7 @@ private:
       return !plan.poses.empty();
     }
 
-    if (!searchVoronoiOnly(Vs, Vg, gvd_map, path_v)) {
+    if (!searchVoronoiOnly(Vs, Vg, gvd_map, map, path_v)) {
       RCLCPP_WARN(this->get_logger(), "Cannot find Voronoi trunk path from start skeleton to goal skeleton.");
       return false;
     }
@@ -1278,6 +1317,7 @@ private:
   bool has_map_ {false};
   bool has_odom_ {false};
   bool has_goal_ {false};
+  bool goal_dirty_ {false};
   bool goal_reached_ {false};
   bool planner_inited_ {false};
 
