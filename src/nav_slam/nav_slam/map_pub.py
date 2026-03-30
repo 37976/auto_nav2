@@ -23,6 +23,7 @@ class ObstacleGridNode(Node):
         self.declare_parameter('min_height', 0.1)
         self.declare_parameter('max_height', 1.0)
         self.declare_parameter('obstacle_radius', 0.2)
+        self.declare_parameter('projection_gap_fill_cells', 2)
 
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
@@ -34,6 +35,8 @@ class ObstacleGridNode(Node):
         self.min_height = self.get_parameter('min_height').get_parameter_value().double_value
         self.max_height = self.get_parameter('max_height').get_parameter_value().double_value
         self.obstacle_radius = self.get_parameter('obstacle_radius').get_parameter_value().double_value
+        self.projection_gap_fill_cells = self.get_parameter(
+            'projection_gap_fill_cells').get_parameter_value().integer_value
 
         self.use_static_map = self.get_parameter('use_static_map').get_parameter_value().bool_value
         self.static_map_yaml = self.get_parameter('static_map_yaml').get_parameter_value().string_value
@@ -90,6 +93,26 @@ class ObstacleGridNode(Node):
     def odom_callback(self, msg):
         self.odom_data = msg
 
+    def iter_grid_line(self, x0, y0, x1, y1):
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        sx = 1 if x0 < x1 else -1
+        sy = 1 if y0 < y1 else -1
+        err = dx - dy
+
+        x, y = x0, y0
+        while True:
+            yield x, y
+            if x == x1 and y == y1:
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x += sx
+            if e2 < dx:
+                err += dx
+                y += sy
+
     def pointcloud_callback(self, msg):
         if self.odom_data is None:
             return
@@ -105,31 +128,51 @@ class ObstacleGridNode(Node):
         new_dilated_obstacles_layer1 = set()
         new_dilated_obstacles_layer2 = set()
         new_dilated_obstacles_layer3 = set()
+        previous_cell = None
 
         for x, y, z in points:
-            if self.min_height <= z <= self.max_height:
-                # 改这里：按地图原点换算，不再默认地图中心在(0,0)
-                center_x = int((x - map_origin_x) / self.resolution)
-                center_y = int((y - map_origin_y) / self.resolution)
+            if not (self.min_height <= z <= self.max_height):
+                previous_cell = None
+                continue
 
-                if 0 <= center_x < self.grid_combined.info.width and 0 <= center_y < self.grid_combined.info.height:
-                    index = center_y * self.grid_combined.info.width + center_x
-                    new_obstacles.add(index)
+            # 改这里：按地图原点换算，不再默认地图中心在(0,0)
+            center_x = int((x - map_origin_x) / self.resolution)
+            center_y = int((y - map_origin_y) / self.resolution)
 
-                for layer, dilated_set in enumerate([
-                    new_dilated_obstacles_layer1,
-                    new_dilated_obstacles_layer2,
-                    new_dilated_obstacles_layer3
-                ]):
-                    rr = (layer + 1) * radius_cells
-                    for dx in range(-rr, rr + 1):
-                        for dy in range(-rr, rr + 1):
-                            if dx ** 2 + dy ** 2 <= rr ** 2:
-                                grid_x = center_x + dx
-                                grid_y = center_y + dy
-                                if 0 <= grid_x < self.grid_combined.info.width and 0 <= grid_y < self.grid_combined.info.height:
-                                    index = grid_y * self.grid_combined.info.width + grid_x
-                                    dilated_set.add(index)
+            if not (
+                0 <= center_x < self.grid_combined.info.width and
+                0 <= center_y < self.grid_combined.info.height
+            ):
+                previous_cell = None
+                continue
+
+            index = center_y * self.grid_combined.info.width + center_x
+            new_obstacles.add(index)
+
+            if previous_cell is not None and self.projection_gap_fill_cells > 0:
+                prev_x, prev_y = previous_cell
+                gap_cells = max(abs(center_x - prev_x), abs(center_y - prev_y)) - 1
+                if 0 < gap_cells <= self.projection_gap_fill_cells:
+                    for fill_x, fill_y in self.iter_grid_line(prev_x, prev_y, center_x, center_y):
+                        fill_index = fill_y * self.grid_combined.info.width + fill_x
+                        new_obstacles.add(fill_index)
+
+            previous_cell = (center_x, center_y)
+
+            for layer, dilated_set in enumerate([
+                new_dilated_obstacles_layer1,
+                new_dilated_obstacles_layer2,
+                new_dilated_obstacles_layer3
+            ]):
+                rr = (layer + 1) * radius_cells
+                for dx in range(-rr, rr + 1):
+                    for dy in range(-rr, rr + 1):
+                        if dx ** 2 + dy ** 2 <= rr ** 2:
+                            grid_x = center_x + dx
+                            grid_y = center_y + dy
+                            if 0 <= grid_x < self.grid_combined.info.width and 0 <= grid_y < self.grid_combined.info.height:
+                                index = grid_y * self.grid_combined.info.width + grid_x
+                                dilated_set.add(index)
 
         self.obstacles.update(new_obstacles)
         self.dilated_obstacles_layer1.update(new_dilated_obstacles_layer1)
