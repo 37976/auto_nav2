@@ -283,7 +283,8 @@ bool VoronoiGridPlanner::searchVoronoiOnly(
 
       const double move_cost = (k < 4) ? 1.0 : std::sqrt(2.0);
       const double clearance = gvd_map[nx][ny].dist;
-      const double safety_penalty = (clearance > 1e-6) ? (0.15 / clearance) : 1000.0;
+      const double safety_penalty =
+        (clearance > 1e-6) ? (config_.trunk_safety_penalty_scale / clearance) : 1000.0;
       const double tentative_g = g_score[cur_idx] + move_cost + safety_penalty;
       const int nidx = toIndex(nx, ny, w);
 

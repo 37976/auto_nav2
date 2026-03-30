@@ -3,6 +3,13 @@
   <world name="voronoi_test_complex">
 
     <!-- 基础物理与插件 -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>20.0</update_rate>
+    </plugin>
+
     <include>
       <uri>model://sun</uri>
     </include>
@@ -401,6 +408,40 @@
       <link name="link">
         <collision name="collision"><geometry><cylinder><radius>0.8</radius><length>1</length></cylinder></geometry></collision>
         <visual name="visual"><geometry><cylinder><radius>0.8</radius><length>1</length></cylinder></geometry></visual>
+      </link>
+    </model>
+
+    <!-- ===================================================== -->
+    <!-- 动态障碍：由 ROS 节点驱动在仿真中移动 -->
+    <!-- ===================================================== -->
+    <model name="dynamic_box_1">
+      <static>false</static>
+      <allow_auto_disable>false</allow_auto_disable>
+      <pose>0 -6 0.5 0 0 0</pose>
+      <link name="link">
+        <gravity>false</gravity>
+        <kinematic>true</kinematic>
+        <inertial>
+          <mass>5.0</mass>
+          <inertia>
+            <ixx>0.5</ixx>
+            <iyy>0.5</iyy>
+            <izz>0.5</izz>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyz>0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.8 0.8 1.0</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.8 0.8 1.0</size></box></geometry>
+          <material>
+            <ambient>0.1 0.2 1.0 1</ambient>
+            <diffuse>0.1 0.2 1.0 1</diffuse>
+          </material>
+        </visual>
       </link>
     </model>
 

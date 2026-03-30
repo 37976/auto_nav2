@@ -29,6 +29,7 @@ setup(
             'map_pub = nav_slam.map_pub:main',
             'odom_map_tf = nav_slam.odom_map_tf:main',
             'points_pub_map = nav_slam.points_pub_map:main',
+            'dynamic_obstacle_publisher = nav_slam.dynamic_obstacle_publisher:main',
             'start_nav = nav_slam.start_nav:main',
             
         ],

@@ -49,6 +49,7 @@ private:
   bool unknown_is_obstacle_ {true};
   bool publish_debug_path2_ {true};
   double goal_tolerance_ {0.2};
+  double trunk_safety_penalty_scale_ {0.06};
 
   rclcpp::TimerBase::SharedPtr plan_timer_;
 

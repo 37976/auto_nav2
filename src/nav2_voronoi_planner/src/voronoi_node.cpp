@@ -26,11 +26,14 @@ VoronoiNode::VoronoiNode()
   goal_tolerance_ = this->declare_parameter<double>("goal_tolerance", 0.2);
   plan_period_ms_ = this->declare_parameter<double>("plan_period_ms", 500.0);
   replan_min_move_ = this->declare_parameter<double>("replan_min_move", 0.15);
+  trunk_safety_penalty_scale_ = this->declare_parameter<double>(
+    "trunk_safety_penalty_scale", 0.06);
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
       occ_threshold_,
-      unknown_is_obstacle_});
+      unknown_is_obstacle_,
+      trunk_safety_penalty_scale_});
 
   cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);

@@ -26,6 +26,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'moving_obstacle_controller = gazebo_modele.moving_obstacle_controller:main',
         ],
     },
 )

@@ -41,6 +41,9 @@ def generate_launch_description():
         executable='voronoi_node',
         name='voronoi',
         output='screen',
+        parameters=[{
+            'trunk_safety_penalty_scale': 0.06,
+        }],
     )
     map_pub = Node( # 基于优化后的点构建2d地图/lio_sam/mapping/cloud_registered
         package='nav_slam',
@@ -49,7 +52,8 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_static_map': True,
-            'static_map_yaml': static_map_yaml
+            'static_map_yaml': static_map_yaml,
+            'dynamic_obstacle_timeout': 0.8,
         }]
     )
     odom_map_tf = Node(# 发布odom到map的坐标转换

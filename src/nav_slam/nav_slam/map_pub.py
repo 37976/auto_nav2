@@ -24,6 +24,7 @@ class ObstacleGridNode(Node):
         self.declare_parameter('max_height', 1.0)
         self.declare_parameter('obstacle_radius', 0.2)
         self.declare_parameter('projection_gap_fill_cells', 2)
+        self.declare_parameter('dynamic_obstacle_timeout', 0.8)
 
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
@@ -37,6 +38,8 @@ class ObstacleGridNode(Node):
         self.obstacle_radius = self.get_parameter('obstacle_radius').get_parameter_value().double_value
         self.projection_gap_fill_cells = self.get_parameter(
             'projection_gap_fill_cells').get_parameter_value().integer_value
+        self.dynamic_obstacle_timeout = self.get_parameter(
+            'dynamic_obstacle_timeout').get_parameter_value().double_value
 
         self.use_static_map = self.get_parameter('use_static_map').get_parameter_value().bool_value
         self.static_map_yaml = self.get_parameter('static_map_yaml').get_parameter_value().string_value
@@ -69,6 +72,9 @@ class ObstacleGridNode(Node):
         self.pointcloud_sub = self.create_subscription(
             PointCloud2, '/mapokk', self.pointcloud_callback, 10
         )
+        self.dynamic_obstacle_sub = self.create_subscription(
+            PointCloud2, '/dynamic_obstacle_points', self.dynamic_obstacle_callback, 10
+        )
         self.odom_sub = self.create_subscription(
             Odometry, '/odom', self.odom_callback, 10
         )
@@ -77,6 +83,16 @@ class ObstacleGridNode(Node):
         )
 
         self.odom_data = None
+        self.last_pointcloud_time = None
+        self.last_dynamic_obstacle_time = None
+        self.pointcloud_obstacles = set()
+        self.pointcloud_dilated_obstacles_layer1 = set()
+        self.pointcloud_dilated_obstacles_layer2 = set()
+        self.pointcloud_dilated_obstacles_layer3 = set()
+        self.dynamic_obstacle_points = set()
+        self.dynamic_dilated_obstacles_layer1 = set()
+        self.dynamic_dilated_obstacles_layer2 = set()
+        self.dynamic_dilated_obstacles_layer3 = set()
 
         # 定时发布，保证即使没有点云也能看到静态地图
         self.timer = self.create_timer(0.5, self.timer_callback)
@@ -86,6 +102,38 @@ class ObstacleGridNode(Node):
             self.get_logger().info(f'Use static map: {self.static_map_yaml}')
 
     def timer_callback(self):
+        changed = False
+        if self.last_pointcloud_time is not None:
+            elapsed = (
+                self.get_clock().now() - self.last_pointcloud_time).nanoseconds / 1e9
+            if elapsed > self.dynamic_obstacle_timeout and (
+                self.pointcloud_obstacles or self.pointcloud_dilated_obstacles_layer1 or
+                self.pointcloud_dilated_obstacles_layer2 or self.pointcloud_dilated_obstacles_layer3
+            ):
+                self.pointcloud_obstacles = set()
+                self.pointcloud_dilated_obstacles_layer1 = set()
+                self.pointcloud_dilated_obstacles_layer2 = set()
+                self.pointcloud_dilated_obstacles_layer3 = set()
+                changed = True
+
+        if self.last_dynamic_obstacle_time is not None:
+            elapsed = (
+                self.get_clock().now() - self.last_dynamic_obstacle_time).nanoseconds / 1e9
+            if elapsed > self.dynamic_obstacle_timeout and (
+                self.dynamic_obstacle_points or self.dynamic_dilated_obstacles_layer1 or
+                self.dynamic_dilated_obstacles_layer2 or self.dynamic_dilated_obstacles_layer3
+            ):
+                self.dynamic_obstacle_points = set()
+                self.dynamic_dilated_obstacles_layer1 = set()
+                self.dynamic_dilated_obstacles_layer2 = set()
+                self.dynamic_dilated_obstacles_layer3 = set()
+                changed = True
+
+        if changed:
+            self.refresh_dynamic_layers()
+            self.update_combined_grid()
+            return
+
         self.grid_combined.header.stamp = self.get_clock().now().to_msg()
         self.grid_combined.header.frame_id = 'map'
         self.grid_combined_pub.publish(self.grid_combined)
@@ -93,35 +141,9 @@ class ObstacleGridNode(Node):
     def odom_callback(self, msg):
         self.odom_data = msg
 
-    def iter_grid_line(self, x0, y0, x1, y1):
-        dx = abs(x1 - x0)
-        dy = abs(y1 - y0)
-        sx = 1 if x0 < x1 else -1
-        sy = 1 if y0 < y1 else -1
-        err = dx - dy
-
-        x, y = x0, y0
-        while True:
-            yield x, y
-            if x == x1 and y == y1:
-                break
-            e2 = 2 * err
-            if e2 > -dy:
-                err -= dy
-                x += sx
-            if e2 < dx:
-                err += dx
-                y += sy
-
-    def pointcloud_callback(self, msg):
-        if self.odom_data is None:
-            return
-
-        # 如果你这份点云就是 map 坐标系下的点云，用地图 origin 算坐标才对
+    def build_obstacle_layers(self, points):
         map_origin_x = self.grid_combined.info.origin.position.x
         map_origin_y = self.grid_combined.info.origin.position.y
-
-        points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
         radius_cells = max(1, int(self.obstacle_radius / self.resolution))
 
         new_obstacles = set()
@@ -135,7 +157,6 @@ class ObstacleGridNode(Node):
                 previous_cell = None
                 continue
 
-            # 改这里：按地图原点换算，不再默认地图中心在(0,0)
             center_x = int((x - map_origin_x) / self.resolution)
             center_y = int((y - map_origin_y) / self.resolution)
 
@@ -174,11 +195,70 @@ class ObstacleGridNode(Node):
                                 index = grid_y * self.grid_combined.info.width + grid_x
                                 dilated_set.add(index)
 
-        self.obstacles.update(new_obstacles)
-        self.dilated_obstacles_layer1.update(new_dilated_obstacles_layer1)
-        self.dilated_obstacles_layer2.update(new_dilated_obstacles_layer2)
-        self.dilated_obstacles_layer3.update(new_dilated_obstacles_layer3)
+        return (
+            new_obstacles,
+            new_dilated_obstacles_layer1,
+            new_dilated_obstacles_layer2,
+            new_dilated_obstacles_layer3,
+        )
 
+    def refresh_dynamic_layers(self):
+        self.obstacles = self.pointcloud_obstacles | self.dynamic_obstacle_points
+        self.dilated_obstacles_layer1 = (
+            self.pointcloud_dilated_obstacles_layer1 | self.dynamic_dilated_obstacles_layer1
+        )
+        self.dilated_obstacles_layer2 = (
+            self.pointcloud_dilated_obstacles_layer2 | self.dynamic_dilated_obstacles_layer2
+        )
+        self.dilated_obstacles_layer3 = (
+            self.pointcloud_dilated_obstacles_layer3 | self.dynamic_dilated_obstacles_layer3
+        )
+
+    def iter_grid_line(self, x0, y0, x1, y1):
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        sx = 1 if x0 < x1 else -1
+        sy = 1 if y0 < y1 else -1
+        err = dx - dy
+
+        x, y = x0, y0
+        while True:
+            yield x, y
+            if x == x1 and y == y1:
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x += sx
+            if e2 < dx:
+                err += dx
+                y += sy
+
+    def pointcloud_callback(self, msg):
+        if self.odom_data is None:
+            return
+
+        points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
+        (
+            self.pointcloud_obstacles,
+            self.pointcloud_dilated_obstacles_layer1,
+            self.pointcloud_dilated_obstacles_layer2,
+            self.pointcloud_dilated_obstacles_layer3,
+        ) = self.build_obstacle_layers(points)
+        self.last_pointcloud_time = self.get_clock().now()
+        self.refresh_dynamic_layers()
+        self.update_combined_grid()
+
+    def dynamic_obstacle_callback(self, msg):
+        points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
+        (
+            self.dynamic_obstacle_points,
+            self.dynamic_dilated_obstacles_layer1,
+            self.dynamic_dilated_obstacles_layer2,
+            self.dynamic_dilated_obstacles_layer3,
+        ) = self.build_obstacle_layers(points)
+        self.last_dynamic_obstacle_time = self.get_clock().now()
+        self.refresh_dynamic_layers()
         self.update_combined_grid()
 
     def update_combined_grid(self):

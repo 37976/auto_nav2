@@ -42,7 +42,13 @@ def generate_launch_description():
 
 
     start_gazebo_cmd = ExecuteProcess(
-        cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so', gazebo_world_path],
+        cmd=[
+            'gazebo',
+            '--verbose',
+            '-s', 'libgazebo_ros_init.so',
+            '-s', 'libgazebo_ros_factory.so',
+            gazebo_world_path,
+        ],
         output='screen')
         
     # Launch the robot
@@ -78,6 +84,25 @@ def generate_launch_description():
             executable='static_transform_publisher',
             output='screen',
             arguments=['0', '0', '0.0', '0', '0', '0', 'map', 'odom'])
+    moving_obstacle_cmd = Node(
+        package='gazebo_modele',
+        executable='moving_obstacle_controller',
+        name='moving_obstacle_controller',
+        output='screen',
+        parameters=[{
+            'enabled': True,
+            'entity_name': 'dynamic_box_1',
+            'reference_frame': 'world',
+            'publish_rate': 20.0,
+            'base_x': 0.0,
+            'base_y': -6.0,
+            'base_z': 0.5,
+            'amp_x': 3.0,
+            'amp_y': 0.0,
+            'period': 10.0,
+            'yaw': 0.0,
+        }],
+    )
     
     
     
@@ -94,6 +119,7 @@ def generate_launch_description():
 
 
     ld.add_action(fake_basel_cmd6)
+    ld.add_action(moving_obstacle_cmd)
 
 
 
