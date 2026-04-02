@@ -22,9 +22,11 @@ class ObstacleGridNode(Node):
         self.declare_parameter('resolution', 0.1)
         self.declare_parameter('min_height', 0.1)
         self.declare_parameter('max_height', 1.0)
-        self.declare_parameter('obstacle_radius', 0.2)
+        self.declare_parameter('obstacle_radius', 0.05)
+        self.declare_parameter('clear_radius', 0.14)
         self.declare_parameter('projection_gap_fill_cells', 2)
         self.declare_parameter('dynamic_obstacle_timeout', 0.8)
+        self.declare_parameter('accumulate_pointcloud_obstacles', False)
 
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
@@ -36,10 +38,13 @@ class ObstacleGridNode(Node):
         self.min_height = self.get_parameter('min_height').get_parameter_value().double_value
         self.max_height = self.get_parameter('max_height').get_parameter_value().double_value
         self.obstacle_radius = self.get_parameter('obstacle_radius').get_parameter_value().double_value
+        self.clear_radius = self.get_parameter('clear_radius').get_parameter_value().double_value
         self.projection_gap_fill_cells = self.get_parameter(
             'projection_gap_fill_cells').get_parameter_value().integer_value
         self.dynamic_obstacle_timeout = self.get_parameter(
             'dynamic_obstacle_timeout').get_parameter_value().double_value
+        self.accumulate_pointcloud_obstacles = self.get_parameter(
+            'accumulate_pointcloud_obstacles').get_parameter_value().bool_value
 
         self.use_static_map = self.get_parameter('use_static_map').get_parameter_value().bool_value
         self.static_map_yaml = self.get_parameter('static_map_yaml').get_parameter_value().string_value
@@ -100,13 +105,14 @@ class ObstacleGridNode(Node):
         self.get_logger().info('ObstacleGridNode started.')
         if self.use_static_map:
             self.get_logger().info(f'Use static map: {self.static_map_yaml}')
+        self.get_logger().info(f'Robot footprint clear radius: {self.clear_radius:.2f} m')
 
     def timer_callback(self):
         changed = False
         if self.last_pointcloud_time is not None:
             elapsed = (
                 self.get_clock().now() - self.last_pointcloud_time).nanoseconds / 1e9
-            if elapsed > self.dynamic_obstacle_timeout and (
+            if (not self.accumulate_pointcloud_obstacles) and elapsed > self.dynamic_obstacle_timeout and (
                 self.pointcloud_obstacles or self.pointcloud_dilated_obstacles_layer1 or
                 self.pointcloud_dilated_obstacles_layer2 or self.pointcloud_dilated_obstacles_layer3
             ):
@@ -240,11 +246,23 @@ class ObstacleGridNode(Node):
 
         points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
         (
-            self.pointcloud_obstacles,
-            self.pointcloud_dilated_obstacles_layer1,
-            self.pointcloud_dilated_obstacles_layer2,
-            self.pointcloud_dilated_obstacles_layer3,
+            new_obstacles,
+            new_dilated_obstacles_layer1,
+            new_dilated_obstacles_layer2,
+            new_dilated_obstacles_layer3,
         ) = self.build_obstacle_layers(points)
+
+        if self.accumulate_pointcloud_obstacles:
+            self.pointcloud_obstacles |= new_obstacles
+            self.pointcloud_dilated_obstacles_layer1 |= new_dilated_obstacles_layer1
+            self.pointcloud_dilated_obstacles_layer2 |= new_dilated_obstacles_layer2
+            self.pointcloud_dilated_obstacles_layer3 |= new_dilated_obstacles_layer3
+        else:
+            self.pointcloud_obstacles = new_obstacles
+            self.pointcloud_dilated_obstacles_layer1 = new_dilated_obstacles_layer1
+            self.pointcloud_dilated_obstacles_layer2 = new_dilated_obstacles_layer2
+            self.pointcloud_dilated_obstacles_layer3 = new_dilated_obstacles_layer3
+
         self.last_pointcloud_time = self.get_clock().now()
         self.refresh_dynamic_layers()
         self.update_combined_grid()
@@ -286,9 +304,41 @@ class ObstacleGridNode(Node):
             if 0 <= index < len(self.grid_combined.data) and self.grid_combined.data[index] == 0:
                 self.grid_combined.data[index] = 5
 
+        self.clear_robot_footprint()
+
         self.grid_combined.header.stamp = self.get_clock().now().to_msg()
         self.grid_combined.header.frame_id = 'map'
         self.grid_combined_pub.publish(self.grid_combined)
+
+    def clear_robot_footprint(self):
+        if self.odom_data is None or self.clear_radius <= 0.0:
+            return
+
+        map_origin_x = self.grid_combined.info.origin.position.x
+        map_origin_y = self.grid_combined.info.origin.position.y
+        width = int(self.grid_combined.info.width)
+        height = int(self.grid_combined.info.height)
+        resolution = float(self.grid_combined.info.resolution)
+
+        center_x = int((self.odom_data.pose.pose.position.x - map_origin_x) / resolution)
+        center_y = int((self.odom_data.pose.pose.position.y - map_origin_y) / resolution)
+        radius_cells = max(1, int(np.ceil(self.clear_radius / resolution)))
+        radius_sq = self.clear_radius * self.clear_radius
+
+        for dx in range(-radius_cells, radius_cells + 1):
+            for dy in range(-radius_cells, radius_cells + 1):
+                cell_x = center_x + dx
+                cell_y = center_y + dy
+                if not (0 <= cell_x < width and 0 <= cell_y < height):
+                    continue
+
+                world_dx = dx * resolution
+                world_dy = dy * resolution
+                if world_dx * world_dx + world_dy * world_dy > radius_sq:
+                    continue
+
+                index = cell_y * width + cell_x
+                self.grid_combined.data[index] = 0
 
     def load_static_map(self, yaml_path):
         if not os.path.exists(yaml_path):

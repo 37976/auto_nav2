@@ -8,6 +8,7 @@ from nav_msgs.msg import Odometry, Path
 import math
 import numpy as np
 from scipy.spatial import KDTree
+from std_msgs.msg import String
 
 
 class PurePursuitController:
@@ -50,6 +51,7 @@ class PathFollowingNode(Node):
         self.path_points = None
         self.current_odom = None
         self.path_received = False
+        self.control_mode = "nav"
 
         # 上一时刻控制量，用于平滑
         self.last_linear_x = 0.0
@@ -70,8 +72,33 @@ class PathFollowingNode(Node):
         self.path_subscriber = self.create_subscription(
             Path, '/path', self.path_callback, 10
         )
+        self.mode_subscriber = self.create_subscription(
+            String, '/control_mode', self.mode_callback, 10
+        )
+
+    def mode_callback(self, msg):
+        new_mode = msg.data.strip().lower()
+        if new_mode not in ("manual", "nav", "pause"):
+            self.get_logger().warn(f"Unknown control mode: {msg.data}")
+            return
+
+        if new_mode == self.control_mode:
+            return
+
+        previous_mode = self.control_mode
+        self.control_mode = new_mode
+
+        if new_mode == "manual":
+            self.path_points = None
+            self.path_received = False
+        self.stop_robot()
+        self.get_logger().info(
+            f"Control mode switched: {previous_mode} -> {self.control_mode}")
 
     def path_callback(self, msg):
+        if self.control_mode == "manual":
+            return
+
         self.path_points_list = [[p.pose.position.x, p.pose.position.y] for p in msg.poses]
 
         if len(self.path_points_list) < 2:
@@ -130,6 +157,10 @@ class PathFollowingNode(Node):
             self.cmd_vel_publisher.publish(cmd_vel_msg)
 
     def odometry_callback(self, msg):
+        if self.control_mode in ("manual", "pause"):
+            self.stop_robot()
+            return
+
         if not self.path_received or self.path_points is None:
             self.stop_robot()
             return

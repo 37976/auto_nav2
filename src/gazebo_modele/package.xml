@@ -20,6 +20,8 @@
   <depend>gazebo</depend>
   <depend>gazebo_ros</depend>
   <depend>nav2_bringup</depend>
+  <depend>nav_slam</depend>
+  <depend>dashgo_web_control</depend>
 
   <export>
     <build_type>ament_python</build_type>

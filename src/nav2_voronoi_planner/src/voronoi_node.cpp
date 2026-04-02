@@ -19,7 +19,7 @@ namespace nav2_voronoi_planner
 VoronoiNode::VoronoiNode()
 : Node("voronoi")
 {
-  robot_radius_ = this->declare_parameter<double>("robot_radius", 0.20);
+  robot_radius_ = this->declare_parameter<double>("robot_radius", 0.14);
   occ_threshold_ = this->declare_parameter<int>("occ_threshold", 50);
   unknown_is_obstacle_ = this->declare_parameter<bool>("unknown_is_obstacle", true);
   publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);

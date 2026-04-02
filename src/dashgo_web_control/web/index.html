@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#113355">
+    <title>Dashgo 手机控制台</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <h1>Dashgo 遥控台</h1>
+          <p id="status-line">正在连接机器人...</p>
+        </div>
+        <div class="header-actions">
+          <div class="status-strip">
+            <div class="status-chip mode-chip">
+              <span class="status-dot mode-dot" id="mode-dot"></span>
+              <span id="mode-text">--</span>
+            </div>
+            <div class="status-chip">
+              <span class="status-dot" id="radar-dot"></span>
+              <span>雷达</span>
+            </div>
+            <div class="status-chip">
+              <span class="status-dot" id="base-dot"></span>
+              <span>底盘</span>
+            </div>
+          </div>
+          <button id="stop-button" class="stop-button">急停</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="panel mode-shell">
+          <div class="panel-title compact-title">
+            <span id="page-title">导航页面</span>
+            <div class="mode-switch">
+              <button id="nav-mode-button" class="mode-button active">导航模式</button>
+              <button id="manual-mode-button" class="mode-button">手动模式</button>
+            </div>
+          </div>
+
+          <section id="nav-page" class="mode-page active">
+            <div class="map-header-actions">
+              <button id="fit-map-button" class="ghost-button">居中</button>
+              <button id="refresh-map-button" class="ghost-button">刷新地图</button>
+            </div>
+            <div class="map-workspace">
+              <canvas id="map-canvas" width="900" height="900"></canvas>
+              <div class="map-goal-bar">
+                <button id="pick-goal-button" class="secondary-button">选点导航</button>
+                <button id="clear-goal-button" class="ghost-button">清除候选</button>
+                <button id="confirm-goal-button" class="primary-button" disabled>确认导航</button>
+              </div>
+            </div>
+            <div class="stats-grid nav-stats">
+              <div class="stat-card stat-card-inline">
+                <label>机器人位置</label>
+                <strong id="pose-text">--</strong>
+              </div>
+              <div class="stat-card stat-card-inline">
+                <label>地图状态</label>
+                <strong id="map-text">--</strong>
+              </div>
+              <div class="stat-card stat-card-inline">
+                <label>导航目标</label>
+                <strong id="goal-text">--</strong>
+              </div>
+              <div class="stat-card stat-card-inline">
+                <label>当前速度</label>
+                <strong id="velocity-text">--</strong>
+              </div>
+            </div>
+            <p class="hint">
+              导航页只保留地图与导航操作。单指拖动查看地图，滚轮或双指缩放；只有“选点导航”后轻点地图，再点击“确认导航”才会发送目标。
+            </p>
+          </section>
+
+          <section id="manual-page" class="mode-page">
+            <div class="manual-layout">
+              <div class="manual-control-card">
+                <div class="joystick-card">
+                  <div id="joystick-base" class="joystick-base">
+                    <div id="joystick-knob" class="joystick-knob"></div>
+                  </div>
+                  <p class="hint">按住摇杆拖动控制底盘，松手自动停车。</p>
+                </div>
+                <div class="stats-grid manual-stats">
+                  <div class="stat-card stat-card-inline">
+                    <label>机器人位置</label>
+                    <strong id="manual-pose-text">--</strong>
+                  </div>
+                  <div class="stat-card stat-card-inline">
+                    <label>当前速度</label>
+                    <strong id="manual-velocity-text">--</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="radar-card">
+                <div class="radar-card-head">
+                  <span>雷达实时探测</span>
+                  <span id="manual-radar-status" class="radar-badge offline">离线</span>
+                </div>
+                <canvas id="manual-radar-canvas" class="radar-canvas" width="420" height="420"></canvas>
+                <p id="manual-radar-caption" class="radar-caption">等待雷达扫描...</p>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
