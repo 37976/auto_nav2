@@ -1,5 +1,36 @@
-sync.sh
-.vscode
+# ROS / colcon
 build/
 install/
 log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Environments
+.env
+.env.*
+.venv/
+venv/
+
+# Editor / IDE
+.codex
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS / temp
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+*.bak
+
+# Local helper scripts
+sync.sh
