@@ -18,7 +18,8 @@ from nav_msgs.msg import OccupancyGrid, Odometry, Path
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import Image, LaserScan
+from sensor_msgs.msg import Image, LaserScan, PointCloud2
+import sensor_msgs_py.point_cloud2 as pc2
 from std_msgs.msg import String
 
 
@@ -42,10 +43,12 @@ class WebControlNode(Node):
         self.declare_parameter("mode_topic", "/control_mode")
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("scan_topic", "/scan_filtered")
+        self.declare_parameter("pointcloud_topic", "")
         self.declare_parameter("base_frame", "base_footprint")
         self.declare_parameter("linear_limit", 0.25)
         self.declare_parameter("angular_limit", 1.20)
         self.declare_parameter("cmd_vel_timeout", 0.6)
+        self.declare_parameter("manual_cmd_publish_hz", 500.0)
         self.declare_parameter("map_publish_hz", 1.0)
         self.declare_parameter("camera_publish_hz", 2.0)
         self.declare_parameter("camera_max_width", 240)
@@ -64,10 +67,12 @@ class WebControlNode(Node):
         self.mode_topic = str(self.get_parameter("mode_topic").value)
         self.image_topic = str(self.get_parameter("image_topic").value)
         self.scan_topic = str(self.get_parameter("scan_topic").value)
+        self.pointcloud_topic = str(self.get_parameter("pointcloud_topic").value)
         self.base_frame = str(self.get_parameter("base_frame").value)
         self.linear_limit = float(self.get_parameter("linear_limit").value)
         self.angular_limit = float(self.get_parameter("angular_limit").value)
         self.cmd_vel_timeout = float(self.get_parameter("cmd_vel_timeout").value)
+        self.manual_cmd_publish_hz = max(float(self.get_parameter("manual_cmd_publish_hz").value), 1.0)
         self.map_publish_interval = 1.0 / max(float(self.get_parameter("map_publish_hz").value), 0.2)
         self.camera_publish_interval = 1.0 / max(float(self.get_parameter("camera_publish_hz").value), 0.2)
         self.camera_max_width = max(64, int(self.get_parameter("camera_max_width").value))
@@ -88,6 +93,8 @@ class WebControlNode(Node):
         self.control_mode = "nav"
         self.last_cmd_time = 0.0
         self.last_cmd_active = False
+        self.manual_linear_cmd = 0.0
+        self.manual_angular_cmd = 0.0
         self.last_map_export_time = 0.0
         self.last_camera_export_time = 0.0
         self.last_odom_time = 0.0
@@ -104,9 +111,16 @@ class WebControlNode(Node):
         self.create_subscription(Odometry, self.odom_topic, self.odom_callback, 20)
         self.create_subscription(Path, self.path_topic, self.path_callback, 10)
         self.create_subscription(Image, self.image_topic, self.image_callback, 10)
-        self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, qos_profile_sensor_data)
+        if self.scan_topic:
+            self.create_subscription(LaserScan, self.scan_topic, self.scan_callback, qos_profile_sensor_data)
+        if self.pointcloud_topic:
+            self.create_subscription(PointCloud2, self.pointcloud_topic, self.pointcloud_callback, qos_profile_sensor_data)
 
         self.watchdog_timer = self.create_timer(0.1, self.watchdog_callback)
+        self.manual_cmd_timer = self.create_timer(
+            1.0 / self.manual_cmd_publish_hz,
+            self.manual_cmd_loop_callback,
+        )
 
         self.http_server = self.build_http_server()
         self.http_thread = threading.Thread(target=self.http_server.serve_forever, daemon=True)
@@ -234,6 +248,46 @@ class WebControlNode(Node):
             self.last_scan_time = now
             self.scan_meta = scan_meta
 
+    def pointcloud_callback(self, msg):
+        now = time.monotonic()
+        try:
+            raw_points = list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True))
+        except Exception as exc:
+            self.get_logger().debug(f"Skip pointcloud frame: {exc}")
+            return
+
+        total_count = len(raw_points)
+        step = max(1, total_count // 540) if total_count else 1
+        planar_distances = []
+        front_values = []
+        points = []
+
+        for index, point in enumerate(raw_points):
+            x = float(point[0])
+            y = float(point[1])
+            distance = math.hypot(x, y)
+            if not math.isfinite(distance) or distance <= 1e-4:
+                continue
+            planar_distances.append(distance)
+            if abs(math.atan2(y, x)) <= math.radians(12.0):
+                front_values.append(distance)
+            if index % step == 0:
+                points.append([x, y])
+
+        display_range = max(8.0, max(planar_distances) if planar_distances else 0.0)
+        scan_meta = {
+            "count": int(total_count),
+            "valid_count": int(len(planar_distances)),
+            "nearest_range": min(planar_distances) if planar_distances else None,
+            "front_range": min(front_values) if front_values else None,
+            "range_min": 0.0,
+            "range_max": float(display_range),
+            "points": points,
+        }
+        with self.state_lock:
+            self.last_scan_time = now
+            self.scan_meta = scan_meta
+
     def watchdog_callback(self):
         if not self.last_cmd_active:
             return
@@ -250,6 +304,26 @@ class WebControlNode(Node):
         msg.angular.z = max(-self.angular_limit, min(self.angular_limit, float(angular)))
         self.cmd_pub.publish(msg)
 
+    def set_manual_cmd(self, linear, angular):
+        with self.state_lock:
+            self.manual_linear_cmd = max(-self.linear_limit, min(self.linear_limit, float(linear)))
+            self.manual_angular_cmd = max(-self.angular_limit, min(self.angular_limit, float(angular)))
+            self.last_cmd_time = time.monotonic()
+            self.last_cmd_active = (
+                abs(self.manual_linear_cmd) > 1e-5 or
+                abs(self.manual_angular_cmd) > 1e-5
+            )
+
+        self.publish_cmd_vel(self.manual_linear_cmd, self.manual_angular_cmd)
+
+    def manual_cmd_loop_callback(self):
+        with self.state_lock:
+            if self.control_mode != "manual" or not self.last_cmd_active:
+                return
+            linear = self.manual_linear_cmd
+            angular = self.manual_angular_cmd
+        self.publish_cmd_vel(linear, angular)
+
     def is_manual_mode(self):
         with self.state_lock:
             return self.control_mode == "manual"
@@ -259,9 +333,12 @@ class WebControlNode(Node):
             return self.control_mode == "pause"
 
     def stop_robot(self):
+        with self.state_lock:
+            self.manual_linear_cmd = 0.0
+            self.manual_angular_cmd = 0.0
+            self.last_cmd_active = False
+            self.last_cmd_time = 0.0
         self.publish_cmd_vel(0.0, 0.0)
-        self.last_cmd_active = False
-        self.last_cmd_time = 0.0
 
     def publish_goal(self, x, y, yaw):
         self.set_control_mode("nav")
@@ -335,6 +412,7 @@ class WebControlNode(Node):
                     "mode": self.mode_topic,
                     "image": self.image_topic,
                     "scan": self.scan_topic,
+                    "pointcloud": self.pointcloud_topic,
                 },
                 "base_frame": self.base_frame,
             }
@@ -568,9 +646,12 @@ class WebControlNode(Node):
                         return
                     linear = float(payload.get("linear", 0.0))
                     angular = float(payload.get("angular", 0.0))
-                    node.publish_cmd_vel(linear, angular)
-                    node.last_cmd_time = time.monotonic()
-                    node.last_cmd_active = abs(linear) > 1e-5 or abs(angular) > 1e-5
+                    node.set_manual_cmd(linear, angular)
+                    self.send_json({"ok": True})
+                    return
+
+                if parsed.path == "/api/hold":
+                    node.stop_robot()
                     self.send_json({"ok": True})
                     return
 

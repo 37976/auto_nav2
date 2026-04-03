@@ -21,10 +21,17 @@ def generate_launch_description():
         'launch',
         '2dpoints.launch.py',
     )
+    default_static_map_yaml = os.path.join(
+        get_package_share_directory('nav_slam'),
+        'map',
+        'gpt.yaml',
+    )
 
     start_nav_rviz = LaunchConfiguration('start_nav_rviz')
     start_web_ui = LaunchConfiguration('start_web_ui')
     use_static_map = LaunchConfiguration('use_static_map')
+    static_map_yaml = LaunchConfiguration('static_map_yaml')
+    world_name = LaunchConfiguration('world_name')
     web_host = LaunchConfiguration('web_host')
     web_port = LaunchConfiguration('web_port')
     web_image_topic = LaunchConfiguration('web_image_topic')
@@ -38,6 +45,8 @@ def generate_launch_description():
         DeclareLaunchArgument('start_nav_rviz', default_value='true'),
         DeclareLaunchArgument('start_web_ui', default_value='true'),
         DeclareLaunchArgument('use_static_map', default_value='true'),
+        DeclareLaunchArgument('static_map_yaml', default_value=default_static_map_yaml),
+        DeclareLaunchArgument('world_name', default_value='gpt.world'),
         DeclareLaunchArgument('web_host', default_value='0.0.0.0'),
         DeclareLaunchArgument('web_port', default_value='8080'),
         DeclareLaunchArgument('web_image_topic', default_value='/camera/image_raw'),
@@ -48,6 +57,9 @@ def generate_launch_description():
         DeclareLaunchArgument('hotspot_ifname', default_value=''),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(gazebo_launch),
+            launch_arguments={
+                'world_name': world_name,
+            }.items(),
         ),
         TimerAction(
             period=2.0,
@@ -58,6 +70,7 @@ def generate_launch_description():
                         'start_nav_rviz': start_nav_rviz,
                         'start_web_ui': start_web_ui,
                         'use_static_map': use_static_map,
+                        'static_map_yaml': static_map_yaml,
                         'web_host': web_host,
                         'web_port': web_port,
                         'web_image_topic': web_image_topic,

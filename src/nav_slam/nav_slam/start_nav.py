@@ -158,7 +158,6 @@ class PathFollowingNode(Node):
 
     def odometry_callback(self, msg):
         if self.control_mode in ("manual", "pause"):
-            self.stop_robot()
             return
 
         if not self.path_received or self.path_points is None:

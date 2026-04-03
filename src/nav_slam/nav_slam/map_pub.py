@@ -24,8 +24,8 @@ class ObstacleGridNode(Node):
         self.declare_parameter('max_height', 1.0)
         self.declare_parameter('obstacle_radius', 0.05)
         self.declare_parameter('clear_radius', 0.14)
-        self.declare_parameter('projection_gap_fill_cells', 2)
-        self.declare_parameter('dynamic_obstacle_timeout', 0.8)
+        self.declare_parameter('projection_gap_fill_cells', 0)
+        self.declare_parameter('dynamic_obstacle_timeout', 0.2)
         self.declare_parameter('accumulate_pointcloud_obstacles', False)
 
         # 新增：静态地图参数
@@ -100,7 +100,7 @@ class ObstacleGridNode(Node):
         self.dynamic_dilated_obstacles_layer3 = set()
 
         # 定时发布，保证即使没有点云也能看到静态地图
-        self.timer = self.create_timer(0.5, self.timer_callback)
+        self.timer = self.create_timer(0.1, self.timer_callback)
 
         self.get_logger().info('ObstacleGridNode started.')
         if self.use_static_map:

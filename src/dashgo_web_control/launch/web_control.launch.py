@@ -52,6 +52,7 @@ def generate_launch_description():
             DeclareLaunchArgument("port", default_value="8080"),
             DeclareLaunchArgument("image_topic", default_value="/camera/camera/color/image_raw"),
             DeclareLaunchArgument("scan_topic", default_value="/scan_filtered"),
+            DeclareLaunchArgument("pointcloud_topic", default_value=""),
             DeclareLaunchArgument("start_hotspot", default_value="false"),
             DeclareLaunchArgument("hotspot_connection_name", default_value="dashgo-hotspot"),
             DeclareLaunchArgument("hotspot_ssid", default_value="Dashgo-Robot"),
@@ -89,6 +90,7 @@ def generate_launch_description():
                         "port": LaunchConfiguration("port"),
                         "image_topic": LaunchConfiguration("image_topic"),
                         "scan_topic": LaunchConfiguration("scan_topic"),
+                        "pointcloud_topic": LaunchConfiguration("pointcloud_topic"),
                     }
                 ],
             ),

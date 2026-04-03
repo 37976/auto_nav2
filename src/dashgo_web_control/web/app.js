@@ -49,10 +49,15 @@ const modeDot = document.getElementById("mode-dot");
 const radarDot = document.getElementById("radar-dot");
 const baseDot = document.getElementById("base-dot");
 const DEFAULT_LOCAL_VIEW_SCALE_FACTOR = 2.4;
+const JOYSTICK_SNAP_MIN_MAGNITUDE = 0.18;
+const JOYSTICK_SNAP_COS_THRESHOLD = Math.cos(Math.PI / 10);
+const JOYSTICK_SNAP_STRENGTH = 0.38;
 let joystickPointerId = null;
 let joystickCenter = null;
 let joystickRadius = 0;
 let cmdVelTimer = null;
+let cmdVelLoop = null;
+let cmdVelRequestInFlight = false;
 let lastCmd = { linear: 0, angular: 0 };
 let mapGesture = null;
 let mapPointers = new Map();
@@ -1043,6 +1048,80 @@ function setJoystickPosition(nx, ny) {
   joystickKnob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
 }
 
+function applyJoystickSnap(nx, ny) {
+  const magnitude = Math.hypot(nx, ny);
+  if (magnitude < JOYSTICK_SNAP_MIN_MAGNITUDE) {
+    return { nx, ny };
+  }
+
+  const unitX = nx / magnitude;
+  const unitY = ny / magnitude;
+  const targets = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  let bestTarget = null;
+  let bestDot = -Infinity;
+  for (const target of targets) {
+    const dot = unitX * target.x + unitY * target.y;
+    if (dot > bestDot) {
+      bestDot = dot;
+      bestTarget = target;
+    }
+  }
+
+  if (!bestTarget || bestDot < JOYSTICK_SNAP_COS_THRESHOLD) {
+    return { nx, ny };
+  }
+
+  const blend = ((bestDot - JOYSTICK_SNAP_COS_THRESHOLD) / (1 - JOYSTICK_SNAP_COS_THRESHOLD)) * JOYSTICK_SNAP_STRENGTH;
+  const mixX = unitX * (1 - blend) + bestTarget.x * blend;
+  const mixY = unitY * (1 - blend) + bestTarget.y * blend;
+  const mixMagnitude = Math.hypot(mixX, mixY) || 1;
+
+  return {
+    nx: (mixX / mixMagnitude) * magnitude,
+    ny: (mixY / mixMagnitude) * magnitude,
+  };
+}
+
+async function flushCmdVel() {
+  if (state.status?.control_mode !== "manual") {
+    return;
+  }
+  if (cmdVelRequestInFlight) {
+    return;
+  }
+  cmdVelRequestInFlight = true;
+  try {
+    await apiPost("/api/cmd_vel", lastCmd);
+  } catch (error) {
+    setStatusMessage(`速度指令发送失败：${error.message}`, 3000);
+  } finally {
+    cmdVelRequestInFlight = false;
+  }
+}
+
+function ensureCmdVelLoop() {
+  if (cmdVelLoop) {
+    return;
+  }
+  cmdVelLoop = setInterval(() => {
+    flushCmdVel();
+  }, 120);
+}
+
+function stopCmdVelLoop() {
+  if (!cmdVelLoop) {
+    return;
+  }
+  clearInterval(cmdVelLoop);
+  cmdVelLoop = null;
+}
+
 function queueCmdVel(linear, angular) {
   if (state.status?.control_mode !== "manual") {
     return;
@@ -1051,20 +1130,17 @@ function queueCmdVel(linear, angular) {
   if (cmdVelTimer) {
     return;
   }
-  cmdVelTimer = setTimeout(async () => {
+  cmdVelTimer = setTimeout(() => {
     cmdVelTimer = null;
-    try {
-      await apiPost("/api/cmd_vel", lastCmd);
-    } catch (error) {
-      setStatusMessage(`速度指令发送失败：${error.message}`, 3000);
-    }
-  }, 90);
+    flushCmdVel();
+  }, 60);
 }
 
 function resetJoystick() {
+  stopCmdVelLoop();
   setJoystickPosition(0, 0);
   lastCmd = { linear: 0, angular: 0 };
-  apiPost("/api/stop", {}).catch(() => {});
+  apiPost("/api/hold", {}).catch(() => {});
 }
 
 function onJoystickMove(clientX, clientY) {
@@ -1072,8 +1148,9 @@ function onJoystickMove(clientX, clientY) {
   const dy = clientY - joystickCenter.y;
   const distance = Math.hypot(dx, dy) || 1;
   const scale = Math.min(1, joystickRadius / distance);
-  const nx = (dx * scale) / joystickRadius;
-  const ny = (dy * scale) / joystickRadius;
+  const rawNx = (dx * scale) / joystickRadius;
+  const rawNy = (dy * scale) / joystickRadius;
+  const { nx, ny } = applyJoystickSnap(rawNx, rawNy);
 
   setJoystickPosition(nx, ny);
 
@@ -1089,6 +1166,7 @@ joystickBase.addEventListener("pointerdown", (event) => {
   }
   joystickPointerId = event.pointerId;
   getJoystickMetrics();
+  ensureCmdVelLoop();
   joystickBase.setPointerCapture(event.pointerId);
   onJoystickMove(event.clientX, event.clientY);
 });
@@ -1247,7 +1325,7 @@ stopButton.addEventListener("click", async () => {
 manualModeButton.addEventListener("click", async () => {
   try {
     await apiPost("/api/mode", { mode: "manual" });
-    await apiPost("/api/stop", {});
+    await apiPost("/api/hold", {});
     if (state.status) {
       state.status.control_mode = "manual";
     }

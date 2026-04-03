@@ -30,6 +30,7 @@ def generate_launch_description():
     web_port = LaunchConfiguration('web_port')
     web_image_topic = LaunchConfiguration('web_image_topic')
     scan_topic = LaunchConfiguration('scan_topic')
+    pointcloud_topic = LaunchConfiguration('pointcloud_topic')
     start_hotspot = LaunchConfiguration('start_hotspot')
     hotspot_connection_name = LaunchConfiguration('hotspot_connection_name')
     hotspot_ssid = LaunchConfiguration('hotspot_ssid')
@@ -44,7 +45,8 @@ def generate_launch_description():
         DeclareLaunchArgument('web_host', default_value='0.0.0.0'),
         DeclareLaunchArgument('web_port', default_value='8080'),
         DeclareLaunchArgument('web_image_topic', default_value='/camera/image_raw'),
-        DeclareLaunchArgument('scan_topic', default_value='/scan'),
+        DeclareLaunchArgument('scan_topic', default_value=''),
+        DeclareLaunchArgument('pointcloud_topic', default_value='/points_raw'),
         DeclareLaunchArgument('start_hotspot', default_value='false'),
         DeclareLaunchArgument('hotspot_connection_name', default_value='dashgo-hotspot'),
         DeclareLaunchArgument('hotspot_ssid', default_value='Dashgo-Robot'),
@@ -69,10 +71,10 @@ def generate_launch_description():
             parameters=[{
                 'use_static_map': use_static_map,
                 'static_map_yaml': static_map_yaml,
-                'dynamic_obstacle_timeout': 0.8,
+                'dynamic_obstacle_timeout': 0.2,
                 'obstacle_radius': 0.05,
                 'clear_radius': 0.14,
-                'projection_gap_fill_cells': 1,
+                'projection_gap_fill_cells': 0,
                 'accumulate_pointcloud_obstacles': False,
             }],
         ),
@@ -103,6 +105,7 @@ def generate_launch_description():
                 'port': web_port,
                 'image_topic': web_image_topic,
                 'scan_topic': scan_topic,
+                'pointcloud_topic': pointcloud_topic,
                 'start_hotspot': start_hotspot,
                 'hotspot_connection_name': hotspot_connection_name,
                 'hotspot_ssid': hotspot_ssid,
