@@ -99,7 +99,7 @@ ros2 launch gazebo_modele gazebo_nav_web.launch.py start_hotspot:=false
 说明：
 
 - 这个仿真工程没有接入真实相机话题，所以网页里不显示相机区块。
-- 仿真雷达网页显示来自 3D 点云话题 `/points_raw`，不是 2D `/scan`。
+- 仿真雷达网页显示来自 3D 点云话题 `/points_raw`。
 - 当前导航地图会融合静态地图和动态障碍，并对动态残留做较快清除。
 
 ## 主要启动文件
