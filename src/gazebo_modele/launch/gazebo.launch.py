@@ -44,21 +44,6 @@ def generate_launch_description():
         name='joint_state_publisher_gui',
         arguments=[urdf_model_path]
     )
-    fake_basel_cmd4 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_footprint'])
-    fake_basel_cmd5 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        output='screen',
-        arguments=['0', '0', '0.1', '0', '0', '0', 'base_footprint', 'base_link'])
-    fake_basel_cmd6 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        output='screen',
-        arguments=['0', '0', '0.0', '0', '0', '0', 'map', 'odom'])
     moving_obstacle_cmd = Node(
         package='gazebo_modele',
         executable='moving_obstacle_controller',
@@ -86,8 +71,5 @@ def generate_launch_description():
         spawn_entity_cmd,
         start_robot_state_publisher_cmd,
         joint_state_publisher_node,
-        fake_basel_cmd4,
-        fake_basel_cmd5,
-        fake_basel_cmd6,
         moving_obstacle_cmd,
     ])

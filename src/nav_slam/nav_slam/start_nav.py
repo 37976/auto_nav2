@@ -115,19 +115,22 @@ class PathFollowingNode(Node):
         self.path_received = True
 
     def interpolate_path(self, points, segment_length=0.1):
-        interpolated_points = []
-        for i in range(len(points) - 1):
-            start_point = points[i]
-            end_point = points[i + 1]
+        interpolated_points = [points[0]]
+        for i in range(1, len(points)):
+            start_point = points[i - 1]
+            end_point = points[i]
             distance = np.linalg.norm(end_point - start_point)
-            num_points = int(distance / segment_length) + 1
-            t_values = np.linspace(0, 1, num_points)
+            if distance < 1e-6:
+                continue
+
+            num_segments = max(int(np.ceil(distance / segment_length)), 1)
+            t_values = np.linspace(0, 1, num_segments + 1)[1:]
             interpolated_segment = (
                 start_point + (end_point - start_point)[np.newaxis, :] * t_values[:, np.newaxis]
             )
-            interpolated_points.append(interpolated_segment)
+            interpolated_points.extend(interpolated_segment)
 
-        return np.vstack(interpolated_points)
+        return np.asarray(interpolated_points)
 
     def quaternion_to_yaw(self, q):
         siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
@@ -181,9 +184,10 @@ class PathFollowingNode(Node):
 
         # 到终点就停车
         if distance_to_end < 0.2:
-            target_speed = 0.0
-            target_angular = 0.0
             self.path_received = False
+            self.path_points = None
+            self.stop_robot()
+            return
         else:
             # 角速度：比例控制 + 限幅
             target_angular = self.angular_gain * steering_angle

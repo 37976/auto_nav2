@@ -62,7 +62,8 @@ def generate_launch_description():
                 'clearance_margin': 0.0,
                 'occ_threshold': 15,
                 'trunk_safety_penalty_scale': 0.06,
-                'connector_candidate_count': 16,
+                'connector_candidate_count': 0,
+                'path_smoothing_control_step': 2,
             }],
         ),
         Node(

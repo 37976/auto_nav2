@@ -26,7 +26,7 @@ public:
     int occ_threshold {50};
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};
-    int connector_candidate_count {16};
+    int connector_candidate_count {0};
   };
 
   explicit VoronoiGridPlanner(Config config);
@@ -98,7 +98,8 @@ private:
     const nav_msgs::msg::OccupancyGrid & grid,
     GridPath & start_connector,
     GridPath & trunk_path,
-    GridPath & goal_connector) const;
+    GridPath & goal_connector,
+    double & total_route_length_m) const;
   void appendPathNoDuplicate(GridPath & dst, const GridPath & src) const;
   std::vector<std::vector<VoronoiData>> buildVoronoiDiagramFromOccupancyGrid(
     const nav_msgs::msg::OccupancyGrid & grid,

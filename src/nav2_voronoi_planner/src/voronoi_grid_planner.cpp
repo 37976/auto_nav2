@@ -289,9 +289,7 @@ VoronoiGridPlanner::findReachableVoronoiCandidates(
   size_t max_candidates) const
 {
   std::vector<VoronoiConnectorCandidate> candidates;
-  if (max_candidates == 0) {
-    return candidates;
-  }
+  const bool collect_all_candidates = (max_candidates == 0);
 
   const int w = static_cast<int>(grid.info.width);
   const int h = static_cast<int>(grid.info.height);
@@ -314,7 +312,7 @@ VoronoiGridPlanner::findReachableVoronoiCandidates(
   const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
   const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
 
-  while (!open.empty() && candidates.size() < max_candidates) {
+  while (!open.empty() && (collect_all_candidates || candidates.size() < max_candidates)) {
     const auto [cur_cost, cur_idx] = open.top();
     open.pop();
 
@@ -451,8 +449,11 @@ bool VoronoiGridPlanner::searchBestVoronoiRoute(
   const nav_msgs::msg::OccupancyGrid & grid,
   GridPath & start_connector,
   GridPath & trunk_path,
-  GridPath & goal_connector) const
+  GridPath & goal_connector,
+  double & total_route_length_m) const
 {
+  total_route_length_m = std::numeric_limits<double>::infinity();
+
   if (gvd_map.empty() || start_candidates.empty() || goal_candidates.empty()) {
     return false;
   }
@@ -536,10 +537,7 @@ bool VoronoiGridPlanner::searchBestVoronoiRoute(
       }
 
       const double move_cost = (k < 4) ? 1.0 : std::sqrt(2.0);
-      const double clearance = gvd_map[nx][ny].dist;
-      const double safety_penalty =
-        (clearance > 1e-6) ? (config_.trunk_safety_penalty_scale / clearance) : 1000.0;
-      const double tentative_g = g_score[cur_idx] + move_cost + safety_penalty;
+      const double tentative_g = g_score[cur_idx] + move_cost;
       const int nidx = toIndex(nx, ny, w);
 
       if (tentative_g < g_score[nidx]) {
@@ -580,6 +578,7 @@ bool VoronoiGridPlanner::searchBestVoronoiRoute(
   trunk_path = best_trunk_path;
   goal_connector = goal_candidates[best_goal_candidate].connector_path;
   std::reverse(goal_connector.begin(), goal_connector.end());
+  total_route_length_m = best_total_cost * grid.info.resolution;
 
   return true;
 }
@@ -901,27 +900,9 @@ bool VoronoiGridPlanner::makePlanFromMap(
   GridPath goal_connector;
   GridPath trunk_path;
 
-  const double start_goal_dist = std::hypot(
-    static_cast<double>(goal_x - start_x),
-    static_cast<double>(goal_y - start_y));
-
-  const double min_clearance = std::max(
-    config_.robot_radius + config_.clearance_margin,
-    resolution * 1.5);
-
-  if (start_goal_dist * resolution < 6.0 &&
-    lineOfSightFree(start_x, start_y, goal_x, goal_y, map, &gvd_map, min_clearance))
-  {
-    const GridPath direct_path = makeLineGridPath(start_x, start_y, goal_x, goal_y);
-    PopulateGridPath(direct_path, plan.header, resolution, origin_x, origin_y, plan);
-    if (!plan.poses.empty()) {
-      plan.poses.back() = goal;
-    }
-    return !plan.poses.empty();
-  }
-
   const size_t connector_candidate_count =
-    static_cast<size_t>(std::max(1, config_.connector_candidate_count));
+    (config_.connector_candidate_count <= 0) ?
+    0 : static_cast<size_t>(config_.connector_candidate_count);
   const auto start_candidates = findReachableVoronoiCandidates(
     start_grid, gvd_map, map, connector_candidate_count);
   const auto goal_candidates = findReachableVoronoiCandidates(
@@ -936,9 +917,10 @@ bool VoronoiGridPlanner::makePlanFromMap(
     return false;
   }
 
+  double total_route_length_m = 0.0;
   if (!searchBestVoronoiRoute(
       start_candidates, goal_candidates, gvd_map, map,
-      start_connector, trunk_path, goal_connector))
+      start_connector, trunk_path, goal_connector, total_route_length_m))
   {
     RCLCPP_WARN(
       logger,
@@ -965,9 +947,10 @@ bool VoronoiGridPlanner::makePlanFromMap(
   RCLCPP_INFO(
     logger,
     "Voronoi global candidate plan success: start_candidates=%zu, goal_candidates=%zu, "
-    "start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu",
+    "start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu, route_length=%.2f m",
     start_candidates.size(), goal_candidates.size(),
-    start_connector.size(), trunk_path.size(), goal_connector.size(), full_path.size());
+    start_connector.size(), trunk_path.size(), goal_connector.size(), full_path.size(),
+    total_route_length_m);
 
   return true;
 }

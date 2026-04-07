@@ -2,10 +2,12 @@
 // 负责订阅输入、触发重规划，以及发布路径和骨架结果。
 #include "nav2_voronoi_planner/voronoi_node.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "tf2/LinearMath/Quaternion.h"
@@ -29,7 +31,8 @@ VoronoiNode::VoronoiNode()
   replan_min_move_ = this->declare_parameter<double>("replan_min_move", 0.15);
   trunk_safety_penalty_scale_ = this->declare_parameter<double>(
     "trunk_safety_penalty_scale", 0.06);
-  connector_candidate_count_ = this->declare_parameter<int>("connector_candidate_count", 16);
+  connector_candidate_count_ = this->declare_parameter<int>("connector_candidate_count", 0);
+  path_smoothing_control_step_ = this->declare_parameter<int>("path_smoothing_control_step", 2);
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
@@ -61,7 +64,7 @@ VoronoiNode::VoronoiNode()
   RCLCPP_INFO(this->get_logger(), "VoronoiNode started.");
   RCLCPP_INFO(
     this->get_logger(),
-    "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m, connector_candidates=%d",
+    "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m, connector_candidates=%d (0=all)",
     robot_radius_, clearance_margin_, connector_candidate_count_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
@@ -86,9 +89,41 @@ void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 
 void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  odom_ = msg;
-  has_odom_ = true;
+  bool goal_reached_now = false;
+  std::string frame_id;
+
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    odom_ = msg;
+    has_odom_ = true;
+
+    if (has_goal_) {
+      const double dx = msg->pose.pose.position.x - last_goal_.pose.position.x;
+      const double dy = msg->pose.pose.position.y - last_goal_.pose.position.y;
+      const double distance = std::hypot(dx, dy);
+
+      if (distance <= goal_tolerance_) {
+        goal_reached_ = true;
+        has_goal_ = false;
+        goal_dirty_ = false;
+        need_replan_ = false;
+        map_dirty_ = false;
+        goal_reached_now = true;
+        frame_id = has_map_ ? map_->header.frame_id : last_goal_.header.frame_id;
+      }
+    }
+  }
+
+  if (goal_reached_now) {
+    nav_msgs::msg::Path empty_path;
+    empty_path.header.frame_id = frame_id;
+    empty_path.header.stamp = this->now();
+    path_pub_->publish(empty_path);
+    path2_pub_->publish(empty_path);
+
+    publishStopCmd();
+    RCLCPP_INFO(this->get_logger(), "Goal reached from odom. Stop replanning.");
+  }
 }
 
 void VoronoiNode::goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr goal_msg)
@@ -163,11 +198,15 @@ void VoronoiNode::tryPlanWithSnapshot(
 
   skeleton.header.stamp = this->now();
   skeleton_pub_->publish(skeleton);
-  path_pub_->publish(plan);
+
+  const nav_msgs::msg::Path smoothing_control_path =
+    downsamplePath(plan, std::max(1, path_smoothing_control_step_));
+  nav_msgs::msg::Path published_plan = smoothPathBSpline(
+    smoothing_control_path, static_cast<int>(plan.poses.size()), 3);
+  path_pub_->publish(published_plan);
 
   if (publish_debug_path2_) {
-    nav_msgs::msg::Path smooth = smoothPathBSpline(plan, static_cast<int>(plan.poses.size()), 3);
-    nav_msgs::msg::Path path2 = downsamplePath(smooth, 2);
+    nav_msgs::msg::Path path2 = downsamplePath(published_plan, 2);
     path2_pub_->publish(path2);
   }
 
@@ -183,7 +222,8 @@ void VoronoiNode::tryPlanWithSnapshot(
 
   RCLCPP_INFO_THROTTLE(
     this->get_logger(), *this->get_clock(), 2000,
-    "Published Voronoi path, size = %zu", plan.poses.size());
+    "Published Voronoi path, raw size = %zu, smooth controls = %zu, smooth size = %zu",
+    plan.poses.size(), smoothing_control_path.poses.size(), published_plan.poses.size());
 }
 
 void VoronoiNode::planTimerCallback()
@@ -245,6 +285,31 @@ void VoronoiNode::planTimerCallback()
   if (!has_goal_local) {
     return;
   }
+
+  const double goal_dx = odom_local->pose.pose.position.x - goal_local.pose.position.x;
+  const double goal_dy = odom_local->pose.pose.position.y - goal_local.pose.position.y;
+  const double goal_distance = std::hypot(goal_dx, goal_dy);
+  if (goal_distance <= goal_tolerance_) {
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      goal_reached_ = true;
+      has_goal_ = false;
+      goal_dirty_ = false;
+      need_replan_ = false;
+      map_dirty_ = false;
+    }
+
+    nav_msgs::msg::Path empty_path;
+    empty_path.header.frame_id = map_local->header.frame_id;
+    empty_path.header.stamp = this->now();
+    path_pub_->publish(empty_path);
+    path2_pub_->publish(empty_path);
+
+    publishStopCmd();
+    RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
+    return;
+  }
+
   if (!need_replan_local && !map_dirty_local) {
     return;
   }
