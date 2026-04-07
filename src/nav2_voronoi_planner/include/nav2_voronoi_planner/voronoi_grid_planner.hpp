@@ -1,6 +1,7 @@
 // Voronoi 骨架构建与栅格路径规划的对外接口声明。
 #pragma once
 
+#include <cstddef>
 #include <unordered_map>
 #include <vector>
 
@@ -25,6 +26,7 @@ public:
     int occ_threshold {50};
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};
+    int connector_candidate_count {16};
   };
 
   explicit VoronoiGridPlanner(Config config);
@@ -39,6 +41,13 @@ public:
 
 private:
   using ParentMap = std::unordered_map<int, int>;
+
+  struct VoronoiConnectorCandidate
+  {
+    GridPoint point;
+    GridPath connector_path;
+    double connector_cost {0.0};
+  };
 
   int toIndex(int x, int y, int w) const;
   GridPoint fromIndex(int idx, int w) const;
@@ -59,6 +68,7 @@ private:
     const nav_msgs::msg::OccupancyGrid & grid,
     const std::vector<std::vector<VoronoiData>> * gvd_map,
     double min_clearance) const;
+  GridPath makeLineGridPath(int x0, int y0, int x1, int y1) const;
   GridPath reconstructGridPath(
     const ParentMap & parent,
     int start_idx,
@@ -70,12 +80,25 @@ private:
     const nav_msgs::msg::OccupancyGrid & grid,
     GridPoint & voronoi_pt,
     GridPath & connector_path) const;
+  std::vector<VoronoiConnectorCandidate> findReachableVoronoiCandidates(
+    const GridPoint & start,
+    const std::vector<std::vector<VoronoiData>> & gvd_map,
+    const nav_msgs::msg::OccupancyGrid & grid,
+    size_t max_candidates) const;
   bool searchVoronoiOnly(
     const GridPoint & start_v,
     const GridPoint & goal_v,
     const std::vector<std::vector<VoronoiData>> & gvd_map,
     const nav_msgs::msg::OccupancyGrid & grid,
     GridPath & voronoi_path) const;
+  bool searchBestVoronoiRoute(
+    const std::vector<VoronoiConnectorCandidate> & start_candidates,
+    const std::vector<VoronoiConnectorCandidate> & goal_candidates,
+    const std::vector<std::vector<VoronoiData>> & gvd_map,
+    const nav_msgs::msg::OccupancyGrid & grid,
+    GridPath & start_connector,
+    GridPath & trunk_path,
+    GridPath & goal_connector) const;
   void appendPathNoDuplicate(GridPath & dst, const GridPath & src) const;
   std::vector<std::vector<VoronoiData>> buildVoronoiDiagramFromOccupancyGrid(
     const nav_msgs::msg::OccupancyGrid & grid,

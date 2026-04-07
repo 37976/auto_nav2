@@ -29,13 +29,15 @@ VoronoiNode::VoronoiNode()
   replan_min_move_ = this->declare_parameter<double>("replan_min_move", 0.15);
   trunk_safety_penalty_scale_ = this->declare_parameter<double>(
     "trunk_safety_penalty_scale", 0.06);
+  connector_candidate_count_ = this->declare_parameter<int>("connector_candidate_count", 16);
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
       clearance_margin_,
       occ_threshold_,
       unknown_is_obstacle_,
-      trunk_safety_penalty_scale_});
+      trunk_safety_penalty_scale_,
+      connector_candidate_count_});
 
   cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
@@ -58,8 +60,9 @@ VoronoiNode::VoronoiNode()
 
   RCLCPP_INFO(this->get_logger(), "VoronoiNode started.");
   RCLCPP_INFO(
-    this->get_logger(), "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m",
-    robot_radius_, clearance_margin_);
+    this->get_logger(),
+    "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m, connector_candidates=%d",
+    robot_radius_, clearance_margin_, connector_candidate_count_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);

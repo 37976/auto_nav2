@@ -155,6 +155,39 @@ bool VoronoiGridPlanner::lineOfSightFree(
   return true;
 }
 
+GridPath VoronoiGridPlanner::makeLineGridPath(int x0, int y0, int x1, int y1) const
+{
+  GridPath path;
+  int dx = std::abs(x1 - x0);
+  int dy = std::abs(y1 - y0);
+  int sx = (x0 < x1) ? 1 : -1;
+  int sy = (y0 < y1) ? 1 : -1;
+  int err = dx - dy;
+
+  int x = x0;
+  int y = y0;
+
+  while (true) {
+    path.push_back(GridPoint{x, y});
+
+    if (x == x1 && y == y1) {
+      break;
+    }
+
+    const int e2 = 2 * err;
+    if (e2 > -dy) {
+      err -= dy;
+      x += sx;
+    }
+    if (e2 < dx) {
+      err += dx;
+      y += sy;
+    }
+  }
+
+  return path;
+}
+
 GridPath VoronoiGridPlanner::reconstructGridPath(
   const ParentMap & parent,
   int start_idx,
@@ -248,6 +281,84 @@ bool VoronoiGridPlanner::findNearestReachableVoronoiPoint(
   return false;
 }
 
+std::vector<VoronoiGridPlanner::VoronoiConnectorCandidate>
+VoronoiGridPlanner::findReachableVoronoiCandidates(
+  const GridPoint & start,
+  const std::vector<std::vector<VoronoiData>> & gvd_map,
+  const nav_msgs::msg::OccupancyGrid & grid,
+  size_t max_candidates) const
+{
+  std::vector<VoronoiConnectorCandidate> candidates;
+  if (max_candidates == 0) {
+    return candidates;
+  }
+
+  const int w = static_cast<int>(grid.info.width);
+  const int h = static_cast<int>(grid.info.height);
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    grid.info.resolution * 1.5);
+
+  if (!isInside(start.x, start.y, w, h) || !isFreeCell(start.x, start.y, grid)) {
+    return candidates;
+  }
+
+  std::priority_queue<QueueIndex, std::vector<QueueIndex>, std::greater<QueueIndex>> open;
+  std::vector<double> g_score(w * h, std::numeric_limits<double>::infinity());
+  ParentMap parent;
+
+  const int start_idx = toIndex(start.x, start.y, w);
+  g_score[start_idx] = 0.0;
+  open.push({0.0, start_idx});
+
+  const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+  const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+  while (!open.empty() && candidates.size() < max_candidates) {
+    const auto [cur_cost, cur_idx] = open.top();
+    open.pop();
+
+    if (cur_cost > g_score[cur_idx]) {
+      continue;
+    }
+
+    const GridPoint cur = fromIndex(cur_idx, w);
+
+    if (gvd_map[cur.x][cur.y].is_voronoi) {
+      candidates.push_back(
+        VoronoiConnectorCandidate{
+          cur,
+          reconstructGridPath(parent, start_idx, cur_idx, w),
+          cur_cost});
+      continue;
+    }
+
+    for (int k = 0; k < 8; ++k) {
+      const int nx = cur.x + dx[k];
+      const int ny = cur.y + dy[k];
+
+      if (!isInside(nx, ny, w, h)) {
+        continue;
+      }
+      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid, &gvd_map, min_clearance)) {
+        continue;
+      }
+
+      const double step = (k < 4) ? 1.0 : std::sqrt(2.0);
+      const int nidx = toIndex(nx, ny, w);
+      const double next_cost = cur_cost + step;
+
+      if (next_cost < g_score[nidx]) {
+        g_score[nidx] = next_cost;
+        parent[nidx] = cur_idx;
+        open.push({next_cost, nidx});
+      }
+    }
+  }
+
+  return candidates;
+}
+
 bool VoronoiGridPlanner::searchVoronoiOnly(
   const GridPoint & start_v,
   const GridPoint & goal_v,
@@ -331,6 +442,146 @@ bool VoronoiGridPlanner::searchVoronoiOnly(
   }
 
   return false;
+}
+
+bool VoronoiGridPlanner::searchBestVoronoiRoute(
+  const std::vector<VoronoiConnectorCandidate> & start_candidates,
+  const std::vector<VoronoiConnectorCandidate> & goal_candidates,
+  const std::vector<std::vector<VoronoiData>> & gvd_map,
+  const nav_msgs::msg::OccupancyGrid & grid,
+  GridPath & start_connector,
+  GridPath & trunk_path,
+  GridPath & goal_connector) const
+{
+  if (gvd_map.empty() || start_candidates.empty() || goal_candidates.empty()) {
+    return false;
+  }
+
+  const int w = static_cast<int>(gvd_map.size());
+  const int h = static_cast<int>(gvd_map[0].size());
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    grid.info.resolution * 1.5);
+
+  std::priority_queue<QueueIndex, std::vector<QueueIndex>, std::greater<QueueIndex>> open;
+  std::vector<double> g_score(w * h, std::numeric_limits<double>::infinity());
+  std::vector<int> parent(w * h, -1);
+  std::unordered_map<int, size_t> source_lookup;
+  std::unordered_map<int, size_t> goal_lookup;
+
+  for (size_t i = 0; i < goal_candidates.size(); ++i) {
+    const auto & candidate = goal_candidates[i];
+    if (!isInside(candidate.point.x, candidate.point.y, w, h)) {
+      continue;
+    }
+    goal_lookup[toIndex(candidate.point.x, candidate.point.y, w)] = i;
+  }
+
+  for (size_t i = 0; i < start_candidates.size(); ++i) {
+    const auto & candidate = start_candidates[i];
+    if (!isInside(candidate.point.x, candidate.point.y, w, h)) {
+      continue;
+    }
+
+    const int idx = toIndex(candidate.point.x, candidate.point.y, w);
+    if (candidate.connector_cost < g_score[idx]) {
+      g_score[idx] = candidate.connector_cost;
+      parent[idx] = idx;
+      source_lookup[idx] = i;
+      open.push({candidate.connector_cost, idx});
+    }
+  }
+
+  const int dx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+  const int dy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+
+  double best_total_cost = std::numeric_limits<double>::infinity();
+  int best_goal_idx = -1;
+  size_t best_goal_candidate = 0;
+
+  while (!open.empty()) {
+    const auto [cur_cost, cur_idx] = open.top();
+    open.pop();
+
+    if (cur_cost > g_score[cur_idx]) {
+      continue;
+    }
+    if (cur_cost >= best_total_cost) {
+      break;
+    }
+
+    const auto goal_it = goal_lookup.find(cur_idx);
+    if (goal_it != goal_lookup.end()) {
+      const double total_cost = cur_cost + goal_candidates[goal_it->second].connector_cost;
+      if (total_cost < best_total_cost) {
+        best_total_cost = total_cost;
+        best_goal_idx = cur_idx;
+        best_goal_candidate = goal_it->second;
+      }
+    }
+
+    const GridPoint cur = fromIndex(cur_idx, w);
+    for (int k = 0; k < 8; ++k) {
+      const int nx = cur.x + dx[k];
+      const int ny = cur.y + dy[k];
+
+      if (!isInside(nx, ny, w, h)) {
+        continue;
+      }
+      if (!gvd_map[nx][ny].is_voronoi) {
+        continue;
+      }
+      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid, &gvd_map, min_clearance)) {
+        continue;
+      }
+
+      const double move_cost = (k < 4) ? 1.0 : std::sqrt(2.0);
+      const double clearance = gvd_map[nx][ny].dist;
+      const double safety_penalty =
+        (clearance > 1e-6) ? (config_.trunk_safety_penalty_scale / clearance) : 1000.0;
+      const double tentative_g = g_score[cur_idx] + move_cost + safety_penalty;
+      const int nidx = toIndex(nx, ny, w);
+
+      if (tentative_g < g_score[nidx]) {
+        g_score[nidx] = tentative_g;
+        parent[nidx] = cur_idx;
+        open.push({tentative_g, nidx});
+      }
+    }
+  }
+
+  if (best_goal_idx < 0) {
+    return false;
+  }
+
+  GridPath best_trunk_path;
+  int current = best_goal_idx;
+  while (true) {
+    best_trunk_path.push_back(fromIndex(current, w));
+
+    const int next = parent[current];
+    if (next < 0) {
+      return false;
+    }
+    if (next == current) {
+      break;
+    }
+    current = next;
+  }
+  std::reverse(best_trunk_path.begin(), best_trunk_path.end());
+
+  const int source_idx = toIndex(best_trunk_path.front().x, best_trunk_path.front().y, w);
+  const auto source_it = source_lookup.find(source_idx);
+  if (source_it == source_lookup.end()) {
+    return false;
+  }
+
+  start_connector = start_candidates[source_it->second].connector_path;
+  trunk_path = best_trunk_path;
+  goal_connector = goal_candidates[best_goal_candidate].connector_path;
+  std::reverse(goal_connector.begin(), goal_connector.end());
+
+  return true;
 }
 
 void VoronoiGridPlanner::appendPathNoDuplicate(GridPath & dst, const GridPath & src) const
@@ -646,25 +897,9 @@ bool VoronoiGridPlanner::makePlanFromMap(
   const GridPoint start_grid{start_x, start_y};
   const GridPoint goal_grid{goal_x, goal_y};
 
-  GridPoint start_voronoi;
-  GridPoint goal_voronoi;
   GridPath start_connector;
   GridPath goal_connector;
   GridPath trunk_path;
-
-  if (!findNearestReachableVoronoiPoint(
-      start_grid, gvd_map, map, start_voronoi, start_connector))
-  {
-    RCLCPP_WARN(logger, "Cannot connect start to Voronoi skeleton.");
-    return false;
-  }
-
-  if (!findNearestReachableVoronoiPoint(
-      goal_grid, gvd_map, map, goal_voronoi, goal_connector))
-  {
-    RCLCPP_WARN(logger, "Cannot connect goal to Voronoi skeleton.");
-    return false;
-  }
 
   const double start_goal_dist = std::hypot(
     static_cast<double>(goal_x - start_x),
@@ -674,22 +909,43 @@ bool VoronoiGridPlanner::makePlanFromMap(
     config_.robot_radius + config_.clearance_margin,
     resolution * 1.5);
 
-  if (start_goal_dist < 6.0 &&
+  if (start_goal_dist * resolution < 6.0 &&
     lineOfSightFree(start_x, start_y, goal_x, goal_y, map, &gvd_map, min_clearance))
   {
-    PopulateGridPath({start_grid, goal_grid}, plan.header, resolution, origin_x, origin_y, plan);
+    const GridPath direct_path = makeLineGridPath(start_x, start_y, goal_x, goal_y);
+    PopulateGridPath(direct_path, plan.header, resolution, origin_x, origin_y, plan);
     if (!plan.poses.empty()) {
       plan.poses.back() = goal;
     }
     return !plan.poses.empty();
   }
 
-  if (!searchVoronoiOnly(start_voronoi, goal_voronoi, gvd_map, map, trunk_path)) {
-    RCLCPP_WARN(logger, "Cannot find Voronoi trunk path from start skeleton to goal skeleton.");
+  const size_t connector_candidate_count =
+    static_cast<size_t>(std::max(1, config_.connector_candidate_count));
+  const auto start_candidates = findReachableVoronoiCandidates(
+    start_grid, gvd_map, map, connector_candidate_count);
+  const auto goal_candidates = findReachableVoronoiCandidates(
+    goal_grid, gvd_map, map, connector_candidate_count);
+
+  if (start_candidates.empty()) {
+    RCLCPP_WARN(logger, "Cannot connect start to Voronoi skeleton.");
+    return false;
+  }
+  if (goal_candidates.empty()) {
+    RCLCPP_WARN(logger, "Cannot connect goal to Voronoi skeleton.");
     return false;
   }
 
-  std::reverse(goal_connector.begin(), goal_connector.end());
+  if (!searchBestVoronoiRoute(
+      start_candidates, goal_candidates, gvd_map, map,
+      start_connector, trunk_path, goal_connector))
+  {
+    RCLCPP_WARN(
+      logger,
+      "Cannot find globally best Voronoi route from %zu start candidates to %zu goal candidates.",
+      start_candidates.size(), goal_candidates.size());
+    return false;
+  }
 
   GridPath full_path;
   appendPathNoDuplicate(full_path, start_connector);
@@ -708,7 +964,9 @@ bool VoronoiGridPlanner::makePlanFromMap(
 
   RCLCPP_INFO(
     logger,
-    "Voronoi 3-stage plan success: start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu",
+    "Voronoi global candidate plan success: start_candidates=%zu, goal_candidates=%zu, "
+    "start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu",
+    start_candidates.size(), goal_candidates.size(),
     start_connector.size(), trunk_path.size(), goal_connector.size(), full_path.size());
 
   return true;
