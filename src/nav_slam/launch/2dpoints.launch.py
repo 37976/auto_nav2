@@ -58,7 +58,8 @@ def generate_launch_description():
             name='voronoi',
             output='screen',
             parameters=[{
-                'robot_radius': 0.14,
+                'robot_radius': 0.12,
+                'clearance_margin': 0.0,
                 'occ_threshold': 15,
                 'trunk_safety_penalty_scale': 0.06,
             }],
@@ -73,7 +74,7 @@ def generate_launch_description():
                 'static_map_yaml': static_map_yaml,
                 'dynamic_obstacle_timeout': 0.2,
                 'obstacle_radius': 0.05,
-                'clear_radius': 0.14,
+                'clear_radius': 0.12,
                 'projection_gap_fill_cells': 0,
                 'accumulate_pointcloud_obstacles': False,
             }],

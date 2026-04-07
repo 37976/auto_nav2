@@ -45,6 +45,7 @@ private:
   bool goal_reached_ {false};
 
   double robot_radius_ {0.20};
+  double clearance_margin_ {0.03};
   int occ_threshold_ {50};
   bool unknown_is_obstacle_ {true};
   bool publish_debug_path2_ {true};

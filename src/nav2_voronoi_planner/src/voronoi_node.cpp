@@ -20,6 +20,7 @@ VoronoiNode::VoronoiNode()
 : Node("voronoi")
 {
   robot_radius_ = this->declare_parameter<double>("robot_radius", 0.14);
+  clearance_margin_ = this->declare_parameter<double>("clearance_margin", 0.03);
   occ_threshold_ = this->declare_parameter<int>("occ_threshold", 50);
   unknown_is_obstacle_ = this->declare_parameter<bool>("unknown_is_obstacle", true);
   publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);
@@ -31,6 +32,7 @@ VoronoiNode::VoronoiNode()
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
+      clearance_margin_,
       occ_threshold_,
       unknown_is_obstacle_,
       trunk_safety_penalty_scale_});
@@ -55,6 +57,9 @@ VoronoiNode::VoronoiNode()
     std::bind(&VoronoiNode::planTimerCallback, this));
 
   RCLCPP_INFO(this->get_logger(), "VoronoiNode started.");
+  RCLCPP_INFO(
+    this->get_logger(), "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m",
+    robot_radius_, clearance_margin_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);

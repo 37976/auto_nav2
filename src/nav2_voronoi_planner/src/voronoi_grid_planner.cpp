@@ -68,11 +68,36 @@ bool VoronoiGridPlanner::isFreeCell(
   return !isObstacle(grid.data[x + y * w]);
 }
 
+bool VoronoiGridPlanner::isSafeCell(
+  int x, int y,
+  const nav_msgs::msg::OccupancyGrid & grid,
+  const std::vector<std::vector<VoronoiData>> * gvd_map,
+  double min_clearance) const
+{
+  if (!isFreeCell(x, y, grid)) {
+    return false;
+  }
+
+  if (gvd_map == nullptr) {
+    return true;
+  }
+
+  const int w = static_cast<int>(grid.info.width);
+  const int h = static_cast<int>(grid.info.height);
+  if (!isInside(x, y, w, h)) {
+    return false;
+  }
+
+  return (*gvd_map)[x][y].dist >= min_clearance;
+}
+
 bool VoronoiGridPlanner::canTraverseBetweenCells(
   int x0, int y0, int x1, int y1,
-  const nav_msgs::msg::OccupancyGrid & grid) const
+  const nav_msgs::msg::OccupancyGrid & grid,
+  const std::vector<std::vector<VoronoiData>> * gvd_map,
+  double min_clearance) const
 {
-  if (!isFreeCell(x1, y1, grid)) {
+  if (!isSafeCell(x1, y1, grid, gvd_map, min_clearance)) {
     return false;
   }
 
@@ -82,12 +107,15 @@ bool VoronoiGridPlanner::canTraverseBetweenCells(
     return true;
   }
 
-  return isFreeCell(x0 + dx, y0, grid) && isFreeCell(x0, y0 + dy, grid);
+  return isSafeCell(x0 + dx, y0, grid, gvd_map, min_clearance) &&
+    isSafeCell(x0, y0 + dy, grid, gvd_map, min_clearance);
 }
 
 bool VoronoiGridPlanner::lineOfSightFree(
   int x0, int y0, int x1, int y1,
-  const nav_msgs::msg::OccupancyGrid & grid) const
+  const nav_msgs::msg::OccupancyGrid & grid,
+  const std::vector<std::vector<VoronoiData>> * gvd_map,
+  double min_clearance) const
 {
   int dx = std::abs(x1 - x0);
   int dy = std::abs(y1 - y0);
@@ -99,7 +127,7 @@ bool VoronoiGridPlanner::lineOfSightFree(
   int y = y0;
 
   while (true) {
-    if (!isFreeCell(x, y, grid)) {
+    if (!isSafeCell(x, y, grid, gvd_map, min_clearance)) {
       return false;
     }
 
@@ -119,7 +147,7 @@ bool VoronoiGridPlanner::lineOfSightFree(
       y += sy;
     }
 
-    if (!canTraverseBetweenCells(prev_x, prev_y, x, y, grid)) {
+    if (!canTraverseBetweenCells(prev_x, prev_y, x, y, grid, gvd_map, min_clearance)) {
       return false;
     }
   }
@@ -159,6 +187,9 @@ bool VoronoiGridPlanner::findNearestReachableVoronoiPoint(
 {
   const int w = static_cast<int>(grid.info.width);
   const int h = static_cast<int>(grid.info.height);
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    grid.info.resolution * 1.5);
 
   if (!isInside(start.x, start.y, w, h) || !isFreeCell(start.x, start.y, grid)) {
     return false;
@@ -198,7 +229,7 @@ bool VoronoiGridPlanner::findNearestReachableVoronoiPoint(
       if (!isInside(nx, ny, w, h)) {
         continue;
       }
-      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid)) {
+      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid, &gvd_map, min_clearance)) {
         continue;
       }
 
@@ -230,6 +261,9 @@ bool VoronoiGridPlanner::searchVoronoiOnly(
 
   const int w = static_cast<int>(gvd_map.size());
   const int h = static_cast<int>(gvd_map[0].size());
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    grid.info.resolution * 1.5);
 
   if (!isInside(start_v.x, start_v.y, w, h) || !isInside(goal_v.x, goal_v.y, w, h)) {
     return false;
@@ -277,7 +311,7 @@ bool VoronoiGridPlanner::searchVoronoiOnly(
       if (!gvd_map[nx][ny].is_voronoi) {
         continue;
       }
-      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid)) {
+      if (!canTraverseBetweenCells(cur.x, cur.y, nx, ny, grid, &gvd_map, min_clearance)) {
         continue;
       }
 
@@ -414,7 +448,9 @@ std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFro
     }
   }
 
-  const double min_clearance = std::max(config_.robot_radius, resolution * 1.5);
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    resolution * 1.5);
   std::vector<std::vector<uint8_t>> candidate(w, std::vector<uint8_t>(h, 0));
 
   for (int x = 0; x < w; ++x) {
@@ -501,6 +537,7 @@ std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFro
       candidate[point.first][point.second] = 0;
     }
   }
+
 
   for (int x = 0; x < w; ++x) {
     for (int y = 0; y < h; ++y) {
@@ -633,7 +670,13 @@ bool VoronoiGridPlanner::makePlanFromMap(
     static_cast<double>(goal_x - start_x),
     static_cast<double>(goal_y - start_y));
 
-  if (start_goal_dist < 6.0 && lineOfSightFree(start_x, start_y, goal_x, goal_y, map)) {
+  const double min_clearance = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    resolution * 1.5);
+
+  if (start_goal_dist < 6.0 &&
+    lineOfSightFree(start_x, start_y, goal_x, goal_y, map, &gvd_map, min_clearance))
+  {
     PopulateGridPath({start_grid, goal_grid}, plan.header, resolution, origin_x, origin_y, plan);
     if (!plan.poses.empty()) {
       plan.poses.back() = goal;

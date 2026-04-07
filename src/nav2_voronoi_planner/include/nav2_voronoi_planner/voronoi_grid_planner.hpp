@@ -21,6 +21,7 @@ public:
   struct Config
   {
     double robot_radius {0.20};
+    double clearance_margin {0.03};
     int occ_threshold {50};
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};
@@ -43,12 +44,21 @@ private:
   GridPoint fromIndex(int idx, int w) const;
   bool isObstacle(int8_t v) const;
   bool isFreeCell(int x, int y, const nav_msgs::msg::OccupancyGrid & grid) const;
+  bool isSafeCell(
+    int x, int y,
+    const nav_msgs::msg::OccupancyGrid & grid,
+    const std::vector<std::vector<VoronoiData>> * gvd_map,
+    double min_clearance) const;
   bool canTraverseBetweenCells(
     int x0, int y0, int x1, int y1,
-    const nav_msgs::msg::OccupancyGrid & grid) const;
+    const nav_msgs::msg::OccupancyGrid & grid,
+    const std::vector<std::vector<VoronoiData>> * gvd_map,
+    double min_clearance) const;
   bool lineOfSightFree(
     int x0, int y0, int x1, int y1,
-    const nav_msgs::msg::OccupancyGrid & grid) const;
+    const nav_msgs::msg::OccupancyGrid & grid,
+    const std::vector<std::vector<VoronoiData>> * gvd_map,
+    double min_clearance) const;
   GridPath reconstructGridPath(
     const ParentMap & parent,
     int start_idx,
