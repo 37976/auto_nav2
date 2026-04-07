@@ -64,6 +64,9 @@ def generate_launch_description():
                 'trunk_safety_penalty_scale': 0.06,
                 'connector_candidate_count': 0,
                 'path_smoothing_control_step': 2,
+                'stable_map_replan_period_ms': 3000.0,
+                'map_significant_change_cells': 50,
+                'path_obstacle_check_distance_m': 2.0,
             }],
         ),
         Node(
@@ -74,10 +77,10 @@ def generate_launch_description():
             parameters=[{
                 'use_static_map': use_static_map,
                 'static_map_yaml': static_map_yaml,
-                'dynamic_obstacle_timeout': 0.2,
-                'obstacle_radius': 0.05,
+                'dynamic_obstacle_timeout': 0.6,
+                'obstacle_radius': 0.12,
                 'clear_radius': 0.12,
-                'projection_gap_fill_cells': 0,
+                'projection_gap_fill_cells': 2,
                 'accumulate_pointcloud_obstacles': False,
             }],
         ),

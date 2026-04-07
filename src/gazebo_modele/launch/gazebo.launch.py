@@ -67,6 +67,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world_name', default_value='gpt.world'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
+        SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,
         spawn_entity_cmd,
         start_robot_state_publisher_cmd,

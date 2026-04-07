@@ -31,6 +31,17 @@ private:
     const geometry_msgs::msg::PoseStamped & goal_local);
   void planTimerCallback();
   void publishStopCmd();
+  int classifyMapCell(int8_t value) const;
+  bool isSignificantMapChange(
+    const nav_msgs::msg::OccupancyGrid & previous,
+    const nav_msgs::msg::OccupancyGrid & current,
+    int * changed_cells) const;
+  bool isPathBlockedByMap(
+    const nav_msgs::msg::Path & path,
+    const nav_msgs::msg::Odometry & odom,
+    const nav_msgs::msg::OccupancyGrid & map,
+    double check_distance_m,
+    int * blocked_path_index) const;
 
   std::mutex data_mutex_;
 
@@ -53,6 +64,9 @@ private:
   double trunk_safety_penalty_scale_ {0.06};
   int connector_candidate_count_ {0};
   int path_smoothing_control_step_ {2};
+  double stable_map_replan_period_ms_ {3000.0};
+  int map_significant_change_cells_ {50};
+  double path_obstacle_check_distance_m_ {2.0};
 
   rclcpp::TimerBase::SharedPtr plan_timer_;
 
@@ -63,6 +77,10 @@ private:
   double last_plan_x_ {0.0};
   double last_plan_y_ {0.0};
   bool has_last_plan_pose_ {false};
+  rclcpp::Time last_map_replan_request_time_ {0, 0, RCL_ROS_TIME};
+  bool has_last_map_replan_request_ {false};
+  nav_msgs::msg::Path last_published_plan_;
+  bool has_published_plan_ {false};
 
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;

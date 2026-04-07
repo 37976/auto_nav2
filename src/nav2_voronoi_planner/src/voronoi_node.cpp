@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -13,6 +14,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
+#include "nav2_voronoi_planner/util.hpp"
 #include "nav2_voronoi_planner/voronoi_path_utils.hpp"
 
 namespace nav2_voronoi_planner
@@ -33,6 +35,12 @@ VoronoiNode::VoronoiNode()
     "trunk_safety_penalty_scale", 0.06);
   connector_candidate_count_ = this->declare_parameter<int>("connector_candidate_count", 0);
   path_smoothing_control_step_ = this->declare_parameter<int>("path_smoothing_control_step", 2);
+  stable_map_replan_period_ms_ = this->declare_parameter<double>(
+    "stable_map_replan_period_ms", 3000.0);
+  map_significant_change_cells_ = this->declare_parameter<int>(
+    "map_significant_change_cells", 50);
+  path_obstacle_check_distance_m_ = this->declare_parameter<double>(
+    "path_obstacle_check_distance_m", 2.0);
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
@@ -66,6 +74,11 @@ VoronoiNode::VoronoiNode()
     this->get_logger(),
     "Clearance rule: robot_radius=%.2f m, extra_margin=%.2f m, connector_candidates=%d (0=all)",
     robot_radius_, clearance_margin_, connector_candidate_count_);
+  RCLCPP_INFO(
+    this->get_logger(),
+    "Map replan gate: stable_period=%.0f ms, significant_change_cells=%d, path_check=%.2f m",
+    stable_map_replan_period_ms_, map_significant_change_cells_,
+    path_obstacle_check_distance_m_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);
@@ -73,18 +86,189 @@ VoronoiNode::VoronoiNode()
 
 void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  map_ = msg;
-  has_map_ = true;
-  map_dirty_ = true;
+  bool request_replan = false;
+  bool significant_change = false;
+  bool path_blocked = false;
+  bool stop_for_path_block = false;
+  int changed_cells = 0;
+  int blocked_path_index = -1;
 
-  if (has_goal_) {
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+
+    if (has_goal_) {
+      significant_change = !has_map_ || isSignificantMapChange(*map_, *msg, &changed_cells);
+      path_blocked =
+        has_odom_ && has_published_plan_ &&
+        isPathBlockedByMap(
+          last_published_plan_, *odom_, *msg, path_obstacle_check_distance_m_,
+          &blocked_path_index);
+
+      const auto now = this->now();
+      const bool slow_replan_due =
+        !has_last_map_replan_request_ ||
+        ((now - last_map_replan_request_time_).seconds() * 1000.0 >=
+        stable_map_replan_period_ms_);
+
+      request_replan = goal_dirty_ || path_blocked || significant_change || slow_replan_due;
+      if (request_replan) {
+        last_map_replan_request_time_ = now;
+        has_last_map_replan_request_ = true;
+      }
+      stop_for_path_block = path_blocked;
+    }
+
+    map_ = msg;
+    has_map_ = true;
+
+    if (request_replan) {
+      map_dirty_ = true;
+      need_replan_ = true;
+    }
+  }
+
+  if (stop_for_path_block) {
+    nav_msgs::msg::Path empty_path;
+    empty_path.header.frame_id = msg->header.frame_id.empty() ? "map" : msg->header.frame_id;
+    empty_path.header.stamp = this->now();
+    path_pub_->publish(empty_path);
+    path2_pub_->publish(empty_path);
+    publishStopCmd();
+    RCLCPP_WARN_THROTTLE(
+      this->get_logger(), *this->get_clock(), 1000,
+      "Current path blocked near path index %d. Stop and request immediate replan.",
+      blocked_path_index);
+  }
+
+  if (request_replan) {
     RCLCPP_INFO_THROTTLE(
       this->get_logger(), *this->get_clock(), 3000,
-      "Received combined_grid: %u x %u, resolution=%.3f",
-      map_->info.width, map_->info.height, map_->info.resolution);
-    need_replan_ = true;
+      "Map update scheduled replan: %u x %u, resolution=%.3f, changed_cells=%d, "
+      "significant=%s, path_blocked=%s",
+      msg->info.width, msg->info.height, msg->info.resolution,
+      changed_cells, significant_change ? "true" : "false",
+      path_blocked ? "true" : "false");
   }
+}
+
+int VoronoiNode::classifyMapCell(int8_t value) const
+{
+  if (value < 0) {
+    return unknown_is_obstacle_ ? 1 : -1;
+  }
+  return (value >= occ_threshold_) ? 1 : 0;
+}
+
+bool VoronoiNode::isSignificantMapChange(
+  const nav_msgs::msg::OccupancyGrid & previous,
+  const nav_msgs::msg::OccupancyGrid & current,
+  int * changed_cells) const
+{
+  if (changed_cells) {
+    *changed_cells = 0;
+  }
+
+  if (
+    previous.info.width != current.info.width ||
+    previous.info.height != current.info.height ||
+    previous.info.resolution != current.info.resolution ||
+    previous.info.origin.position.x != current.info.origin.position.x ||
+    previous.info.origin.position.y != current.info.origin.position.y ||
+    previous.data.size() != current.data.size())
+  {
+    if (changed_cells) {
+      *changed_cells = static_cast<int>(current.data.size());
+    }
+    return true;
+  }
+
+  int changes = 0;
+  for (size_t i = 0; i < current.data.size(); ++i) {
+    if (classifyMapCell(previous.data[i]) != classifyMapCell(current.data[i])) {
+      ++changes;
+      if (changes >= map_significant_change_cells_) {
+        if (changed_cells) {
+          *changed_cells = changes;
+        }
+        return true;
+      }
+    }
+  }
+
+  if (changed_cells) {
+    *changed_cells = changes;
+  }
+  return false;
+}
+
+bool VoronoiNode::isPathBlockedByMap(
+  const nav_msgs::msg::Path & path,
+  const nav_msgs::msg::Odometry & odom,
+  const nav_msgs::msg::OccupancyGrid & map,
+  double check_distance_m,
+  int * blocked_path_index) const
+{
+  if (blocked_path_index) {
+    *blocked_path_index = -1;
+  }
+  if (path.poses.empty() || map.info.resolution <= 0.0 || map.data.empty()) {
+    return false;
+  }
+
+  const double robot_x = odom.pose.pose.position.x;
+  const double robot_y = odom.pose.pose.position.y;
+  size_t closest_index = 0;
+  double best_dist_sq = std::numeric_limits<double>::infinity();
+
+  for (size_t i = 0; i < path.poses.size(); ++i) {
+    const auto & position = path.poses[i].pose.position;
+    const double dx = position.x - robot_x;
+    const double dy = position.y - robot_y;
+    const double dist_sq = dx * dx + dy * dy;
+    if (dist_sq < best_dist_sq) {
+      best_dist_sq = dist_sq;
+      closest_index = i;
+    }
+  }
+
+  const int width = static_cast<int>(map.info.width);
+  const int height = static_cast<int>(map.info.height);
+  const double resolution = map.info.resolution;
+  const double origin_x = map.info.origin.position.x;
+  const double origin_y = map.info.origin.position.y;
+  const double max_check_distance = std::max(0.0, check_distance_m);
+
+  double traversed_distance = 0.0;
+  for (size_t i = closest_index; i < path.poses.size(); ++i) {
+    if (i > closest_index) {
+      const auto & prev = path.poses[i - 1].pose.position;
+      const auto & cur = path.poses[i].pose.position;
+      traversed_distance += std::hypot(cur.x - prev.x, cur.y - prev.y);
+      if (traversed_distance > max_check_distance) {
+        break;
+      }
+    }
+
+    const auto & position = path.poses[i].pose.position;
+    const int x = ContXY2Disc(position.x - origin_x, resolution);
+    const int y = ContXY2Disc(position.y - origin_y, resolution);
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+      if (blocked_path_index) {
+        *blocked_path_index = static_cast<int>(i);
+      }
+      return true;
+    }
+
+    const int index = y * width + x;
+    if (classifyMapCell(map.data[index]) == 1) {
+      if (blocked_path_index) {
+        *blocked_path_index = static_cast<int>(i);
+      }
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
@@ -108,6 +292,7 @@ void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
         goal_dirty_ = false;
         need_replan_ = false;
         map_dirty_ = false;
+        has_published_plan_ = false;
         goal_reached_now = true;
         frame_id = has_map_ ? map_->header.frame_id : last_goal_.header.frame_id;
       }
@@ -162,6 +347,7 @@ void VoronoiNode::tryPlanWithSnapshot(
       goal_dirty_ = false;
       need_replan_ = false;
       map_dirty_ = false;
+      has_published_plan_ = false;
     }
 
     nav_msgs::msg::Path empty_path;
@@ -218,6 +404,8 @@ void VoronoiNode::tryPlanWithSnapshot(
     last_plan_x_ = odom_local->pose.pose.position.x;
     last_plan_y_ = odom_local->pose.pose.position.y;
     has_last_plan_pose_ = true;
+    last_published_plan_ = published_plan;
+    has_published_plan_ = true;
   }
 
   RCLCPP_INFO_THROTTLE(
@@ -297,6 +485,7 @@ void VoronoiNode::planTimerCallback()
       goal_dirty_ = false;
       need_replan_ = false;
       map_dirty_ = false;
+      has_published_plan_ = false;
     }
 
     nav_msgs::msg::Path empty_path;
