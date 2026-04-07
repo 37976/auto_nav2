@@ -66,7 +66,8 @@ def generate_launch_description():
                 'path_smoothing_control_step': 2,
                 'stable_map_replan_period_ms': 3000.0,
                 'map_significant_change_cells': 50,
-                'path_obstacle_check_distance_m': 2.0,
+                'path_obstacle_check_distance_m': 3.0,
+                'path_switch_min_improvement_m': 0.5,
             }],
         ),
         Node(

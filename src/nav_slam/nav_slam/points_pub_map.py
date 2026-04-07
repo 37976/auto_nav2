@@ -18,6 +18,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
 import sensor_msgs_py.point_cloud2 as pc2
@@ -29,13 +30,16 @@ class PointCloudTransformNode(Node):
         
         # Declare parameters
         self.declare_parameter('frame_id', 'map')
+        fast_sensor_qos = QoSProfile(depth=1)
         
         # Create subscribers
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
-        self.pointcloud_sub = self.create_subscription(PointCloud2, '/points_raw', self.pointcloud_callback, 10)
+        self.pointcloud_sub = self.create_subscription(
+            PointCloud2, '/points_raw', self.pointcloud_callback, fast_sensor_qos)
         
         # Create publisher
-        self.transformed_pointcloud_pub = self.create_publisher(PointCloud2, '/mapokk', 10)
+        self.transformed_pointcloud_pub = self.create_publisher(
+            PointCloud2, '/mapokk', fast_sensor_qos)
        
         # Initialize variables
         self.odom_data = None
@@ -113,6 +117,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
 
 

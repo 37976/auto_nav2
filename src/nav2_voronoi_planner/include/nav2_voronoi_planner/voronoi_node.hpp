@@ -42,6 +42,10 @@ private:
     const nav_msgs::msg::OccupancyGrid & map,
     double check_distance_m,
     int * blocked_path_index) const;
+  double pathLengthFromClosestPose(
+    const nav_msgs::msg::Path & path,
+    const geometry_msgs::msg::Pose & pose) const;
+  double pathLength(const nav_msgs::msg::Path & path) const;
 
   std::mutex data_mutex_;
 
@@ -67,6 +71,7 @@ private:
   double stable_map_replan_period_ms_ {3000.0};
   int map_significant_change_cells_ {50};
   double path_obstacle_check_distance_m_ {2.0};
+  double path_switch_min_improvement_m_ {0.5};
 
   rclcpp::TimerBase::SharedPtr plan_timer_;
 

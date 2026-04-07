@@ -41,6 +41,8 @@ VoronoiNode::VoronoiNode()
     "map_significant_change_cells", 50);
   path_obstacle_check_distance_m_ = this->declare_parameter<double>(
     "path_obstacle_check_distance_m", 2.0);
+  path_switch_min_improvement_m_ = this->declare_parameter<double>(
+    "path_switch_min_improvement_m", 0.5);
 
   planner_ = std::make_unique<VoronoiGridPlanner>(VoronoiGridPlanner::Config{
       robot_radius_,
@@ -76,9 +78,10 @@ VoronoiNode::VoronoiNode()
     robot_radius_, clearance_margin_, connector_candidate_count_);
   RCLCPP_INFO(
     this->get_logger(),
-    "Map replan gate: stable_period=%.0f ms, significant_change_cells=%d, path_check=%.2f m",
+    "Map replan gate: stable_period=%.0f ms, significant_change_cells=%d, "
+    "path_check=%.2f m, switch_improvement=%.2f m",
     stable_map_replan_period_ms_, map_significant_change_cells_,
-    path_obstacle_check_distance_m_);
+    path_obstacle_check_distance_m_, path_switch_min_improvement_m_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);
@@ -271,6 +274,53 @@ bool VoronoiNode::isPathBlockedByMap(
   return false;
 }
 
+double VoronoiNode::pathLengthFromClosestPose(
+  const nav_msgs::msg::Path & path,
+  const geometry_msgs::msg::Pose & pose) const
+{
+  if (path.poses.size() < 2) {
+    return 0.0;
+  }
+
+  size_t closest_index = 0;
+  double best_dist_sq = std::numeric_limits<double>::infinity();
+  for (size_t i = 0; i < path.poses.size(); ++i) {
+    const auto & position = path.poses[i].pose.position;
+    const double dx = position.x - pose.position.x;
+    const double dy = position.y - pose.position.y;
+    const double dist_sq = dx * dx + dy * dy;
+    if (dist_sq < best_dist_sq) {
+      best_dist_sq = dist_sq;
+      closest_index = i;
+    }
+  }
+
+  double length = std::sqrt(best_dist_sq);
+  for (size_t i = closest_index + 1; i < path.poses.size(); ++i) {
+    const auto & prev = path.poses[i - 1].pose.position;
+    const auto & cur = path.poses[i].pose.position;
+    length += std::hypot(cur.x - prev.x, cur.y - prev.y);
+  }
+
+  return length;
+}
+
+double VoronoiNode::pathLength(const nav_msgs::msg::Path & path) const
+{
+  if (path.poses.size() < 2) {
+    return 0.0;
+  }
+
+  double length = 0.0;
+  for (size_t i = 1; i < path.poses.size(); ++i) {
+    const auto & prev = path.poses[i - 1].pose.position;
+    const auto & cur = path.poses[i].pose.position;
+    length += std::hypot(cur.x - prev.x, cur.y - prev.y);
+  }
+
+  return length;
+}
+
 void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   bool goal_reached_now = false;
@@ -382,13 +432,58 @@ void VoronoiNode::tryPlanWithSnapshot(
     return;
   }
 
-  skeleton.header.stamp = this->now();
-  skeleton_pub_->publish(skeleton);
+  nav_msgs::msg::Path previous_plan;
+  bool has_previous_plan = false;
+  bool goal_dirty_snapshot = false;
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    previous_plan = last_published_plan_;
+    has_previous_plan = has_published_plan_;
+    goal_dirty_snapshot = goal_dirty_;
+  }
 
   const nav_msgs::msg::Path smoothing_control_path =
     downsamplePath(plan, std::max(1, path_smoothing_control_step_));
   nav_msgs::msg::Path published_plan = smoothPathBSpline(
     smoothing_control_path, static_cast<int>(plan.poses.size()), 3);
+
+  bool previous_plan_blocked = false;
+  if (has_previous_plan && !previous_plan.poses.empty()) {
+    previous_plan_blocked = isPathBlockedByMap(
+      previous_plan, *odom_local, *map_local, path_obstacle_check_distance_m_,
+      nullptr);
+  }
+
+  const double new_path_length = pathLength(published_plan);
+  const double previous_remaining_length =
+    has_previous_plan ?
+    pathLengthFromClosestPose(previous_plan, odom_local->pose.pose) :
+    std::numeric_limits<double>::infinity();
+
+  if (
+    has_previous_plan && !goal_dirty_snapshot && !previous_plan_blocked &&
+    new_path_length + path_switch_min_improvement_m_ >= previous_remaining_length)
+  {
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      goal_dirty_ = false;
+      need_replan_ = false;
+      map_dirty_ = false;
+      last_plan_x_ = odom_local->pose.pose.position.x;
+      last_plan_y_ = odom_local->pose.pose.position.y;
+      has_last_plan_pose_ = true;
+    }
+
+    RCLCPP_INFO_THROTTLE(
+      this->get_logger(), *this->get_clock(), 2000,
+      "Keep current path to avoid oscillation: current_remaining=%.2f m, "
+      "new=%.2f m, switch_threshold=%.2f m",
+      previous_remaining_length, new_path_length, path_switch_min_improvement_m_);
+    return;
+  }
+
+  skeleton.header.stamp = this->now();
+  skeleton_pub_->publish(skeleton);
   path_pub_->publish(published_plan);
 
   if (publish_debug_path2_) {

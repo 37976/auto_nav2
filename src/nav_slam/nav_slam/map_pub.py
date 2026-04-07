@@ -5,6 +5,7 @@ import os
 import yaml
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
@@ -73,18 +74,20 @@ class ObstacleGridNode(Node):
         if self.use_static_map:
             self.load_static_map(self.static_map_yaml)
 
+        fast_map_qos = QoSProfile(depth=1)
+
         # 创建订阅者和发布者
         self.pointcloud_sub = self.create_subscription(
-            PointCloud2, '/mapokk', self.pointcloud_callback, 10
+            PointCloud2, '/mapokk', self.pointcloud_callback, fast_map_qos
         )
         self.dynamic_obstacle_sub = self.create_subscription(
-            PointCloud2, '/dynamic_obstacle_points', self.dynamic_obstacle_callback, 10
+            PointCloud2, '/dynamic_obstacle_points', self.dynamic_obstacle_callback, fast_map_qos
         )
         self.odom_sub = self.create_subscription(
             Odometry, '/odom', self.odom_callback, 10
         )
         self.grid_combined_pub = self.create_publisher(
-            OccupancyGrid, '/combined_grid', 10
+            OccupancyGrid, '/combined_grid', fast_map_qos
         )
 
         self.odom_data = None
