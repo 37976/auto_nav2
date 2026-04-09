@@ -53,6 +53,12 @@ private:
   GridPoint fromIndex(int idx, int w) const;
   bool isObstacle(int8_t v) const;
   bool isFreeCell(int x, int y, const nav_msgs::msg::OccupancyGrid & grid) const;
+  bool findNearestFreeCell(
+    int input_x,
+    int input_y,
+    const nav_msgs::msg::OccupancyGrid & grid,
+    int max_radius_cells,
+    GridPoint & free_cell) const;
   bool isSafeCell(
     int x, int y,
     const nav_msgs::msg::OccupancyGrid & grid,

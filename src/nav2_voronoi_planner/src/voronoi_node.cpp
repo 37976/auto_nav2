@@ -52,7 +52,6 @@ VoronoiNode::VoronoiNode()
       trunk_safety_penalty_scale_,
       connector_candidate_count_});
 
-  cmd_vel_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
   path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path", 10);
   path2_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path2", 10);
@@ -92,7 +91,6 @@ void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
   bool request_replan = false;
   bool significant_change = false;
   bool path_blocked = false;
-  bool stop_for_path_block = false;
   int changed_cells = 0;
   int blocked_path_index = -1;
 
@@ -118,7 +116,6 @@ void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
         last_map_replan_request_time_ = now;
         has_last_map_replan_request_ = true;
       }
-      stop_for_path_block = path_blocked;
     }
 
     map_ = msg;
@@ -128,19 +125,6 @@ void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
       map_dirty_ = true;
       need_replan_ = true;
     }
-  }
-
-  if (stop_for_path_block) {
-    nav_msgs::msg::Path empty_path;
-    empty_path.header.frame_id = msg->header.frame_id.empty() ? "map" : msg->header.frame_id;
-    empty_path.header.stamp = this->now();
-    path_pub_->publish(empty_path);
-    path2_pub_->publish(empty_path);
-    publishStopCmd();
-    RCLCPP_WARN_THROTTLE(
-      this->get_logger(), *this->get_clock(), 1000,
-      "Current path blocked near path index %d. Stop and request immediate replan.",
-      blocked_path_index);
   }
 
   if (request_replan) {
@@ -356,7 +340,6 @@ void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
 
-    publishStopCmd();
     RCLCPP_INFO(this->get_logger(), "Goal reached from odom. Stop replanning.");
   }
 }
@@ -374,6 +357,17 @@ void VoronoiNode::goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr 
   has_goal_ = true;
   goal_dirty_ = true;
   need_replan_ = true;
+  map_dirty_ = true;
+  has_last_plan_pose_ = false;
+  has_last_map_replan_request_ = false;
+  has_published_plan_ = false;
+  last_published_plan_.poses.clear();
+
+  RCLCPP_INFO(
+    this->get_logger(), "New goal received: frame=%s, x=%.2f, y=%.2f",
+    last_goal_.header.frame_id.c_str(),
+    last_goal_.pose.position.x,
+    last_goal_.pose.position.y);
 }
 
 void VoronoiNode::tryPlanWithSnapshot(
@@ -406,7 +400,6 @@ void VoronoiNode::tryPlanWithSnapshot(
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
 
-    publishStopCmd();
     RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
     return;
   }
@@ -426,9 +419,23 @@ void VoronoiNode::tryPlanWithSnapshot(
   if (!planner_->makePlanFromMap(
       *map_local, start, goal, plan, &skeleton, this->get_logger()))
   {
+    {
+      std::lock_guard<std::mutex> lock(data_mutex_);
+      has_published_plan_ = false;
+      last_published_plan_.poses.clear();
+    }
+
+    nav_msgs::msg::Path empty_path;
+    empty_path.header.frame_id = map_local->header.frame_id;
+    empty_path.header.stamp = this->now();
+    path_pub_->publish(empty_path);
+    path2_pub_->publish(empty_path);
+
     RCLCPP_WARN_THROTTLE(
       this->get_logger(), *this->get_clock(), 2000,
-      "Voronoi replanning failed.");
+      "Voronoi replanning failed: start=(%.2f, %.2f), goal=(%.2f, %.2f).",
+      start.pose.position.x, start.pose.position.y,
+      goal.pose.position.x, goal.pose.position.y);
     return;
   }
 
@@ -589,7 +596,6 @@ void VoronoiNode::planTimerCallback()
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
 
-    publishStopCmd();
     RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
     return;
   }
@@ -608,21 +614,6 @@ void VoronoiNode::planTimerCallback()
   }
 
   tryPlanWithSnapshot(map_local, odom_local, goal_local);
-}
-
-void VoronoiNode::publishStopCmd()
-{
-  geometry_msgs::msg::Twist stop_cmd;
-  stop_cmd.linear.x = 0.0;
-  stop_cmd.linear.y = 0.0;
-  stop_cmd.linear.z = 0.0;
-  stop_cmd.angular.x = 0.0;
-  stop_cmd.angular.y = 0.0;
-  stop_cmd.angular.z = 0.0;
-
-  for (int i = 0; i < 5; ++i) {
-    cmd_vel_pub_->publish(stop_cmd);
-  }
 }
 
 }  // namespace nav2_voronoi_planner

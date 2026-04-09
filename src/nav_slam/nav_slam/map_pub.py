@@ -28,6 +28,8 @@ class ObstacleGridNode(Node):
         self.declare_parameter('projection_gap_fill_cells', 0)
         self.declare_parameter('dynamic_obstacle_timeout', 0.2)
         self.declare_parameter('accumulate_pointcloud_obstacles', False)
+        self.declare_parameter('use_pointcloud_obstacles', True)
+        self.declare_parameter('use_dynamic_obstacle_points', True)
 
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
@@ -46,6 +48,10 @@ class ObstacleGridNode(Node):
             'dynamic_obstacle_timeout').get_parameter_value().double_value
         self.accumulate_pointcloud_obstacles = self.get_parameter(
             'accumulate_pointcloud_obstacles').get_parameter_value().bool_value
+        self.use_pointcloud_obstacles = self.get_parameter(
+            'use_pointcloud_obstacles').get_parameter_value().bool_value
+        self.use_dynamic_obstacle_points = self.get_parameter(
+            'use_dynamic_obstacle_points').get_parameter_value().bool_value
 
         self.use_static_map = self.get_parameter('use_static_map').get_parameter_value().bool_value
         self.static_map_yaml = self.get_parameter('static_map_yaml').get_parameter_value().string_value
@@ -108,6 +114,11 @@ class ObstacleGridNode(Node):
         self.get_logger().info('ObstacleGridNode started.')
         if self.use_static_map:
             self.get_logger().info(f'Use static map: {self.static_map_yaml}')
+        self.get_logger().info(
+            'Dynamic map layers: '
+            f'pointcloud={self.use_pointcloud_obstacles}, '
+            f'dynamic_points={self.use_dynamic_obstacle_points}'
+        )
         self.get_logger().info(f'Robot footprint clear radius: {self.clear_radius:.2f} m')
 
     def timer_callback(self):
@@ -212,15 +223,40 @@ class ObstacleGridNode(Node):
         )
 
     def refresh_dynamic_layers(self):
-        self.obstacles = self.pointcloud_obstacles | self.dynamic_obstacle_points
+        pointcloud_obstacles = (
+            self.pointcloud_obstacles if self.use_pointcloud_obstacles else set()
+        )
+        pointcloud_dilated_obstacles_layer1 = (
+            self.pointcloud_dilated_obstacles_layer1 if self.use_pointcloud_obstacles else set()
+        )
+        pointcloud_dilated_obstacles_layer2 = (
+            self.pointcloud_dilated_obstacles_layer2 if self.use_pointcloud_obstacles else set()
+        )
+        pointcloud_dilated_obstacles_layer3 = (
+            self.pointcloud_dilated_obstacles_layer3 if self.use_pointcloud_obstacles else set()
+        )
+        dynamic_obstacle_points = (
+            self.dynamic_obstacle_points if self.use_dynamic_obstacle_points else set()
+        )
+        dynamic_dilated_obstacles_layer1 = (
+            self.dynamic_dilated_obstacles_layer1 if self.use_dynamic_obstacle_points else set()
+        )
+        dynamic_dilated_obstacles_layer2 = (
+            self.dynamic_dilated_obstacles_layer2 if self.use_dynamic_obstacle_points else set()
+        )
+        dynamic_dilated_obstacles_layer3 = (
+            self.dynamic_dilated_obstacles_layer3 if self.use_dynamic_obstacle_points else set()
+        )
+
+        self.obstacles = pointcloud_obstacles | dynamic_obstacle_points
         self.dilated_obstacles_layer1 = (
-            self.pointcloud_dilated_obstacles_layer1 | self.dynamic_dilated_obstacles_layer1
+            pointcloud_dilated_obstacles_layer1 | dynamic_dilated_obstacles_layer1
         )
         self.dilated_obstacles_layer2 = (
-            self.pointcloud_dilated_obstacles_layer2 | self.dynamic_dilated_obstacles_layer2
+            pointcloud_dilated_obstacles_layer2 | dynamic_dilated_obstacles_layer2
         )
         self.dilated_obstacles_layer3 = (
-            self.pointcloud_dilated_obstacles_layer3 | self.dynamic_dilated_obstacles_layer3
+            pointcloud_dilated_obstacles_layer3 | dynamic_dilated_obstacles_layer3
         )
 
     def iter_grid_line(self, x0, y0, x1, y1):
@@ -244,6 +280,8 @@ class ObstacleGridNode(Node):
                 y += sy
 
     def pointcloud_callback(self, msg):
+        if not self.use_pointcloud_obstacles:
+            return
         if self.odom_data is None:
             return
 
@@ -271,6 +309,8 @@ class ObstacleGridNode(Node):
         self.update_combined_grid()
 
     def dynamic_obstacle_callback(self, msg):
+        if not self.use_dynamic_obstacle_points:
+            return
         points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
         (
             self.dynamic_obstacle_points,

@@ -10,6 +10,7 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -31,6 +32,8 @@ def generate_launch_description():
     web_image_topic = LaunchConfiguration('web_image_topic')
     scan_topic = LaunchConfiguration('scan_topic')
     pointcloud_topic = LaunchConfiguration('pointcloud_topic')
+    use_pointcloud_obstacles = LaunchConfiguration('use_pointcloud_obstacles')
+    use_dynamic_obstacle_points = LaunchConfiguration('use_dynamic_obstacle_points')
     start_hotspot = LaunchConfiguration('start_hotspot')
     hotspot_connection_name = LaunchConfiguration('hotspot_connection_name')
     hotspot_ssid = LaunchConfiguration('hotspot_ssid')
@@ -47,6 +50,8 @@ def generate_launch_description():
         DeclareLaunchArgument('web_image_topic', default_value='/camera/image_raw'),
         DeclareLaunchArgument('scan_topic', default_value=''),
         DeclareLaunchArgument('pointcloud_topic', default_value='/points_raw'),
+        DeclareLaunchArgument('use_pointcloud_obstacles', default_value='true'),
+        DeclareLaunchArgument('use_dynamic_obstacle_points', default_value='true'),
         DeclareLaunchArgument('start_hotspot', default_value='false'),
         DeclareLaunchArgument('hotspot_connection_name', default_value='dashgo-hotspot'),
         DeclareLaunchArgument('hotspot_ssid', default_value='Dashgo-Robot'),
@@ -58,8 +63,8 @@ def generate_launch_description():
             name='voronoi',
             output='screen',
             parameters=[{
-                'robot_radius': 0.12,
-                'clearance_margin': 0.0,
+                'robot_radius': 0.14,
+                'clearance_margin': 0.03,
                 'occ_threshold': 15,
                 'trunk_safety_penalty_scale': 0.06,
                 'connector_candidate_count': 0,
@@ -79,10 +84,14 @@ def generate_launch_description():
                 'use_static_map': use_static_map,
                 'static_map_yaml': static_map_yaml,
                 'dynamic_obstacle_timeout': 0.6,
-                'obstacle_radius': 0.12,
-                'clear_radius': 0.12,
+                'obstacle_radius': 0.15,
+                'clear_radius': 0.16,
                 'projection_gap_fill_cells': 2,
                 'accumulate_pointcloud_obstacles': False,
+                'use_pointcloud_obstacles': ParameterValue(
+                    use_pointcloud_obstacles, value_type=bool),
+                'use_dynamic_obstacle_points': ParameterValue(
+                    use_dynamic_obstacle_points, value_type=bool),
             }],
         ),
         Node(

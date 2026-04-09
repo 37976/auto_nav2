@@ -3,6 +3,7 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -14,6 +15,7 @@ def generate_launch_description():
 
     pkg_share = FindPackageShare(package=package_name)
     world_name = LaunchConfiguration('world_name')
+    start_moving_obstacle = LaunchConfiguration('start_moving_obstacle')
     urdf_model_path = PathJoinSubstitution([pkg_share, 'urdf', 'model.urdf'])
     gazebo_world_path = PathJoinSubstitution([pkg_share, 'world', world_name])
 
@@ -38,16 +40,11 @@ def generate_launch_description():
         executable='robot_state_publisher',
         arguments=[urdf_model_path]
     )
-    joint_state_publisher_node = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui',
-        name='joint_state_publisher_gui',
-        arguments=[urdf_model_path]
-    )
     moving_obstacle_cmd = Node(
         package='gazebo_modele',
         executable='moving_obstacle_controller',
         name='moving_obstacle_controller',
+        condition=IfCondition(start_moving_obstacle),
         output='screen',
         parameters=[{
             'enabled': True,
@@ -66,11 +63,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         DeclareLaunchArgument('world_name', default_value='gpt.world'),
+        DeclareLaunchArgument('start_moving_obstacle', default_value='false'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,
         spawn_entity_cmd,
         start_robot_state_publisher_cmd,
-        joint_state_publisher_node,
         moving_obstacle_cmd,
     ])

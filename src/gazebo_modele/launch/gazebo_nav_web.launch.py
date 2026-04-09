@@ -32,9 +32,12 @@ def generate_launch_description():
     use_static_map = LaunchConfiguration('use_static_map')
     static_map_yaml = LaunchConfiguration('static_map_yaml')
     world_name = LaunchConfiguration('world_name')
+    start_moving_obstacle = LaunchConfiguration('start_moving_obstacle')
     web_host = LaunchConfiguration('web_host')
     web_port = LaunchConfiguration('web_port')
     web_image_topic = LaunchConfiguration('web_image_topic')
+    use_pointcloud_obstacles = LaunchConfiguration('use_pointcloud_obstacles')
+    use_dynamic_obstacle_points = LaunchConfiguration('use_dynamic_obstacle_points')
     start_hotspot = LaunchConfiguration('start_hotspot')
     hotspot_connection_name = LaunchConfiguration('hotspot_connection_name')
     hotspot_ssid = LaunchConfiguration('hotspot_ssid')
@@ -47,9 +50,12 @@ def generate_launch_description():
         DeclareLaunchArgument('use_static_map', default_value='true'),
         DeclareLaunchArgument('static_map_yaml', default_value=default_static_map_yaml),
         DeclareLaunchArgument('world_name', default_value='gpt.world'),
+        DeclareLaunchArgument('start_moving_obstacle', default_value='false'),
         DeclareLaunchArgument('web_host', default_value='0.0.0.0'),
         DeclareLaunchArgument('web_port', default_value='8080'),
         DeclareLaunchArgument('web_image_topic', default_value='/camera/image_raw'),
+        DeclareLaunchArgument('use_pointcloud_obstacles', default_value='true'),
+        DeclareLaunchArgument('use_dynamic_obstacle_points', default_value='true'),
         DeclareLaunchArgument('start_hotspot', default_value='false'),
         DeclareLaunchArgument('hotspot_connection_name', default_value='dashgo-hotspot'),
         DeclareLaunchArgument('hotspot_ssid', default_value='Dashgo-Robot'),
@@ -59,6 +65,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource(gazebo_launch),
             launch_arguments={
                 'world_name': world_name,
+                'start_moving_obstacle': start_moving_obstacle,
             }.items(),
         ),
         TimerAction(
@@ -74,6 +81,8 @@ def generate_launch_description():
                         'web_host': web_host,
                         'web_port': web_port,
                         'web_image_topic': web_image_topic,
+                        'use_pointcloud_obstacles': use_pointcloud_obstacles,
+                        'use_dynamic_obstacle_points': use_dynamic_obstacle_points,
                         'start_hotspot': start_hotspot,
                         'hotspot_connection_name': hotspot_connection_name,
                         'hotspot_ssid': hotspot_ssid,

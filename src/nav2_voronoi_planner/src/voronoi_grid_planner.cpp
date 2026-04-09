@@ -68,6 +68,55 @@ bool VoronoiGridPlanner::isFreeCell(
   return !isObstacle(grid.data[x + y * w]);
 }
 
+bool VoronoiGridPlanner::findNearestFreeCell(
+  int input_x,
+  int input_y,
+  const nav_msgs::msg::OccupancyGrid & grid,
+  int max_radius_cells,
+  GridPoint & free_cell) const
+{
+  const int w = static_cast<int>(grid.info.width);
+  const int h = static_cast<int>(grid.info.height);
+
+  if (!isInside(input_x, input_y, w, h)) {
+    return false;
+  }
+  if (isFreeCell(input_x, input_y, grid)) {
+    free_cell = GridPoint{input_x, input_y};
+    return true;
+  }
+
+  int best_x = input_x;
+  int best_y = input_y;
+  int best_dist_sq = std::numeric_limits<int>::max();
+  const int radius = std::max(0, max_radius_cells);
+
+  for (int dy = -radius; dy <= radius; ++dy) {
+    for (int dx = -radius; dx <= radius; ++dx) {
+      const int x = input_x + dx;
+      const int y = input_y + dy;
+      const int dist_sq = dx * dx + dy * dy;
+      if (dist_sq > radius * radius || dist_sq >= best_dist_sq) {
+        continue;
+      }
+      if (!isFreeCell(x, y, grid)) {
+        continue;
+      }
+
+      best_x = x;
+      best_y = y;
+      best_dist_sq = dist_sq;
+    }
+  }
+
+  if (best_dist_sq == std::numeric_limits<int>::max()) {
+    return false;
+  }
+
+  free_cell = GridPoint{best_x, best_y};
+  return true;
+}
+
 bool VoronoiGridPlanner::isSafeCell(
   int x, int y,
   const nav_msgs::msg::OccupancyGrid & grid,
@@ -875,12 +924,40 @@ bool VoronoiGridPlanner::makePlanFromMap(
     return false;
   }
   if (!isFreeCell(start_x, start_y, map)) {
-    RCLCPP_WARN(logger, "Start is occupied or unknown.");
-    return false;
+    GridPoint adjusted_start;
+    const int search_radius = std::max(1, ContXY2Disc(config_.robot_radius * 2.0, resolution));
+    if (!findNearestFreeCell(start_x, start_y, map, search_radius, adjusted_start)) {
+      RCLCPP_WARN(
+        logger,
+        "Start is occupied or unknown, and no nearby free cell was found: (%d, %d).",
+        start_x, start_y);
+      return false;
+    }
+
+    RCLCPP_WARN(
+      logger,
+      "Start is occupied or unknown; use nearest free cell (%d, %d) instead of (%d, %d).",
+      adjusted_start.x, adjusted_start.y, start_x, start_y);
+    start_x = adjusted_start.x;
+    start_y = adjusted_start.y;
   }
   if (!isFreeCell(goal_x, goal_y, map)) {
-    RCLCPP_WARN(logger, "Goal is occupied or unknown.");
-    return false;
+    GridPoint adjusted_goal;
+    const int search_radius = std::max(1, ContXY2Disc(config_.robot_radius * 3.0, resolution));
+    if (!findNearestFreeCell(goal_x, goal_y, map, search_radius, adjusted_goal)) {
+      RCLCPP_WARN(
+        logger,
+        "Goal is occupied or unknown, and no nearby free cell was found: (%d, %d).",
+        goal_x, goal_y);
+      return false;
+    }
+
+    RCLCPP_WARN(
+      logger,
+      "Goal is occupied or unknown; use nearest free cell (%d, %d) instead of (%d, %d).",
+      adjusted_goal.x, adjusted_goal.y, goal_x, goal_y);
+    goal_x = adjusted_goal.x;
+    goal_y = adjusted_goal.y;
   }
 
   const auto gvd_map = buildVoronoiDiagramFromOccupancyGrid(map, logger);

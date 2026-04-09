@@ -5,7 +5,6 @@
 #include <mutex>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -30,7 +29,6 @@ private:
     const nav_msgs::msg::Odometry::SharedPtr & odom_local,
     const geometry_msgs::msg::PoseStamped & goal_local);
   void planTimerCallback();
-  void publishStopCmd();
   int classifyMapCell(int8_t value) const;
   bool isSignificantMapChange(
     const nav_msgs::msg::OccupancyGrid & previous,
@@ -93,7 +91,6 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path2_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr skeleton_pub_;
 
   std::unique_ptr<VoronoiGridPlanner> planner_;
