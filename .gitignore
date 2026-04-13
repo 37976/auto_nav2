@@ -34,3 +34,6 @@ Thumbs.db
 
 # Local helper scripts
 sync.sh
+
+# Large local vocab files
+src/sp_orb_slam_localization/vendor/superpoint_orb_slam3/Vocabulary/ORBvoc.txt

@@ -1,0 +1,57 @@
+%YAML:1.0
+
+# Intel RealSense D435 aligned color/RGB-D config.
+# Intrinsics below were read from:
+#   ros2 topic echo /camera/camera/color/camera_info --once
+
+File.version: "1.0"
+
+Camera.type: "PinHole"
+
+# Intrinsics read from:
+#   ros2 topic echo /camera/camera/color/camera_info --once
+Camera1.fx: 606.0560302734375
+Camera1.fy: 605.041259765625
+Camera1.cx: 329.16729736328125
+Camera1.cy: 235.98187255859375
+
+# Distortion coefficients reported by the current D435 driver.
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
+Camera1.k3: 0.0
+
+Camera.width: 640
+Camera.height: 480
+Camera.newWidth: 320
+Camera.newHeight: 240
+Camera.fps: 30
+Camera.RGB: 1
+
+# RGB-D settings for D435 aligned depth.
+Stereo.ThDepth: 40.0
+Stereo.b: 0.0745
+RGBD.DepthMapFactor: 1000.0
+
+ORBextractor.nFeatures: 400
+ORBextractor.scaleFactor: 1.2
+ORBextractor.nLevels: 8
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+# Required by the ORB-SLAM3 settings parser even in minimal mode.
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 1.0
+
+# Optional tuning.
+System.thFarPoints: 40.0
