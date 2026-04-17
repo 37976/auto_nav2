@@ -74,6 +74,11 @@ ros2 launch gazebo_modele gazebo.launch.py
 ros2 launch nav_slam 2dpoints.launch.py
 ```
 
+说明：
+
+- 这个启动现在会自动补起 `robot_state_publisher` 和 `joint_state_publisher`
+- 所以即使不经过 Gazebo，总能在 RViz 里看到完整底盘和轮子连接
+
 导航但不打开网页：
 
 ```bash
@@ -108,6 +113,7 @@ ros2 launch gazebo_modele gazebo_nav_web.launch.py start_hotspot:=false
 - `voronoi_node` 不再发布 `/cmd_vel`
 - `/cmd_vel` 由 `start_nav.py` 单独负责
 - 轮子 TF 由 Gazebo `diff_drive` 直接发布，避免 RViz 轮子 frame 报红
+- 如果不启 Gazebo，只跑 `2dpoints.launch.py`，则由 `joint_state_publisher` 提供静态轮子 joint state，保证 RViz 模型完整
 
 ## 当前稳定性修复
 

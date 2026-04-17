@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
 from launch.conditions import IfCondition
@@ -14,10 +17,15 @@ def generate_launch_description():
     package_name = 'gazebo_modele'
 
     pkg_share = FindPackageShare(package=package_name)
+    pkg_share_dir = get_package_share_directory(package_name)
     world_name = LaunchConfiguration('world_name')
     start_moving_obstacle = LaunchConfiguration('start_moving_obstacle')
+    use_sim_time = LaunchConfiguration('use_sim_time')
     urdf_model_path = PathJoinSubstitution([pkg_share, 'urdf', 'model.urdf'])
     gazebo_world_path = PathJoinSubstitution([pkg_share, 'world', world_name])
+    robot_model_file = os.path.join(pkg_share_dir, 'urdf', 'model.urdf')
+    with open(robot_model_file, 'r', encoding='utf-8') as robot_model_stream:
+        robot_description = robot_model_stream.read()
 
     start_gazebo_cmd = ExecuteProcess(
         cmd=[
@@ -38,7 +46,12 @@ def generate_launch_description():
     start_robot_state_publisher_cmd = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        arguments=[urdf_model_path]
+        output='screen',
+        parameters=[{
+            'robot_description': robot_description,
+            'publish_frequency': 30.0,
+            'use_sim_time': use_sim_time,
+        }],
     )
     moving_obstacle_cmd = Node(
         package='gazebo_modele',
@@ -58,12 +71,14 @@ def generate_launch_description():
             'amp_y': 0.0,
             'period': 10.0,
             'yaw': 0.0,
+            'use_sim_time': use_sim_time,
         }],
     )
 
     return LaunchDescription([
         DeclareLaunchArgument('world_name', default_value='gpt.world'),
         DeclareLaunchArgument('start_moving_obstacle', default_value='false'),
+        DeclareLaunchArgument('use_sim_time', default_value='true'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,

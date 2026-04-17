@@ -76,6 +76,8 @@
 - `local_crop_max_padding_m`
 - `local_crop_expansion_factor`
 - `local_crop_max_expansions`
+- `enable_local_map_downsampling`
+- `local_map_downsample_factor`
 - `path_smoothing_control_step`
 
 ### 4.2 三类回调的职责分工
@@ -241,11 +243,15 @@
 
 如果第一次局部窗口规划失败，不会立刻结束，而是：
 
+- 可选地先对局部图做一次降采样
+  - 当前默认支持 `2x` 降采样
+  - 由 `enable_local_map_downsampling` 和 `local_map_downsample_factor` 控制
+  - 如果降采样局部图失败，会立刻回退到同一窗口的原分辨率局部图
 - 按 `local_crop_expansion_factor` 逐步扩大窗口
 - 最多尝试 `local_crop_max_expansions + 1` 次局部规划
 - 如果局部窗口已经扩展到全图，或者局部尝试全部失败，则自动回退到全图规划
 
-这个阶段的目标，是尽量把 Voronoi 距离场和骨架提取限制在与当前任务相关的局部范围里，从而降低单次重规划耗时。
+这个阶段的目标，是尽量把 Voronoi 距离场和骨架提取限制在与当前任务相关的局部范围里，并在可接受的前提下减少参与规划的栅格数，从而降低单次重规划耗时。
 
 ### 第 4 段：构建 Voronoi 图
 
@@ -360,9 +366,17 @@ Voronoi 骨架要找的，就是这条分界带中连通且安全的中线。
 
 ### 7.3 算法流程
 
-#### 第一步：把所有障碍格当成传播种子
+#### 第一步：把真正障碍格当成传播种子
 
-代码先扫描整张地图，把所有障碍格压入优先队列，见 [voronoi_grid_planner.cpp](/home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:699)。
+代码先扫描整张地图，把真正的硬障碍格压入优先队列，见 [voronoi_grid_planner.cpp](/home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:699)。
+
+这里要注意，当前实现已经把“骨架传播种子”和“通行约束”分开了：
+
+- 骨架传播时，只把值为 `100` 的真正障碍当作 seed
+- 动态层里的膨胀代价值，例如 `30 / 15 / 5`，不会再参与 Voronoi 中轴传播
+- 但这些膨胀层仍然会通过后续 `isObstacle()` 和 `min_clearance` 参与通行约束
+
+这样可以避免“已经膨胀过的障碍层”再次把骨架整体往中间压缩。
 
 对于障碍格本身：
 

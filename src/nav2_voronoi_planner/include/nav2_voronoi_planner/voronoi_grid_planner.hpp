@@ -22,7 +22,7 @@ public:
   struct Config
   {
     double robot_radius {0.20};
-    double clearance_margin {0.03};
+    double clearance_margin {0.01};
     int occ_threshold {50};
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};
@@ -33,6 +33,8 @@ public:
     double local_crop_max_padding_m {8.0};
     double local_crop_expansion_factor {1.8};
     int local_crop_max_expansions {2};
+    bool enable_local_map_downsampling {false};
+    int local_map_downsample_factor {2};
   };
 
   explicit VoronoiGridPlanner(Config config);
@@ -146,10 +148,16 @@ private:
   nav_msgs::msg::OccupancyGrid extractSubGrid(
     const nav_msgs::msg::OccupancyGrid & grid,
     const CropBounds & bounds) const;
+  nav_msgs::msg::OccupancyGrid downsampleGrid(
+    const nav_msgs::msg::OccupancyGrid & grid,
+    int factor) const;
+  GridPoint downsampleGridPoint(
+    const GridPoint & point,
+    int factor,
+    const nav_msgs::msg::OccupancyGrid & downsampled_grid) const;
   void populateEmbeddedSkeleton(
     const nav_msgs::msg::OccupancyGrid & local_skeleton,
     const nav_msgs::msg::OccupancyGrid & full_grid,
-    const CropBounds & bounds,
     nav_msgs::msg::OccupancyGrid & skeleton) const;
   double computeCropPaddingMeters(
     const GridPoint & start_grid,

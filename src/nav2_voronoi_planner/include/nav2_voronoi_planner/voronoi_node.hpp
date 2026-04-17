@@ -58,7 +58,7 @@ private:
   bool goal_reached_ {false};
 
   double robot_radius_ {0.20};
-  double clearance_margin_ {0.03};
+  double clearance_margin_ {0.01};
   int occ_threshold_ {50};
   bool unknown_is_obstacle_ {true};
   bool publish_debug_path2_ {true};
@@ -71,6 +71,8 @@ private:
   double local_crop_max_padding_m_ {8.0};
   double local_crop_expansion_factor_ {1.8};
   int local_crop_max_expansions_ {2};
+  bool enable_local_map_downsampling_ {false};
+  int local_map_downsample_factor_ {2};
   int path_smoothing_control_step_ {2};
   double stable_map_replan_period_ms_ {3000.0};
   int map_significant_change_cells_ {50};

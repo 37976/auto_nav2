@@ -63,10 +63,11 @@ def generate_launch_description():
         DeclareLaunchArgument('hotspot_ifname', default_value=''),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(gazebo_launch),
-            launch_arguments={
-                'world_name': world_name,
-                'start_moving_obstacle': start_moving_obstacle,
-            }.items(),
+                    launch_arguments={
+                        'world_name': world_name,
+                        'start_moving_obstacle': start_moving_obstacle,
+                        'use_sim_time': 'true',
+                    }.items(),
         ),
         TimerAction(
             period=2.0,
@@ -76,6 +77,8 @@ def generate_launch_description():
                     launch_arguments={
                         'start_nav_rviz': start_nav_rviz,
                         'start_web_ui': start_web_ui,
+                        'publish_robot_model': 'false',
+                        'use_sim_time': 'true',
                         'use_static_map': use_static_map,
                         'static_map_yaml': static_map_yaml,
                         'web_host': web_host,

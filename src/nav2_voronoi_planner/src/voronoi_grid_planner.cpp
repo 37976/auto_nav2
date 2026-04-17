@@ -21,6 +21,11 @@ namespace
 
 using QueueIndex = std::pair<double, int>;
 
+bool isVoronoiSeedObstacle(int8_t value)
+{
+  return value >= 100;
+}
+
 }  // namespace
 
 VoronoiGridPlanner::VoronoiGridPlanner(Config config)
@@ -786,6 +791,21 @@ VoronoiGridPlanner::CropBounds VoronoiGridPlanner::computeCropBounds(
   bounds.min_y = std::max(0, std::min(start_grid.y, goal_grid.y) - padding_cells);
   bounds.max_y = std::min(h - 1, std::max(start_grid.y, goal_grid.y) + padding_cells);
 
+  // Align crop windows to the same global coarse-grid phase so optional
+  // downsampling does not make narrow passages flicker as the window shifts.
+  const int downsample_factor = std::max(1, config_.local_map_downsample_factor);
+  if (config_.enable_local_map_downsampling && downsample_factor > 1) {
+    bounds.min_x = std::max(0, (bounds.min_x / downsample_factor) * downsample_factor);
+    bounds.min_y = std::max(0, (bounds.min_y / downsample_factor) * downsample_factor);
+
+    bounds.max_x = std::min(
+      w - 1,
+      (((bounds.max_x + 1) + downsample_factor - 1) / downsample_factor) * downsample_factor - 1);
+    bounds.max_y = std::min(
+      h - 1,
+      (((bounds.max_y + 1) + downsample_factor - 1) / downsample_factor) * downsample_factor - 1);
+  }
+
   return bounds;
 }
 
@@ -831,10 +851,98 @@ nav_msgs::msg::OccupancyGrid VoronoiGridPlanner::extractSubGrid(
   return sub_grid;
 }
 
+nav_msgs::msg::OccupancyGrid VoronoiGridPlanner::downsampleGrid(
+  const nav_msgs::msg::OccupancyGrid & grid,
+  int factor) const
+{
+  if (factor <= 1) {
+    return grid;
+  }
+
+  nav_msgs::msg::OccupancyGrid downsampled_grid;
+  downsampled_grid.header = grid.header;
+  downsampled_grid.info = grid.info;
+
+  const int src_w = static_cast<int>(grid.info.width);
+  const int src_h = static_cast<int>(grid.info.height);
+  const int dst_w = std::max(1, (src_w + factor - 1) / factor);
+  const int dst_h = std::max(1, (src_h + factor - 1) / factor);
+
+  downsampled_grid.info.width = static_cast<uint32_t>(dst_w);
+  downsampled_grid.info.height = static_cast<uint32_t>(dst_h);
+  downsampled_grid.info.resolution = grid.info.resolution * factor;
+  downsampled_grid.data.assign(dst_w * dst_h, -1);
+
+  for (int y = 0; y < dst_h; ++y) {
+    for (int x = 0; x < dst_w; ++x) {
+      bool has_obstacle = false;
+      bool has_unknown = false;
+      int8_t max_free_value = 0;
+      bool has_free_value = false;
+
+      const int src_x0 = x * factor;
+      const int src_y0 = y * factor;
+      const int src_x1 = std::min(src_w, src_x0 + factor);
+      const int src_y1 = std::min(src_h, src_y0 + factor);
+
+      for (int sy = src_y0; sy < src_y1; ++sy) {
+        for (int sx = src_x0; sx < src_x1; ++sx) {
+          const int8_t value = grid.data[sx + sy * src_w];
+          if (isObstacle(value)) {
+            has_obstacle = true;
+            break;
+          }
+          if (value < 0) {
+            has_unknown = true;
+            continue;
+          }
+
+          if (!has_free_value || value > max_free_value) {
+            max_free_value = value;
+            has_free_value = true;
+          }
+        }
+        if (has_obstacle) {
+          break;
+        }
+      }
+
+      const int dst_idx = x + y * dst_w;
+      if (has_obstacle) {
+        downsampled_grid.data[dst_idx] = 100;
+      } else if (has_unknown) {
+        downsampled_grid.data[dst_idx] = -1;
+      } else if (has_free_value) {
+        downsampled_grid.data[dst_idx] = max_free_value;
+      } else {
+        downsampled_grid.data[dst_idx] = 0;
+      }
+    }
+  }
+
+  return downsampled_grid;
+}
+
+GridPoint VoronoiGridPlanner::downsampleGridPoint(
+  const GridPoint & point,
+  int factor,
+  const nav_msgs::msg::OccupancyGrid & downsampled_grid) const
+{
+  GridPoint downsampled_point;
+
+  const int w = static_cast<int>(downsampled_grid.info.width);
+  const int h = static_cast<int>(downsampled_grid.info.height);
+  const int safe_factor = std::max(1, factor);
+
+  downsampled_point.x = std::min(w - 1, std::max(0, point.x / safe_factor));
+  downsampled_point.y = std::min(h - 1, std::max(0, point.y / safe_factor));
+
+  return downsampled_point;
+}
+
 void VoronoiGridPlanner::populateEmbeddedSkeleton(
   const nav_msgs::msg::OccupancyGrid & local_skeleton,
   const nav_msgs::msg::OccupancyGrid & full_grid,
-  const CropBounds & bounds,
   nav_msgs::msg::OccupancyGrid & skeleton) const
 {
   skeleton.header = full_grid.header;
@@ -853,6 +961,20 @@ void VoronoiGridPlanner::populateEmbeddedSkeleton(
     }
   }
 
+  const double full_resolution = full_grid.info.resolution;
+  const double local_resolution = local_skeleton.info.resolution;
+  const int scale = (full_resolution > 0.0) ?
+    std::max(1, static_cast<int>(std::llround(local_resolution / full_resolution))) :
+    1;
+  const int offset_x = (full_resolution > 0.0) ?
+    static_cast<int>(std::llround(
+    (local_skeleton.info.origin.position.x - full_grid.info.origin.position.x) / full_resolution)) :
+    0;
+  const int offset_y = (full_resolution > 0.0) ?
+    static_cast<int>(std::llround(
+    (local_skeleton.info.origin.position.y - full_grid.info.origin.position.y) / full_resolution)) :
+    0;
+
   const int local_w = static_cast<int>(local_skeleton.info.width);
   const int local_h = static_cast<int>(local_skeleton.info.height);
   for (int y = 0; y < local_h; ++y) {
@@ -862,12 +984,16 @@ void VoronoiGridPlanner::populateEmbeddedSkeleton(
         continue;
       }
 
-      const int full_x = bounds.min_x + x;
-      const int full_y = bounds.min_y + y;
-      if (!isInside(full_x, full_y, full_w, full_h)) {
-        continue;
+      const int full_x0 = offset_x + x * scale;
+      const int full_y0 = offset_y + y * scale;
+      const int full_x1 = std::min(full_w, full_x0 + scale);
+      const int full_y1 = std::min(full_h, full_y0 + scale);
+
+      for (int fy = std::max(0, full_y0); fy < full_y1; ++fy) {
+        for (int fx = std::max(0, full_x0); fx < full_x1; ++fx) {
+          skeleton.data[fx + fy * full_w] = 0;
+        }
       }
-      skeleton.data[full_x + full_y * full_w] = 0;
     }
   }
 }
@@ -948,7 +1074,7 @@ std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFro
   for (int x = 0; x < w; ++x) {
     for (int y = 0; y < h; ++y) {
       const int idx = x + y * w;
-      if (isObstacle(grid.data[idx])) {
+      if (isVoronoiSeedObstacle(grid.data[idx])) {
         dist_map[x][y] = 0.0;
         seed_map[x][y] = {x, y};
         open.push({0.0, x, y, x, y});
@@ -957,7 +1083,7 @@ std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFro
   }
 
   if (open.empty()) {
-    RCLCPP_DEBUG(logger, "No obstacle cell found in /combined_grid.");
+    RCLCPP_DEBUG(logger, "No hard obstacle seed found in /combined_grid.");
     return {};
   }
 
@@ -1265,12 +1391,52 @@ bool VoronoiGridPlanner::makePlanFromMap(
     const GridPoint local_start{start_grid.x - bounds.min_x, start_grid.y - bounds.min_y};
     const GridPoint local_goal{goal_grid.x - bounds.min_x, goal_grid.y - bounds.min_y};
 
+    const int downsample_factor = std::max(1, config_.local_map_downsample_factor);
+    const bool try_downsample =
+      config_.enable_local_map_downsampling &&
+      downsample_factor > 1 &&
+      crop_w >= downsample_factor &&
+      crop_h >= downsample_factor;
+
+    if (try_downsample) {
+      const nav_msgs::msg::OccupancyGrid downsampled_local_map =
+        downsampleGrid(local_map, downsample_factor);
+      const GridPoint downsampled_start =
+        downsampleGridPoint(local_start, downsample_factor, downsampled_local_map);
+      const GridPoint downsampled_goal =
+        downsampleGridPoint(local_goal, downsample_factor, downsampled_local_map);
+
+      nav_msgs::msg::OccupancyGrid downsampled_local_skeleton;
+      nav_msgs::msg::OccupancyGrid * downsampled_local_skeleton_ptr =
+        (skeleton != nullptr) ? &downsampled_local_skeleton : nullptr;
+      if (makePlanOnGrid(
+          downsampled_local_map, downsampled_start, downsampled_goal,
+          plan, downsampled_local_skeleton_ptr, logger))
+      {
+        finalizeGoalPose(plan);
+        if (skeleton != nullptr) {
+          populateEmbeddedSkeleton(downsampled_local_skeleton, map, *skeleton);
+        }
+
+        RCLCPP_DEBUG(
+          logger,
+          "Voronoi downsampled local crop success on attempt %d/%d with %d x %d window, factor=%d.",
+          attempt + 1, local_attempts, crop_w, crop_h, downsample_factor);
+        return true;
+      }
+
+      RCLCPP_DEBUG(
+        logger,
+        "Voronoi downsampled local crop failed on attempt %d/%d; retry same window at original resolution.",
+        attempt + 1, local_attempts);
+    }
+
     nav_msgs::msg::OccupancyGrid local_skeleton;
     nav_msgs::msg::OccupancyGrid * local_skeleton_ptr = (skeleton != nullptr) ? &local_skeleton : nullptr;
     if (makePlanOnGrid(local_map, local_start, local_goal, plan, local_skeleton_ptr, logger)) {
       finalizeGoalPose(plan);
       if (skeleton != nullptr) {
-        populateEmbeddedSkeleton(local_skeleton, map, bounds, *skeleton);
+        populateEmbeddedSkeleton(local_skeleton, map, *skeleton);
       }
 
       RCLCPP_DEBUG(

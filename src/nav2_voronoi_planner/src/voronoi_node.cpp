@@ -24,7 +24,7 @@ VoronoiNode::VoronoiNode()
 : Node("voronoi")
 {
   robot_radius_ = this->declare_parameter<double>("robot_radius", 0.14);
-  clearance_margin_ = this->declare_parameter<double>("clearance_margin", 0.03);
+  clearance_margin_ = this->declare_parameter<double>("clearance_margin", 0.01);
   occ_threshold_ = this->declare_parameter<int>("occ_threshold", 50);
   unknown_is_obstacle_ = this->declare_parameter<bool>("unknown_is_obstacle", true);
   publish_debug_path2_ = this->declare_parameter<bool>("publish_debug_path2", true);
@@ -41,6 +41,9 @@ VoronoiNode::VoronoiNode()
   local_crop_expansion_factor_ = this->declare_parameter<double>(
     "local_crop_expansion_factor", 1.8);
   local_crop_max_expansions_ = this->declare_parameter<int>("local_crop_max_expansions", 2);
+  enable_local_map_downsampling_ = this->declare_parameter<bool>(
+    "enable_local_map_downsampling", false);
+  local_map_downsample_factor_ = this->declare_parameter<int>("local_map_downsample_factor", 2);
   path_smoothing_control_step_ = this->declare_parameter<int>("path_smoothing_control_step", 2);
   stable_map_replan_period_ms_ = this->declare_parameter<double>(
     "stable_map_replan_period_ms", 3000.0);
@@ -63,7 +66,9 @@ VoronoiNode::VoronoiNode()
       local_crop_detour_ratio_,
       local_crop_max_padding_m_,
       local_crop_expansion_factor_,
-      local_crop_max_expansions_});
+      local_crop_max_expansions_,
+      enable_local_map_downsampling_,
+      local_map_downsample_factor_});
 
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
   path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path", 10);
@@ -97,11 +102,14 @@ VoronoiNode::VoronoiNode()
   RCLCPP_INFO(
     this->get_logger(),
     "Local crop: enabled=%s, min_padding=%.2f m, detour_ratio=%.2f, "
-    "max_padding=%.2f m, expand_factor=%.2f, max_expansions=%d",
+    "max_padding=%.2f m, expand_factor=%.2f, max_expansions=%d, "
+    "downsample=%s, downsample_factor=%d",
     enable_local_map_cropping_ ? "true" : "false",
     local_crop_min_padding_m_, local_crop_detour_ratio_,
     local_crop_max_padding_m_, local_crop_expansion_factor_,
-    local_crop_max_expansions_);
+    local_crop_max_expansions_,
+    enable_local_map_downsampling_ ? "true" : "false",
+    local_map_downsample_factor_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);

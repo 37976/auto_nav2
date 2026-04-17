@@ -125,6 +125,9 @@ class PathFollowingNode(Node):
         self.recovery_turn_speed = 0.55
         self.obstacle_threshold = 15
         self.target_line_clearance = 0.12
+        self.relaxed_target_line_clearance = 0.07
+        self.blocked_crawl_speed = 0.05
+        self.blocked_crawl_distance = 0.30
 
         self.odom_subscriber = self.create_subscription(
             Odometry, '/odom', self.odometry_callback, 10
@@ -240,12 +243,50 @@ class PathFollowingNode(Node):
         else:
             return max(target, current - step)
 
+    def compute_steering_to_point(self, vehicle_pose, target_point):
+        dx = target_point[0] - vehicle_pose[0]
+        dy = target_point[1] - vehicle_pose[1]
+        target_angle = math.atan2(dy, dx)
+
+        steering_angle = target_angle - vehicle_pose[2]
+        while steering_angle > math.pi:
+            steering_angle -= 2 * math.pi
+        while steering_angle < -math.pi:
+            steering_angle += 2 * math.pi
+
+        return steering_angle
+
     def find_nearest_path_index(self, path_points, world_x, world_y):
         if path_points is None or len(path_points) == 0:
             return 0
         deltas = path_points[:, :2] - np.array([world_x, world_y])
         distances_sq = np.einsum('ij,ij->i', deltas, deltas)
         return int(np.argmin(distances_sq))
+
+    def find_relaxed_crawl_target(self, vehicle_pose, closest_idx):
+        if self.path_points is None or len(self.path_points) == 0:
+            return None, None
+
+        traveled = 0.0
+        best_idx = None
+        for idx in range(max(closest_idx, 0) + 1, len(self.path_points)):
+            traveled += float(np.linalg.norm(self.path_points[idx] - self.path_points[idx - 1]))
+            candidate = self.path_points[idx]
+            if self.is_line_free(
+                vehicle_pose[0], vehicle_pose[1], candidate[0], candidate[1],
+                clearance=self.relaxed_target_line_clearance,
+            ):
+                best_idx = idx
+
+            if traveled >= self.blocked_crawl_distance:
+                break
+
+        if best_idx is None:
+            return None, None
+
+        target_point = self.path_points[best_idx]
+        steering_angle = self.compute_steering_to_point(vehicle_pose, target_point)
+        return target_point, steering_angle
     
     def stop_robot(self):
         cmd_vel_msg = Twist()
@@ -307,12 +348,25 @@ class PathFollowingNode(Node):
             return
         else:
             if not target_visible:
-                target_angular = self.clamp(
-                    self.angular_gain * steering_angle,
-                    -self.max_angular,
-                    self.max_angular,
-                )
-                target_speed = 0.0
+                crawl_target, crawl_steering = self.find_relaxed_crawl_target(pose, closest_idx)
+                if crawl_target is not None:
+                    steering_angle = crawl_steering
+                    target_angular = self.clamp(
+                        self.angular_gain * steering_angle,
+                        -self.max_angular,
+                        self.max_angular,
+                    )
+                    if abs(steering_angle) >= self.rotate_in_place_angle:
+                        target_speed = 0.0
+                    else:
+                        target_speed = self.blocked_crawl_speed
+                else:
+                    target_angular = self.clamp(
+                        self.angular_gain * steering_angle,
+                        -self.max_angular,
+                        self.max_angular,
+                    )
+                    target_speed = 0.0
             # 角速度：比例控制 + 限幅
             elif abs(steering_angle) >= self.rotate_in_place_angle:
                 target_angular = math.copysign(self.rotate_in_place_speed, steering_angle)
@@ -356,10 +410,13 @@ class PathFollowingNode(Node):
                 f"target=({target_point[0]:.2f}, {target_point[1]:.2f})"
             )
 
-    def is_line_free(self, start_x, start_y, end_x, end_y):
+    def is_line_free(self, start_x, start_y, end_x, end_y, clearance=None):
         grid = self.latest_map
         if grid is None or grid.info.resolution <= 0.0 or not grid.data:
             return True
+
+        if clearance is None:
+            clearance = self.target_line_clearance
 
         distance = math.hypot(end_x - start_x, end_y - start_y)
         step = max(float(grid.info.resolution) * 0.5, 0.02)
@@ -369,7 +426,7 @@ class PathFollowingNode(Node):
             ratio = i / steps
             x = start_x + (end_x - start_x) * ratio
             y = start_y + (end_y - start_y) * ratio
-            if not self.is_world_area_free(x, y, self.target_line_clearance):
+            if not self.is_world_area_free(x, y, clearance):
                 return False
         return True
 
