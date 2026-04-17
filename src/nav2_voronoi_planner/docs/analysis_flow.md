@@ -174,9 +174,9 @@
 规划成功后，不会立刻发布，而是先做两层后处理：
 
 1. `downsamplePath`
-  - 用较稀疏的控制点减少 B-spline 控制点数量
+  - 从原始路径抽取更稀疏的控制点，并保留首尾点
 2. `smoothPathBSpline`
-  - 生成和原路径长度相近的平滑路径
+  - 对控制点做 clamped uniform B-spline 平滑，输出点数通常与原路径点数接近，且首尾点保持不变
 
 然后它会把“新路径”和“当前已发布旧路径”进行比较：
 
@@ -291,7 +291,7 @@
 
 最后还会把终点 pose 强制覆盖成原始 `goal` 消息。
 
-## 7. Voronoi 骨架生成详解
+## 7. Voronoi 骨架生成
 
 这一段对应的核心实现是 `buildVoronoiDiagramFromOccupancyGrid()`，位置在 [voronoi_grid_planner.cpp](/home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:656)。
 
@@ -475,37 +475,7 @@ LLLLLLLLLMMMMMRRRRRRRRR
 - 剪枝规则是经验式，不保证最优拓扑结构
 - 地图噪声越大，骨架越容易出现毛刺
 
-## 8. 路径后处理逻辑
-
-### 8.1 `PopulateGridPath`
-
-功能：
-
-- 把 `GridPath` 变成 `nav_msgs/Path`
-- 所有 pose 默认落在栅格中心
-- 朝向由相邻点差分得到
-
-### 8.2 `downsamplePath`
-
-功能：
-
-- 从原始路径抽取更稀疏的控制点
-- 保留首尾点
-
-用途：
-
-- 减少平滑时控制点数量
-- 降低局部折线抖动
-
-### 8.3 `smoothPathBSpline`
-
-功能：
-
-- 对控制点做 clamped uniform B-spline 平滑
-- 输出点数默认与输入路径点数一致
-- 首尾点强制保持不变
-
-## 9. 关键状态机理解
+## 8. 关键状态机理解
 
 可以把节点内部状态理解成以下几个开关：
 
@@ -528,9 +498,9 @@ LLLLLLLLLMMMMMRRRRRRRRR
 
 这些状态位共同实现了“回调只打标记、定时器集中规划”的工作模式。
 
-## 10. 值得注意的实现细节
+## 9. 值得注意的实现细节
 
-### 10.1 真正生效的主干代价是“长度优先”
+### 9.1 真正生效的主干代价是“长度优先”
 
 虽然参数里有 `trunk_safety_penalty_scale`，而且 `searchVoronoiOnly` 里也实现了基于 clearance 的安全惩罚，但当前主流程并没有调用 `searchVoronoiOnly`。
 
@@ -541,7 +511,7 @@ LLLLLLLLLMMMMMRRRRRRRRR
 - 当前主干路径更偏向“最短骨架路”
 - `trunk_safety_penalty_scale` 对实际主流程几乎没有效果
 
-### 10.2 有几段辅助函数目前没有接入主流程
+### 9.2 有几段辅助函数目前没有接入主流程
 
 当前未进入实际主链路的函数包括：
 
@@ -552,7 +522,7 @@ LLLLLLLLLMMMMMRRRRRRRRR
 
 这说明作者可能为后续“直连 shortcut”“单一骨架搜索”“安全代价搜索”预留了接口，但现在没有用上。
 
-### 10.3 平滑后没有再次做碰撞校验
+### 9.3 平滑后没有再次做碰撞校验
 
 原始栅格路径是安全的，但 B-spline 平滑后：
 
@@ -561,7 +531,7 @@ LLLLLLLLLMMMMMRRRRRRRRR
 
 因此在窄通道或尖角环境里，平滑路径可能比原始骨架路径更容易切角。
 
-### 10.4 终点若被调整，最终发布终点仍会回到原始目标
+### 9.4 终点若被调整，最终发布终点仍会回到原始目标
 
 如果原始目标点落在障碍或未知区域，代码会先找到一个最近自由栅格作为规划终点。
 
@@ -574,9 +544,9 @@ LLLLLLLLLMMMMMRRRRRRRRR
 
 这一点在实际导航中需要特别留意。
 
-## 11. 详细流程图
+## 10. 详细流程图
 
-### 11.1 ROS 调度与重规划总流程
+### 10.1 ROS 调度与重规划总流程
 
 ```mermaid
 flowchart TD
@@ -628,7 +598,7 @@ flowchart TD
     BC -- no --> BE[仅更新 odom_]
 ```
 
-### 11.2 单次规划内部流程
+### 10.2 单次规划内部流程
 
 ```mermaid
 flowchart TD
@@ -680,7 +650,7 @@ flowchart TD
     ZB -- yes --> ZD[发布 skeleton /path /path2]
 ```
 
-### 11.3 Voronoi 骨架构建细流程
+### 10.3 Voronoi 骨架构建细流程
 
 ```mermaid
 flowchart TD
@@ -715,7 +685,7 @@ flowchart TD
     U --> V[写回 gvd_map xy 的 is_voronoi 标记]
 ```
 
-## 12. 一句话总结
+## 11. 总结
 
 这个包的真实工作模式是：
 
