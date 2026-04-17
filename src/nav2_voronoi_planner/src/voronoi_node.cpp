@@ -34,6 +34,13 @@ VoronoiNode::VoronoiNode()
   trunk_safety_penalty_scale_ = this->declare_parameter<double>(
     "trunk_safety_penalty_scale", 0.06);
   connector_candidate_count_ = this->declare_parameter<int>("connector_candidate_count", 0);
+  enable_local_map_cropping_ = this->declare_parameter<bool>("enable_local_map_cropping", true);
+  local_crop_min_padding_m_ = this->declare_parameter<double>("local_crop_min_padding_m", 2.0);
+  local_crop_detour_ratio_ = this->declare_parameter<double>("local_crop_detour_ratio", 0.5);
+  local_crop_max_padding_m_ = this->declare_parameter<double>("local_crop_max_padding_m", 8.0);
+  local_crop_expansion_factor_ = this->declare_parameter<double>(
+    "local_crop_expansion_factor", 1.8);
+  local_crop_max_expansions_ = this->declare_parameter<int>("local_crop_max_expansions", 2);
   path_smoothing_control_step_ = this->declare_parameter<int>("path_smoothing_control_step", 2);
   stable_map_replan_period_ms_ = this->declare_parameter<double>(
     "stable_map_replan_period_ms", 3000.0);
@@ -50,7 +57,13 @@ VoronoiNode::VoronoiNode()
       occ_threshold_,
       unknown_is_obstacle_,
       trunk_safety_penalty_scale_,
-      connector_candidate_count_});
+      connector_candidate_count_,
+      enable_local_map_cropping_,
+      local_crop_min_padding_m_,
+      local_crop_detour_ratio_,
+      local_crop_max_padding_m_,
+      local_crop_expansion_factor_,
+      local_crop_max_expansions_});
 
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
   path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path", 10);
@@ -81,6 +94,14 @@ VoronoiNode::VoronoiNode()
     "path_check=%.2f m, switch_improvement=%.2f m",
     stable_map_replan_period_ms_, map_significant_change_cells_,
     path_obstacle_check_distance_m_, path_switch_min_improvement_m_);
+  RCLCPP_INFO(
+    this->get_logger(),
+    "Local crop: enabled=%s, min_padding=%.2f m, detour_ratio=%.2f, "
+    "max_padding=%.2f m, expand_factor=%.2f, max_expansions=%d",
+    enable_local_map_cropping_ ? "true" : "false",
+    local_crop_min_padding_m_, local_crop_detour_ratio_,
+    local_crop_max_padding_m_, local_crop_expansion_factor_,
+    local_crop_max_expansions_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
   RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);
@@ -128,7 +149,7 @@ void VoronoiNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
   }
 
   if (request_replan) {
-    RCLCPP_INFO_THROTTLE(
+    RCLCPP_DEBUG_THROTTLE(
       this->get_logger(), *this->get_clock(), 3000,
       "Map update scheduled replan: %u x %u, resolution=%.3f, changed_cells=%d, "
       "significant=%s, path_blocked=%s",
@@ -481,7 +502,7 @@ void VoronoiNode::tryPlanWithSnapshot(
       has_last_plan_pose_ = true;
     }
 
-    RCLCPP_INFO_THROTTLE(
+    RCLCPP_DEBUG_THROTTLE(
       this->get_logger(), *this->get_clock(), 2000,
       "Keep current path to avoid oscillation: current_remaining=%.2f m, "
       "new=%.2f m, switch_threshold=%.2f m",
@@ -510,7 +531,7 @@ void VoronoiNode::tryPlanWithSnapshot(
     has_published_plan_ = true;
   }
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     this->get_logger(), *this->get_clock(), 2000,
     "Published Voronoi path, raw size = %zu, smooth controls = %zu, smooth size = %zu",
     plan.poses.size(), smoothing_control_path.poses.size(), published_plan.poses.size());

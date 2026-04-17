@@ -632,6 +632,119 @@ bool VoronoiGridPlanner::searchBestVoronoiRoute(
   return true;
 }
 
+bool VoronoiGridPlanner::makePlanOnGrid(
+  const nav_msgs::msg::OccupancyGrid & map,
+  const GridPoint & start_grid,
+  const GridPoint & goal_grid,
+  nav_msgs::msg::Path & plan,
+  nav_msgs::msg::OccupancyGrid * skeleton,
+  const rclcpp::Logger & logger) const
+{
+  plan.header.frame_id = map.header.frame_id;
+  plan.header.stamp = map.header.stamp;
+  plan.poses.clear();
+
+  const double resolution = map.info.resolution;
+  const double origin_x = map.info.origin.position.x;
+  const double origin_y = map.info.origin.position.y;
+  const int size_x = static_cast<int>(map.info.width);
+  const int size_y = static_cast<int>(map.info.height);
+
+  if (!isInside(start_grid.x, start_grid.y, size_x, size_y)) {
+    RCLCPP_DEBUG(logger, "Start out of map: (%d, %d)", start_grid.x, start_grid.y);
+    return false;
+  }
+  if (!isInside(goal_grid.x, goal_grid.y, size_x, size_y)) {
+    RCLCPP_DEBUG(logger, "Goal out of map: (%d, %d)", goal_grid.x, goal_grid.y);
+    return false;
+  }
+  if (!isFreeCell(start_grid.x, start_grid.y, map)) {
+    RCLCPP_DEBUG(
+      logger,
+      "Start is not free in planning grid: (%d, %d).",
+      start_grid.x, start_grid.y);
+    return false;
+  }
+  if (!isFreeCell(goal_grid.x, goal_grid.y, map)) {
+    RCLCPP_DEBUG(
+      logger,
+      "Goal is not free in planning grid: (%d, %d).",
+      goal_grid.x, goal_grid.y);
+    return false;
+  }
+
+  const auto gvd_map = buildVoronoiDiagramFromOccupancyGrid(map, logger);
+  if (gvd_map.empty()) {
+    RCLCPP_DEBUG(logger, "Failed to build Voronoi diagram from planning grid.");
+    return false;
+  }
+
+  if (skeleton != nullptr) {
+    populateVoronoiSkeleton(gvd_map, map, *skeleton);
+  }
+
+  GridPath start_connector;
+  GridPath goal_connector;
+  GridPath trunk_path;
+
+  const size_t connector_candidate_count =
+    (config_.connector_candidate_count <= 0) ?
+    0 : static_cast<size_t>(config_.connector_candidate_count);
+  const auto start_candidates = findReachableVoronoiCandidates(
+    start_grid, gvd_map, map, connector_candidate_count);
+  const auto goal_candidates = findReachableVoronoiCandidates(
+    goal_grid, gvd_map, map, connector_candidate_count);
+
+  if (start_candidates.empty()) {
+    RCLCPP_DEBUG(logger, "Cannot connect start to Voronoi skeleton.");
+    return false;
+  }
+  if (goal_candidates.empty()) {
+    RCLCPP_DEBUG(logger, "Cannot connect goal to Voronoi skeleton.");
+    return false;
+  }
+
+  double total_route_length_m = 0.0;
+  if (!searchBestVoronoiRoute(
+      start_candidates, goal_candidates, gvd_map, map,
+      start_connector, trunk_path, goal_connector, total_route_length_m))
+  {
+    RCLCPP_DEBUG(
+      logger,
+      "Cannot find globally best Voronoi route from %zu start candidates to %zu goal candidates.",
+      start_candidates.size(), goal_candidates.size());
+    return false;
+  }
+
+  GridPath full_path;
+  appendPathNoDuplicate(full_path, start_connector);
+  appendPathNoDuplicate(full_path, trunk_path);
+  appendPathNoDuplicate(full_path, goal_connector);
+
+  if (full_path.empty()) {
+    RCLCPP_DEBUG(logger, "Merged final path is empty.");
+    return false;
+  }
+
+  PopulateGridPath(full_path, plan.header, resolution, origin_x, origin_y, plan);
+  if (!plan.poses.empty()) {
+    const double goal_world_x = DiscXY2Cont(goal_grid.x, resolution) + origin_x;
+    const double goal_world_y = DiscXY2Cont(goal_grid.y, resolution) + origin_y;
+    plan.poses.back().pose.position.x = goal_world_x;
+    plan.poses.back().pose.position.y = goal_world_y;
+  }
+
+  RCLCPP_DEBUG(
+    logger,
+    "Voronoi candidate plan success: map=%d x %d, start_candidates=%zu, goal_candidates=%zu, "
+    "start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu, route_length=%.2f m",
+    size_x, size_y, start_candidates.size(), goal_candidates.size(),
+    start_connector.size(), trunk_path.size(), goal_connector.size(), full_path.size(),
+    total_route_length_m);
+
+  return true;
+}
+
 void VoronoiGridPlanner::appendPathNoDuplicate(GridPath & dst, const GridPath & src) const
 {
   if (src.empty()) {
@@ -651,6 +764,142 @@ void VoronoiGridPlanner::appendPathNoDuplicate(GridPath & dst, const GridPath & 
   for (size_t i = start_i; i < src.size(); ++i) {
     dst.push_back(src[i]);
   }
+}
+
+VoronoiGridPlanner::CropBounds VoronoiGridPlanner::computeCropBounds(
+  const nav_msgs::msg::OccupancyGrid & grid,
+  const GridPoint & start_grid,
+  const GridPoint & goal_grid,
+  double padding_m) const
+{
+  CropBounds bounds;
+
+  const int w = static_cast<int>(grid.info.width);
+  const int h = static_cast<int>(grid.info.height);
+  const double resolution = grid.info.resolution;
+  const int padding_cells = (resolution > 0.0) ?
+    std::max(1, static_cast<int>(std::ceil(std::max(0.0, padding_m) / resolution))) :
+    1;
+
+  bounds.min_x = std::max(0, std::min(start_grid.x, goal_grid.x) - padding_cells);
+  bounds.max_x = std::min(w - 1, std::max(start_grid.x, goal_grid.x) + padding_cells);
+  bounds.min_y = std::max(0, std::min(start_grid.y, goal_grid.y) - padding_cells);
+  bounds.max_y = std::min(h - 1, std::max(start_grid.y, goal_grid.y) + padding_cells);
+
+  return bounds;
+}
+
+bool VoronoiGridPlanner::cropBoundsCoverWholeMap(
+  const CropBounds & bounds,
+  const nav_msgs::msg::OccupancyGrid & grid) const
+{
+  const int w = static_cast<int>(grid.info.width);
+  const int h = static_cast<int>(grid.info.height);
+
+  return bounds.min_x <= 0 && bounds.min_y <= 0 &&
+         bounds.max_x >= (w - 1) && bounds.max_y >= (h - 1);
+}
+
+nav_msgs::msg::OccupancyGrid VoronoiGridPlanner::extractSubGrid(
+  const nav_msgs::msg::OccupancyGrid & grid,
+  const CropBounds & bounds) const
+{
+  nav_msgs::msg::OccupancyGrid sub_grid;
+  sub_grid.header = grid.header;
+  sub_grid.info = grid.info;
+
+  const int full_w = static_cast<int>(grid.info.width);
+  const int sub_w = bounds.max_x - bounds.min_x + 1;
+  const int sub_h = bounds.max_y - bounds.min_y + 1;
+
+  sub_grid.info.width = static_cast<uint32_t>(sub_w);
+  sub_grid.info.height = static_cast<uint32_t>(sub_h);
+  sub_grid.info.origin.position.x =
+    grid.info.origin.position.x + bounds.min_x * grid.info.resolution;
+  sub_grid.info.origin.position.y =
+    grid.info.origin.position.y + bounds.min_y * grid.info.resolution;
+  sub_grid.data.assign(sub_w * sub_h, -1);
+
+  for (int y = 0; y < sub_h; ++y) {
+    for (int x = 0; x < sub_w; ++x) {
+      const int src_x = bounds.min_x + x;
+      const int src_y = bounds.min_y + y;
+      sub_grid.data[x + y * sub_w] = grid.data[src_x + src_y * full_w];
+    }
+  }
+
+  return sub_grid;
+}
+
+void VoronoiGridPlanner::populateEmbeddedSkeleton(
+  const nav_msgs::msg::OccupancyGrid & local_skeleton,
+  const nav_msgs::msg::OccupancyGrid & full_grid,
+  const CropBounds & bounds,
+  nav_msgs::msg::OccupancyGrid & skeleton) const
+{
+  skeleton.header = full_grid.header;
+  skeleton.info = full_grid.info;
+
+  const int full_w = static_cast<int>(full_grid.info.width);
+  const int full_h = static_cast<int>(full_grid.info.height);
+  skeleton.data.assign(full_w * full_h, -1);
+
+  for (int y = 0; y < full_h; ++y) {
+    for (int x = 0; x < full_w; ++x) {
+      const int idx = x + y * full_w;
+      if (isObstacle(full_grid.data[idx])) {
+        skeleton.data[idx] = 100;
+      }
+    }
+  }
+
+  const int local_w = static_cast<int>(local_skeleton.info.width);
+  const int local_h = static_cast<int>(local_skeleton.info.height);
+  for (int y = 0; y < local_h; ++y) {
+    for (int x = 0; x < local_w; ++x) {
+      const int local_idx = x + y * local_w;
+      if (local_skeleton.data[local_idx] != 0) {
+        continue;
+      }
+
+      const int full_x = bounds.min_x + x;
+      const int full_y = bounds.min_y + y;
+      if (!isInside(full_x, full_y, full_w, full_h)) {
+        continue;
+      }
+      skeleton.data[full_x + full_y * full_w] = 0;
+    }
+  }
+}
+
+double VoronoiGridPlanner::computeCropPaddingMeters(
+  const GridPoint & start_grid,
+  const GridPoint & goal_grid,
+  double resolution,
+  int expansion_step) const
+{
+  const double safety_padding = std::max(
+    config_.robot_radius + config_.clearance_margin,
+    resolution * 2.0);
+  const double start_goal_distance = std::hypot(
+    static_cast<double>(goal_grid.x - start_grid.x),
+    static_cast<double>(goal_grid.y - start_grid.y)) * resolution;
+  const double detour_ratio = std::max(0.0, config_.local_crop_detour_ratio);
+  const double expansion_factor = std::max(1.0, config_.local_crop_expansion_factor);
+  const double detour_max_padding = std::max(0.0, config_.local_crop_max_padding_m);
+
+  double detour_padding = std::max(
+    0.0,
+    std::max(config_.local_crop_min_padding_m, start_goal_distance * detour_ratio));
+
+  if (expansion_step > 0) {
+    detour_padding *= std::pow(expansion_factor, expansion_step);
+  }
+  if (detour_max_padding > 0.0) {
+    detour_padding = std::min(detour_padding, detour_max_padding);
+  }
+
+  return safety_padding + detour_padding;
 }
 
 std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFromOccupancyGrid(
@@ -708,7 +957,7 @@ std::vector<std::vector<VoronoiData>> VoronoiGridPlanner::buildVoronoiDiagramFro
   }
 
   if (open.empty()) {
-    RCLCPP_WARN(logger, "No obstacle cell found in /combined_grid.");
+    RCLCPP_DEBUG(logger, "No obstacle cell found in /combined_grid.");
     return {};
   }
 
@@ -916,25 +1165,25 @@ bool VoronoiGridPlanner::makePlanFromMap(
     &start_x, &start_y, &goal_x, &goal_y);
 
   if (!isInside(start_x, start_y, size_x, size_y)) {
-    RCLCPP_WARN(logger, "Start out of map: (%d, %d)", start_x, start_y);
+    RCLCPP_DEBUG(logger, "Start out of map: (%d, %d)", start_x, start_y);
     return false;
   }
   if (!isInside(goal_x, goal_y, size_x, size_y)) {
-    RCLCPP_WARN(logger, "Goal out of map: (%d, %d)", goal_x, goal_y);
+    RCLCPP_DEBUG(logger, "Goal out of map: (%d, %d)", goal_x, goal_y);
     return false;
   }
   if (!isFreeCell(start_x, start_y, map)) {
     GridPoint adjusted_start;
     const int search_radius = std::max(1, ContXY2Disc(config_.robot_radius * 2.0, resolution));
     if (!findNearestFreeCell(start_x, start_y, map, search_radius, adjusted_start)) {
-      RCLCPP_WARN(
+      RCLCPP_DEBUG(
         logger,
         "Start is occupied or unknown, and no nearby free cell was found: (%d, %d).",
         start_x, start_y);
       return false;
     }
 
-    RCLCPP_WARN(
+    RCLCPP_DEBUG(
       logger,
       "Start is occupied or unknown; use nearest free cell (%d, %d) instead of (%d, %d).",
       adjusted_start.x, adjusted_start.y, start_x, start_y);
@@ -945,14 +1194,14 @@ bool VoronoiGridPlanner::makePlanFromMap(
     GridPoint adjusted_goal;
     const int search_radius = std::max(1, ContXY2Disc(config_.robot_radius * 3.0, resolution));
     if (!findNearestFreeCell(goal_x, goal_y, map, search_radius, adjusted_goal)) {
-      RCLCPP_WARN(
+      RCLCPP_DEBUG(
         logger,
         "Goal is occupied or unknown, and no nearby free cell was found: (%d, %d).",
         goal_x, goal_y);
       return false;
     }
 
-    RCLCPP_WARN(
+    RCLCPP_DEBUG(
       logger,
       "Goal is occupied or unknown; use nearest free cell (%d, %d) instead of (%d, %d).",
       adjusted_goal.x, adjusted_goal.y, goal_x, goal_y);
@@ -960,76 +1209,87 @@ bool VoronoiGridPlanner::makePlanFromMap(
     goal_y = adjusted_goal.y;
   }
 
-  const auto gvd_map = buildVoronoiDiagramFromOccupancyGrid(map, logger);
-  if (gvd_map.empty()) {
-    RCLCPP_WARN(logger, "Failed to build Voronoi diagram from /combined_grid.");
-    return false;
-  }
-
-  if (skeleton != nullptr) {
-    populateVoronoiSkeleton(gvd_map, map, *skeleton);
-  }
-
   const GridPoint start_grid{start_x, start_y};
   const GridPoint goal_grid{goal_x, goal_y};
+  auto finalizeGoalPose = [&](nav_msgs::msg::Path & candidate_plan) {
+      if (!candidate_plan.poses.empty()) {
+        candidate_plan.poses.back() = goal;
+      }
+    };
 
-  GridPath start_connector;
-  GridPath goal_connector;
-  GridPath trunk_path;
-
-  const size_t connector_candidate_count =
-    (config_.connector_candidate_count <= 0) ?
-    0 : static_cast<size_t>(config_.connector_candidate_count);
-  const auto start_candidates = findReachableVoronoiCandidates(
-    start_grid, gvd_map, map, connector_candidate_count);
-  const auto goal_candidates = findReachableVoronoiCandidates(
-    goal_grid, gvd_map, map, connector_candidate_count);
-
-  if (start_candidates.empty()) {
-    RCLCPP_WARN(logger, "Cannot connect start to Voronoi skeleton.");
-    return false;
-  }
-  if (goal_candidates.empty()) {
-    RCLCPP_WARN(logger, "Cannot connect goal to Voronoi skeleton.");
-    return false;
+  if (!config_.enable_local_map_cropping) {
+    const bool success = makePlanOnGrid(map, start_grid, goal_grid, plan, skeleton, logger);
+    if (success) {
+      finalizeGoalPose(plan);
+    }
+    return success;
   }
 
-  double total_route_length_m = 0.0;
-  if (!searchBestVoronoiRoute(
-      start_candidates, goal_candidates, gvd_map, map,
-      start_connector, trunk_path, goal_connector, total_route_length_m))
-  {
-    RCLCPP_WARN(
+  CropBounds previous_bounds;
+  bool has_previous_bounds = false;
+  const int local_attempts = std::max(0, config_.local_crop_max_expansions) + 1;
+
+  for (int attempt = 0; attempt < local_attempts; ++attempt) {
+    const double padding_m = computeCropPaddingMeters(start_grid, goal_grid, resolution, attempt);
+    const CropBounds bounds = computeCropBounds(map, start_grid, goal_grid, padding_m);
+
+    if (cropBoundsCoverWholeMap(bounds, map)) {
+      RCLCPP_DEBUG(
+        logger,
+        "Voronoi crop attempt %d reached full map coverage (padding=%.2f m); switch to full map.",
+        attempt + 1, padding_m);
+      break;
+    }
+
+    if (
+      has_previous_bounds &&
+      bounds.min_x == previous_bounds.min_x &&
+      bounds.max_x == previous_bounds.max_x &&
+      bounds.min_y == previous_bounds.min_y &&
+      bounds.max_y == previous_bounds.max_y)
+    {
+      continue;
+    }
+    previous_bounds = bounds;
+    has_previous_bounds = true;
+
+    const int crop_w = bounds.max_x - bounds.min_x + 1;
+    const int crop_h = bounds.max_y - bounds.min_y + 1;
+    RCLCPP_DEBUG(
       logger,
-      "Cannot find globally best Voronoi route from %zu start candidates to %zu goal candidates.",
-      start_candidates.size(), goal_candidates.size());
-    return false;
+      "Voronoi crop attempt %d/%d: padding=%.2f m, window=[%d:%d, %d:%d], size=%d x %d",
+      attempt + 1, local_attempts, padding_m,
+      bounds.min_x, bounds.max_x, bounds.min_y, bounds.max_y, crop_w, crop_h);
+
+    const nav_msgs::msg::OccupancyGrid local_map = extractSubGrid(map, bounds);
+    const GridPoint local_start{start_grid.x - bounds.min_x, start_grid.y - bounds.min_y};
+    const GridPoint local_goal{goal_grid.x - bounds.min_x, goal_grid.y - bounds.min_y};
+
+    nav_msgs::msg::OccupancyGrid local_skeleton;
+    nav_msgs::msg::OccupancyGrid * local_skeleton_ptr = (skeleton != nullptr) ? &local_skeleton : nullptr;
+    if (makePlanOnGrid(local_map, local_start, local_goal, plan, local_skeleton_ptr, logger)) {
+      finalizeGoalPose(plan);
+      if (skeleton != nullptr) {
+        populateEmbeddedSkeleton(local_skeleton, map, bounds, *skeleton);
+      }
+
+      RCLCPP_DEBUG(
+        logger,
+        "Voronoi local crop success on attempt %d/%d with %d x %d window.",
+        attempt + 1, local_attempts, crop_w, crop_h);
+      return true;
+    }
   }
 
-  GridPath full_path;
-  appendPathNoDuplicate(full_path, start_connector);
-  appendPathNoDuplicate(full_path, trunk_path);
-  appendPathNoDuplicate(full_path, goal_connector);
-
-  if (full_path.empty()) {
-    RCLCPP_WARN(logger, "Merged final path is empty.");
-    return false;
-  }
-
-  PopulateGridPath(full_path, plan.header, resolution, origin_x, origin_y, plan);
-  if (!plan.poses.empty()) {
-    plan.poses.back() = goal;
-  }
-
-  RCLCPP_INFO(
+  RCLCPP_DEBUG(
     logger,
-    "Voronoi global candidate plan success: start_candidates=%zu, goal_candidates=%zu, "
-    "start_connector=%zu, trunk=%zu, goal_connector=%zu, total=%zu, route_length=%.2f m",
-    start_candidates.size(), goal_candidates.size(),
-    start_connector.size(), trunk_path.size(), goal_connector.size(), full_path.size(),
-    total_route_length_m);
-
-  return true;
+    "Voronoi local crop planning failed after %d attempt(s); fallback to full map %d x %d.",
+    local_attempts, size_x, size_y);
+  const bool success = makePlanOnGrid(map, start_grid, goal_grid, plan, skeleton, logger);
+  if (success) {
+    finalizeGoalPose(plan);
+  }
+  return success;
 }
 
 }  // namespace nav2_voronoi_planner

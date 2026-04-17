@@ -70,6 +70,12 @@
 - `path_obstacle_check_distance_m`
 - `path_switch_min_improvement_m`
 - `connector_candidate_count`
+- `enable_local_map_cropping`
+- `local_crop_min_padding_m`
+- `local_crop_detour_ratio`
+- `local_crop_max_padding_m`
+- `local_crop_expansion_factor`
+- `local_crop_max_expansions`
 - `path_smoothing_control_step`
 
 ### 4.2 三类回调的职责分工
@@ -200,7 +206,7 @@
 
 ## 6. `makePlanFromMap` 的核心规划逻辑
 
-`VoronoiGridPlanner::makePlanFromMap` 的内部步骤非常清晰，可以分成 7 段。
+`VoronoiGridPlanner::makePlanFromMap` 的内部步骤非常清晰，可以分成 8 段。
 
 ### 第 1 段：坐标转换
 
@@ -221,7 +227,27 @@
 - 起点搜索半径约为 `2 * robot_radius`
 - 终点搜索半径约为 `3 * robot_radius`
 
-### 第 3 段：构建 Voronoi 图
+### 第 3 段：局部代价地图裁剪与扩窗
+
+当前实现会优先尝试“以起点和终点为核心”的局部地图裁剪：
+
+- 先取起点和终点的最小包围框
+- 再叠加安全外扩
+  - 至少覆盖 `robot_radius + clearance_margin`
+- 再叠加绕行冗余
+  - 由 `local_crop_min_padding_m`
+  - 和 `local_crop_detour_ratio * 起终点直线距离`
+  - 两者取较大值后决定
+
+如果第一次局部窗口规划失败，不会立刻结束，而是：
+
+- 按 `local_crop_expansion_factor` 逐步扩大窗口
+- 最多尝试 `local_crop_max_expansions + 1` 次局部规划
+- 如果局部窗口已经扩展到全图，或者局部尝试全部失败，则自动回退到全图规划
+
+这个阶段的目标，是尽量把 Voronoi 距离场和骨架提取限制在与当前任务相关的局部范围里，从而降低单次重规划耗时。
+
+### 第 4 段：构建 Voronoi 图
 
 调用 `buildVoronoiDiagramFromOccupancyGrid`，输出一张 `gvd_map`：
 
@@ -232,7 +258,7 @@
 
 这一段内部会经历“障碍种子扩散 -> 距离场计算 -> 骨架候选提取 -> 剪枝”几个步骤，后面第 7 节会单独展开，不在这里重复。
 
-### 第 4 段：为起终点寻找骨架连接候选
+### 第 5 段：为起终点寻找骨架连接候选
 
 调用 `findReachableVoronoiCandidates` 两次：
 
@@ -254,7 +280,7 @@
 - `connector_cost`
   - 连接代价
 
-### 第 5 段：搜索全局最优骨架主干
+### 第 6 段：搜索全局最优骨架主干
 
 调用 `searchBestVoronoiRoute`：
 
@@ -272,7 +298,7 @@
 - `trunk_path`
 - `goal_connector`
 
-### 第 6 段：拼接完整栅格路径
+### 第 7 段：拼接完整栅格路径
 
 用 `appendPathNoDuplicate` 依次拼接三段路径，避免重复点：
 
@@ -280,7 +306,7 @@
 - Voronoi 主干段
 - 终点连接段
 
-### 第 7 段：转成 ROS Path
+### 第 8 段：转成 ROS Path
 
 调用 `PopulateGridPath`，把栅格路径转换成 `nav_msgs/Path`。
 

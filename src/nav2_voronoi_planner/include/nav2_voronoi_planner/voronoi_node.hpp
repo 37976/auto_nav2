@@ -65,6 +65,12 @@ private:
   double goal_tolerance_ {0.2};
   double trunk_safety_penalty_scale_ {0.06};
   int connector_candidate_count_ {0};
+  bool enable_local_map_cropping_ {true};
+  double local_crop_min_padding_m_ {2.0};
+  double local_crop_detour_ratio_ {0.5};
+  double local_crop_max_padding_m_ {8.0};
+  double local_crop_expansion_factor_ {1.8};
+  int local_crop_max_expansions_ {2};
   int path_smoothing_control_step_ {2};
   double stable_map_replan_period_ms_ {3000.0};
   int map_significant_change_cells_ {50};

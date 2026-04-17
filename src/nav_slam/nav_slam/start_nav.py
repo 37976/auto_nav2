@@ -347,7 +347,7 @@ class PathFollowingNode(Node):
         now = self.get_clock().now()
         if (now - self.last_debug_log_time).nanoseconds / 1e9 >= 2.0:
             self.last_debug_log_time = now
-            self.get_logger().info(
+            self.get_logger().debug(
                 f"tracking path: mode={self.control_mode}, v={self.last_linear_x:.2f}, "
                 f"w={self.last_angular_z:.2f}, odom_v={odom_linear:.2f}, "
                 f"odom_w={odom_angular:.2f}, dist={distance_to_end:.2f}, "

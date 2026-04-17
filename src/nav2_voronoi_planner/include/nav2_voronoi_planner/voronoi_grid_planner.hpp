@@ -27,6 +27,12 @@ public:
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};
     int connector_candidate_count {0};
+    bool enable_local_map_cropping {true};
+    double local_crop_min_padding_m {2.0};
+    double local_crop_detour_ratio {0.5};
+    double local_crop_max_padding_m {8.0};
+    double local_crop_expansion_factor {1.8};
+    int local_crop_max_expansions {2};
   };
 
   explicit VoronoiGridPlanner(Config config);
@@ -47,6 +53,14 @@ private:
     GridPoint point;
     GridPath connector_path;
     double connector_cost {0.0};
+  };
+
+  struct CropBounds
+  {
+    int min_x {0};
+    int max_x {-1};
+    int min_y {0};
+    int max_y {-1};
   };
 
   int toIndex(int x, int y, int w) const;
@@ -106,6 +120,13 @@ private:
     GridPath & trunk_path,
     GridPath & goal_connector,
     double & total_route_length_m) const;
+  bool makePlanOnGrid(
+    const nav_msgs::msg::OccupancyGrid & map,
+    const GridPoint & start_grid,
+    const GridPoint & goal_grid,
+    nav_msgs::msg::Path & plan,
+    nav_msgs::msg::OccupancyGrid * skeleton,
+    const rclcpp::Logger & logger) const;
   void appendPathNoDuplicate(GridPath & dst, const GridPath & src) const;
   std::vector<std::vector<VoronoiData>> buildVoronoiDiagramFromOccupancyGrid(
     const nav_msgs::msg::OccupancyGrid & grid,
@@ -114,6 +135,27 @@ private:
     const std::vector<std::vector<VoronoiData>> & gvd_map,
     const nav_msgs::msg::OccupancyGrid & src_grid,
     nav_msgs::msg::OccupancyGrid & skeleton) const;
+  CropBounds computeCropBounds(
+    const nav_msgs::msg::OccupancyGrid & grid,
+    const GridPoint & start_grid,
+    const GridPoint & goal_grid,
+    double padding_m) const;
+  bool cropBoundsCoverWholeMap(
+    const CropBounds & bounds,
+    const nav_msgs::msg::OccupancyGrid & grid) const;
+  nav_msgs::msg::OccupancyGrid extractSubGrid(
+    const nav_msgs::msg::OccupancyGrid & grid,
+    const CropBounds & bounds) const;
+  void populateEmbeddedSkeleton(
+    const nav_msgs::msg::OccupancyGrid & local_skeleton,
+    const nav_msgs::msg::OccupancyGrid & full_grid,
+    const CropBounds & bounds,
+    nav_msgs::msg::OccupancyGrid & skeleton) const;
+  double computeCropPaddingMeters(
+    const GridPoint & start_grid,
+    const GridPoint & goal_grid,
+    double resolution,
+    int expansion_step) const;
   void getStartAndEndConfigurations(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal,
