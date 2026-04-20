@@ -588,55 +588,105 @@ LLLLLLLLLMMMMMRRRRRRRRR
 
 ### 10.1 ROS 调度与重规划总流程
 
+#### 10.1.1 节点初始化
+
 ```mermaid
 flowchart TD
     A[Node 启动] --> B[声明参数并构造 VoronoiGridPlanner]
     B --> C[订阅 /combined_grid /goal_pose /odom]
     C --> D[创建发布器 /path /path2 /voronoi_skeleton]
-    D --> E[启动 plan_timer]
-
-    E --> F{planTimerCallback}
-    F --> G[加锁复制 map odom goal 和状态快照]
-    G --> H{goal_reached_?}
-    H -- yes --> Z1[直接返回]
-    H -- no --> I{has_map_?}
-    I -- no --> Z2[节流告警: 无地图]
-    I -- yes --> J{has_odom_?}
-    J -- no --> Z3[节流告警: 无里程计]
-    J -- yes --> K{has_goal_?}
-    K -- no --> Z4[直接返回]
-    K -- yes --> L{机器人已到达目标?}
-    L -- yes --> M[清空目标与规划状态]
-    M --> N[发布空 /path 和 /path2]
-    N --> Z5[返回]
-    L -- no --> O{need_replan_ 或 map_dirty_?}
-    O -- no --> Z6[返回]
-    O -- yes --> P{需要满足最小移动距离门控?}
-    P -- no --> Q[调用 tryPlanWithSnapshot]
-    P -- yes --> R{moved >= replan_min_move?}
-    R -- no --> Z7[返回]
-    R -- yes --> Q
-
-    S[/combined_grid 更新/] --> T[mapCallback]
-    T --> U[判断 significant_change]
-    T --> V[判断 current path 是否被新地图堵塞]
-    T --> W[判断稳定地图重规划周期是否到达]
-    U --> X{goal_dirty or path_blocked or significant_change or slow_replan_due}
-    V --> X
-    W --> X
-    X -- yes --> Y[置位 map_dirty_ need_replan_]
-    X -- no --> Y0[只更新 map_]
-
-    AA[/goal_pose 更新/] --> AB[goalCallback]
-    AB --> AC[保存 last_goal_]
-    AC --> AD[清空旧路径状态]
-    AD --> AE[置位 goal_dirty_ need_replan_ map_dirty_]
-
-    BA[/odom 更新/] --> BB[odomCallback]
-    BB --> BC{距离目标 <= goal_tolerance?}
-    BC -- yes --> BD[清除目标状态并发布空路径]
-    BC -- no --> BE[仅更新 odom_]
+    D --> E[启动 plan_timer<br/>每 plan_period_ms 周期触发]
 ```
+
+- `Node 启动`：Voronoi 规划节点开始运行。
+- `plan_timer`：周期定时器，会按照 `plan_period_ms` 的间隔反复触发规划检查。
+- 这一小图表达的重点是：节点启动后先完成参数、订阅器、发布器和定时器的初始化，后面的规划都建立在这一步之上。
+
+#### 10.1.2 地图回调 `mapCallback`
+
+```mermaid
+flowchart TD
+    A[/combined_grid 更新/] --> B[更新 map_]
+    B --> C[判断 significant_change]
+    B --> D[判断 current path 是否被新地图堵塞]
+    C --> E{goal_dirty or path_blocked or significant_change?}
+    D --> E
+    E -- yes --> F[置位 map_dirty_ 和 need_replan_]
+    E -- no --> G{slow_replan_due?}
+    G -- yes --> H[置位 need_replan_<br/>触发稳定地图下的周期性重规划]
+    G -- no --> I[仅保留最新 map_]
+```
+
+- `significant_change`：地图是否发生了“足够明显”的变化，比如障碍分类变化的格子数超过阈值。
+- `current path 是否被新地图堵塞`：检查当前已经发布的路径，在机器人前方一小段范围内，是否被新障碍挡住。
+- `goal_dirty`：目标点刚刚更新过，说明旧路径已经不适合当前目标。
+- `path_blocked`：当前路径被新地图判定为不可走。
+- `slow_replan_due`：即使地图没明显变化，也到了稳定地图下允许再次重规划的时间点。
+- `map_dirty_`：地图侧的脏标记，表示旧规划可能已经不再匹配当前地图。
+- `need_replan_`：重规划请求标记，表示下一轮定时器应该尝试重新规划。
+
+#### 10.1.3 目标回调 `goalCallback`
+
+```mermaid
+flowchart TD
+    A[/goal_pose 更新/] --> B[保存 last_goal_]
+    B --> C[清空旧路径状态]
+    C --> D[置位 goal_dirty_ need_replan_ map_dirty_]
+```
+
+- `last_goal_`：保存最新收到的目标点。
+- `goal_dirty_`：目标发生变化，旧路径已经不对应当前目标。
+- `need_replan_`：请求下一轮重新规划。
+- `map_dirty_`：这里也一起置位，作用是让定时器不要沿用旧规划，尽快基于当前地图重新算路。
+
+#### 10.1.4 里程计回调 `odomCallback`
+
+```mermaid
+flowchart TD
+    A[/odom 更新/] --> B[更新 odom_]
+    B --> C{距离目标 <= goal_tolerance?}
+    C -- yes --> D[置位 goal_reached_ 并清除规划状态]
+    D --> E[发布空 /path 和 /path2]
+    C -- no --> F[仅保留最新 odom_]
+```
+
+- `odom_`：机器人当前里程计位姿。
+- `goal_tolerance`：判定“已经到达目标”的距离阈值。
+- 如果机器人已经进入目标容差范围，就会把 `goal_reached_` 置为真，并发布空路径，表示这次导航任务结束。
+- 如果还没到达，就只更新当前位置，不做额外收尾动作。
+
+#### 10.1.5 定时器主线 `planTimerCallback`
+
+```mermaid
+flowchart TD
+    A[plan_timer 周期触发] --> B{planTimerCallback}
+    B --> C[加锁复制 map odom goal 和状态快照]
+    C --> D{goal_reached_?}
+    D -- yes --> Z1[直接返回]
+    D -- no --> E{has_map_?}
+    E -- no --> Z2[节流告警: 无地图]
+    E -- yes --> F{has_odom_?}
+    F -- no --> Z3[节流告警: 无里程计]
+    F -- yes --> G{has_goal_?}
+    G -- no --> Z4[直接返回]
+    G -- yes --> H{机器人当前是否已到达目标?}
+    H -- yes --> I[清空目标与规划状态]
+    I --> J[发布空 /path 和 /path2]
+    J --> Z5[返回]
+    H -- no --> K{need_replan_ 或 map_dirty_?}
+    K -- no --> Z6[返回]
+    K -- yes --> L{这次是否需要应用最小移动距离门控?}
+    L -- no --> M[调用 tryPlanWithSnapshot]
+    L -- yes --> N{moved >= replan_min_move?}
+    N -- no --> Z7[返回]
+    N -- yes --> M
+```
+
+- `goal_reached_`：目标是否已经被确认到达；如果已经到达，定时器会直接返回，不再继续规划。
+- `has_map_ / has_odom_ / has_goal_`：地图、里程计、目标是否都已经准备齐全。
+- `need_replan_ 或 map_dirty_`：只有存在重规划请求，或者地图发生变化时，才值得继续往下走。
+- `最小移动距离门控`：如果这次不是目标变化触发、也不是地图变化触发，就要求机器人至少移动了 `replan_min_move` 这么远，才允许再次规划。
+- `moved >= replan_min_move`：机器人从上次规划位置到现在的移动距离是否达到最小重规划距离。
 
 ### 10.2 单次规划内部流程
 
@@ -690,6 +740,13 @@ flowchart TD
     ZB -- yes --> ZD[发布 skeleton /path /path2]
 ```
 
+- `snapshot`：把当前地图、里程计和目标复制成一份局部快照，避免规划过程中共享数据被回调修改。
+- `makePlanFromMap`：底层真正执行 Voronoi 规划的核心函数。
+- `raw plan`：还没做平滑前的原始路径。
+- `skeleton`：Voronoi 骨架可视化结果。
+- `B-spline 平滑`：把折线型原始路径变成更平滑、更适合跟踪的轨迹。
+- `新路径是否足够更优`：新路径只有在比当前旧路径明显更短、更值得切换时才会发布，否则保留旧路径以减少抖动。
+
 ### 10.3 Voronoi 骨架构建细流程
 
 ```mermaid
@@ -724,6 +781,14 @@ flowchart TD
     T --> U
     U --> V[写回 gvd_map xy 的 is_voronoi 标记]
 ```
+
+- `OccupancyGrid`：输入的栅格地图。
+- `dist=0`：障碍格作为距离传播的起点，它到自己的距离是 0。
+- `dist=inf`：自由格初始时还不知道离障碍多远，所以先记成无穷大。
+- `seed`：每个自由格最近的障碍源是谁。
+- `min_clearance`：最小安全间隙，小于它的格子即使在几何中间也不能进入骨架。
+- `candidate`：初步判定为 Voronoi 骨架候选的格子集合。
+- `is_voronoi`：最终写回到 `gvd_map` 里的正式骨架标记。
 
 ## 11. 总结
 
