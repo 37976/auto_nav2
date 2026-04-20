@@ -1,0 +1,884 @@
+<!DOCTYPE html><html><head>
+      <title>analysis_flow</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:////home/xu/.vscode/extensions/shd101wyy.markdown-preview-enhanced-0.8.23/crossnote/dependencies/katex/katex.min.css">
+      
+      
+      
+      <script type="text/javascript" src="file:////home/xu/.vscode/extensions/shd101wyy.markdown-preview-enhanced-0.8.23/crossnote/dependencies/mermaid/mermaid.min.js" charset="UTF-8"></script>
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script>
+    </head>
+    <body for="html-export">
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="nav2_voronoi_planner">nav2_voronoi_planner </h1>
+<h2 id="1-定位">1. 定位 </h2>
+<p><code>nav2_voronoi_planner</code> 是一个独立的 ROS 2 Voronoi 路径规划节点包，不是标准 Nav2 <code>planner_server</code> 插件。</p>
+<p>它的职责可以概括成两层：</p>
+<ul>
+<li><code>VoronoiNode</code>
+<ul>
+<li>负责 ROS 话题订阅、定时触发、重规划门控、结果发布。</li>
+</ul>
+</li>
+<li><code>VoronoiGridPlanner</code>
+<ul>
+<li>负责把栅格地图转换成 Voronoi 骨架，并在骨架上搜索路径。</li>
+</ul>
+</li>
+</ul>
+<p>入口文件是 <code>src/voronoi_node_main.cpp</code>，最终只启动一个名为 <code>voronoi</code> 的节点。</p>
+<h2 id="2-文件职责">2. 文件职责 </h2>
+<ul>
+<li><code>src/voronoi_node.cpp</code>
+<ul>
+<li>节点初始化、参数声明、订阅发布、重规划条件判断、路径发布。</li>
+</ul>
+</li>
+<li><code>src/voronoi_grid_planner.cpp</code>
+<ul>
+<li>核心规划逻辑，包括障碍距离传播、骨架提取、连接段搜索、主干路径搜索、路径拼接。</li>
+</ul>
+</li>
+<li><code>src/voronoi_path_utils.cpp</code>
+<ul>
+<li>栅格路径转 <code>nav_msgs/Path</code>、路径降采样、B-spline 平滑。</li>
+</ul>
+</li>
+<li><code>include/nav2_voronoi_planner/voronoi_types.hpp</code>
+<ul>
+<li>Voronoi 栅格基础数据结构，记录 <code>is_voronoi</code> 和 <code>dist</code>。</li>
+</ul>
+</li>
+<li><code>include/nav2_voronoi_planner/util.hpp</code>
+<ul>
+<li>连续坐标与离散栅格坐标转换工具。</li>
+</ul>
+</li>
+</ul>
+<h2 id="3-输入输出关系">3. 输入输出关系 </h2>
+<h3 id="输入话题">输入话题 </h3>
+<ul>
+<li><code>/combined_grid</code>
+<ul>
+<li>地图输入，类型 <code>nav_msgs/msg/OccupancyGrid</code></li>
+</ul>
+</li>
+<li><code>/goal_pose</code>
+<ul>
+<li>目标点输入，类型 <code>geometry_msgs/msg/PoseStamped</code></li>
+</ul>
+</li>
+<li><code>/odom</code>
+<ul>
+<li>机器人当前位姿，类型 <code>nav_msgs/msg/Odometry</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="输出话题">输出话题 </h3>
+<ul>
+<li><code>/path</code>
+<ul>
+<li>主输出路径，经过平滑处理</li>
+</ul>
+</li>
+<li><code>/path2</code>
+<ul>
+<li>调试路径，是 <code>/path</code> 的再次降采样版本</li>
+</ul>
+</li>
+<li><code>/voronoi_skeleton</code>
+<ul>
+<li>骨架可视化图，障碍为 <code>100</code>，Voronoi 骨架为 <code>0</code>，其他为 <code>-1</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="4-运行主线">4. 运行主线 </h2>
+<h3 id="41-节点启动阶段">4.1 节点启动阶段 </h3>
+<p>节点启动后会：</p>
+<ol>
+<li>声明参数</li>
+<li>构造 <code>VoronoiGridPlanner</code></li>
+<li>创建订阅器和发布器</li>
+<li>创建周期定时器 <code>plan_timer_</code></li>
+</ol>
+<p>关键参数包括：</p>
+<ul>
+<li><code>robot_radius</code></li>
+<li><code>clearance_margin</code></li>
+<li><code>occ_threshold</code></li>
+<li><code>unknown_is_obstacle</code></li>
+<li><code>plan_period_ms</code></li>
+<li><code>replan_min_move</code></li>
+<li><code>stable_map_replan_period_ms</code></li>
+<li><code>map_significant_change_cells</code></li>
+<li><code>path_obstacle_check_distance_m</code></li>
+<li><code>path_switch_min_improvement_m</code></li>
+<li><code>connector_candidate_count</code></li>
+<li><code>enable_local_map_cropping</code></li>
+<li><code>local_crop_min_padding_m</code></li>
+<li><code>local_crop_detour_ratio</code></li>
+<li><code>local_crop_max_padding_m</code></li>
+<li><code>local_crop_expansion_factor</code></li>
+<li><code>local_crop_max_expansions</code></li>
+<li><code>enable_local_map_downsampling</code></li>
+<li><code>local_map_downsample_factor</code></li>
+<li><code>path_smoothing_control_step</code></li>
+</ul>
+<h3 id="42-三类回调的职责分工">4.2 三类回调的职责分工 </h3>
+<h4 id="1-mapcallback">1. <code>mapCallback</code> </h4>
+<p>地图更新时不会立刻规划，只会判断是否需要重规划，并设置状态位：</p>
+<ul>
+<li><code>significant_change</code>
+<ul>
+<li>当前地图与上一帧地图相比，分类后的障碍状态变化格子数是否超过阈值</li>
+</ul>
+</li>
+<li><code>path_blocked</code>
+<ul>
+<li>当前已发布路径在机器人前方一段距离内，是否已经撞到新障碍或超出地图</li>
+</ul>
+</li>
+<li><code>slow_replan_due</code>
+<ul>
+<li>即使地图变化不大，也会每隔一段时间允许一次稳定地图重规划</li>
+</ul>
+</li>
+</ul>
+<p>只要以下任一条件满足，就会设置：</p>
+<ul>
+<li><code>goal_dirty_ = true</code></li>
+<li><code>map_dirty_ = true</code></li>
+<li><code>need_replan_ = true</code></li>
+</ul>
+<h4 id="2-goalcallback">2. <code>goalCallback</code> </h4>
+<p>收到新目标后会：</p>
+<ul>
+<li>保存最新目标 <code>last_goal_</code></li>
+<li>清空旧路径状态</li>
+<li>标记 <code>goal_dirty_ = true</code></li>
+<li>标记 <code>need_replan_ = true</code></li>
+<li>标记 <code>map_dirty_ = true</code></li>
+</ul>
+<p>这意味着新目标会强制触发下一轮规划。</p>
+<h4 id="3-odomcallback">3. <code>odomCallback</code> </h4>
+<p>里程计回调只做一件关键事：</p>
+<ul>
+<li>判断机器人是否已经到达目标点</li>
+</ul>
+<p>如果与目标距离小于 <code>goal_tolerance</code>，就会：</p>
+<ul>
+<li>清除目标状态</li>
+<li>清除重规划状态</li>
+<li>发布空路径</li>
+</ul>
+<h3 id="43-定时器回调-plantimercallback">4.3 定时器回调 <code>planTimerCallback</code> </h3>
+<p>定时器是整个节点真正的“规划调度入口”。</p>
+<p>它每 <code>plan_period_ms</code> 毫秒触发一次，流程如下：</p>
+<ol>
+<li>从互斥锁保护的数据区复制地图、里程计、目标和状态快照</li>
+<li>如果没有地图，直接返回</li>
+<li>如果没有里程计，直接返回</li>
+<li>如果没有目标，直接返回</li>
+<li>如果已经到达目标，直接返回</li>
+<li>如果既不需要重规划，也没有地图脏标记，直接返回</li>
+<li>如果上次规划后机器人移动距离小于 <code>replan_min_move</code>，并且这次不是目标变化/地图变化触发，则跳过</li>
+<li>调用 <code>tryPlanWithSnapshot</code></li>
+</ol>
+<p>这里的设计重点是：</p>
+<ul>
+<li>真正的规划发生在定时器线程中，而不是订阅回调线程里</li>
+<li>订阅回调只负责“标记需要规划”</li>
+<li>这样可以避免地图高频更新时在回调里直接做重计算</li>
+</ul>
+<h2 id="5-tryplanwithsnapshot-的规划发布流程">5. <code>tryPlanWithSnapshot</code> 的规划发布流程 </h2>
+<p>这是 <code>VoronoiNode</code> 中最核心的函数。</p>
+<h3 id="51-规划前检查">5.1 规划前检查 </h3>
+<p>它先做两步检查：</p>
+<ol>
+<li>地图和里程计快照是否存在</li>
+<li>当前机器人是否已经足够接近目标</li>
+</ol>
+<p>如果已经到达目标，会直接发布空路径并退出。</p>
+<h3 id="52-调用底层规划器">5.2 调用底层规划器 </h3>
+<p>然后构造：</p>
+<ul>
+<li><code>start</code>
+<ul>
+<li>来自 <code>/odom</code></li>
+</ul>
+</li>
+<li><code>goal</code>
+<ul>
+<li>来自 <code>/goal_pose</code></li>
+</ul>
+</li>
+</ul>
+<p>再调用：</p>
+<ul>
+<li><code>planner_-&gt;makePlanFromMap(...)</code></li>
+</ul>
+<p>输出两个结果：</p>
+<ul>
+<li><code>plan</code>
+<ul>
+<li>原始栅格路径转成的 <code>nav_msgs/Path</code></li>
+</ul>
+</li>
+<li><code>skeleton</code>
+<ul>
+<li>骨架调试图</li>
+</ul>
+</li>
+</ul>
+<h3 id="53-平滑与抗振荡">5.3 平滑与抗振荡 </h3>
+<p>规划成功后，不会立刻发布，而是先做两层后处理：</p>
+<ol>
+<li><code>downsamplePath</code></li>
+</ol>
+<ul>
+<li>从原始路径抽取更稀疏的控制点，并保留首尾点</li>
+</ul>
+<ol start="2">
+<li><code>smoothPathBSpline</code></li>
+</ol>
+<ul>
+<li>对控制点做 clamped uniform B-spline 平滑，输出点数通常与原路径点数接近，且首尾点保持不变</li>
+</ul>
+<p>然后它会把“新路径”和“当前已发布旧路径”进行比较：</p>
+<ul>
+<li>如果旧路径没有被新地图堵住</li>
+<li>并且这次不是新目标触发</li>
+<li>并且新路径没有比旧路径剩余长度明显更短</li>
+</ul>
+<p>那么它会保留旧路径，避免频繁切换路径导致振荡。</p>
+<p>比较阈值由 <code>path_switch_min_improvement_m</code> 控制。</p>
+<h3 id="54-发布">5.4 发布 </h3>
+<p>最终会发布：</p>
+<ul>
+<li><code>/voronoi_skeleton</code></li>
+<li><code>/path</code></li>
+<li><code>/path2</code>（如果开启调试）</li>
+</ul>
+<p>并把 <code>last_published_plan_</code> 更新为新路径。</p>
+<h2 id="6-makeplanfrommap-的核心规划逻辑">6. <code>makePlanFromMap</code> 的核心规划逻辑 </h2>
+<p><code>VoronoiGridPlanner::makePlanFromMap</code> 的内部步骤非常清晰，可以分成 8 段。</p>
+<h3 id="第-1-段坐标转换">第 1 段：坐标转换 </h3>
+<p>将连续世界坐标转为地图栅格坐标：</p>
+<ul>
+<li><code>start.pose.position -&gt; (start_x, start_y)</code></li>
+<li><code>goal.pose.position -&gt; (goal_x, goal_y)</code></li>
+</ul>
+<h3 id="第-2-段边界与占用检查">第 2 段：边界与占用检查 </h3>
+<p>如果起点或终点：</p>
+<ul>
+<li>超出地图边界，则直接失败</li>
+<li>落在障碍或未知区，则在一定半径内寻找最近自由栅格</li>
+</ul>
+<p>其中：</p>
+<ul>
+<li>起点搜索半径约为 <code>2 * robot_radius</code></li>
+<li>终点搜索半径约为 <code>3 * robot_radius</code></li>
+</ul>
+<h3 id="第-3-段局部代价地图裁剪与扩窗">第 3 段：局部代价地图裁剪与扩窗 </h3>
+<p>当前实现会优先尝试“以起点和终点为核心”的局部地图裁剪：</p>
+<ul>
+<li>先取起点和终点的最小包围框</li>
+<li>再叠加安全外扩
+<ul>
+<li>至少覆盖 <code>robot_radius + clearance_margin</code></li>
+</ul>
+</li>
+<li>再叠加绕行冗余
+<ul>
+<li>由 <code>local_crop_min_padding_m</code></li>
+<li>和 <code>local_crop_detour_ratio * 起终点直线距离</code></li>
+<li>两者取较大值后决定</li>
+</ul>
+</li>
+</ul>
+<p>如果第一次局部窗口规划失败，不会立刻结束，而是：</p>
+<ul>
+<li>可选地先对局部图做一次降采样
+<ul>
+<li>当前默认支持 <code>2x</code> 降采样</li>
+<li>由 <code>enable_local_map_downsampling</code> 和 <code>local_map_downsample_factor</code> 控制</li>
+<li>如果降采样局部图失败，会立刻回退到同一窗口的原分辨率局部图</li>
+</ul>
+</li>
+<li>按 <code>local_crop_expansion_factor</code> 逐步扩大窗口</li>
+<li>最多尝试 <code>local_crop_max_expansions + 1</code> 次局部规划</li>
+<li>如果局部窗口已经扩展到全图，或者局部尝试全部失败，则自动回退到全图规划</li>
+</ul>
+<p>这个阶段的目标，是尽量把 Voronoi 距离场和骨架提取限制在与当前任务相关的局部范围里，并在可接受的前提下减少参与规划的栅格数，从而降低单次重规划耗时。</p>
+<h3 id="第-4-段构建-voronoi-图">第 4 段：构建 Voronoi 图 </h3>
+<p>调用 <code>buildVoronoiDiagramFromOccupancyGrid</code>，输出一张 <code>gvd_map</code>：</p>
+<ul>
+<li><code>dist</code>
+<ul>
+<li>每个栅格到最近障碍的米制距离</li>
+</ul>
+</li>
+<li><code>is_voronoi</code>
+<ul>
+<li>是否属于骨架点</li>
+</ul>
+</li>
+</ul>
+<p>这一段内部会经历“障碍种子扩散 -&gt; 距离场计算 -&gt; 骨架候选提取 -&gt; 剪枝”几个步骤，后面第 7 节会单独展开，不在这里重复。</p>
+<h3 id="第-5-段为起终点寻找骨架连接候选">第 5 段：为起终点寻找骨架连接候选 </h3>
+<p>调用 <code>findReachableVoronoiCandidates</code> 两次：</p>
+<ul>
+<li>一次从起点出发</li>
+<li>一次从终点出发</li>
+</ul>
+<p>这个搜索本质上是带安全约束的 Dijkstra：</p>
+<ul>
+<li>只能走自由栅格</li>
+<li>栅格 clearance 必须大于 <code>max(robot_radius + clearance_margin, 1.5 * resolution)</code></li>
+<li>对角走法还要检查防止“切角穿障碍”</li>
+</ul>
+<p>它会返回一组候选：</p>
+<ul>
+<li><code>point</code>
+<ul>
+<li>可连接到的 Voronoi 骨架点</li>
+</ul>
+</li>
+<li><code>connector_path</code>
+<ul>
+<li>从起点/终点到该骨架点的局部连接段</li>
+</ul>
+</li>
+<li><code>connector_cost</code>
+<ul>
+<li>连接代价</li>
+</ul>
+</li>
+</ul>
+<h3 id="第-6-段搜索全局最优骨架主干">第 6 段：搜索全局最优骨架主干 </h3>
+<p>调用 <code>searchBestVoronoiRoute</code>：</p>
+<ol>
+<li>把所有起点候选同时压入优先队列</li>
+<li>在 Voronoi 骨架上做一次多源 Dijkstra</li>
+<li>只要搜索到任一终点候选，就计算：</li>
+</ol>
+<p><code>总成本 = 起点连接段成本 + 骨架主干成本 + 终点连接段成本</code></p>
+<ol start="4">
+<li>选择总成本最小的组合</li>
+</ol>
+<p>最后得到三段路径：</p>
+<ul>
+<li><code>start_connector</code></li>
+<li><code>trunk_path</code></li>
+<li><code>goal_connector</code></li>
+</ul>
+<h3 id="第-7-段拼接完整栅格路径">第 7 段：拼接完整栅格路径 </h3>
+<p>用 <code>appendPathNoDuplicate</code> 依次拼接三段路径，避免重复点：</p>
+<ul>
+<li>起点连接段</li>
+<li>Voronoi 主干段</li>
+<li>终点连接段</li>
+</ul>
+<h3 id="第-8-段转成-ros-path">第 8 段：转成 ROS Path </h3>
+<p>调用 <code>PopulateGridPath</code>，把栅格路径转换成 <code>nav_msgs/Path</code>。</p>
+<p>转换时会：</p>
+<ul>
+<li>把栅格中心点转为世界坐标</li>
+<li>用前后点方向估算每个 pose 的航向</li>
+</ul>
+<p>最后还会把终点 pose 强制覆盖成原始 <code>goal</code> 消息。</p>
+<h2 id="7-voronoi-骨架生成">7. Voronoi 骨架生成 </h2>
+<p>这一段对应的核心实现是 <code>buildVoronoiDiagramFromOccupancyGrid()</code>，位置在 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:656">voronoi_grid_planner.cpp</a>。</p>
+<p>如果只记一句话，可以这样理解：</p>
+<p>“Voronoi 骨架是在自由空间里，找到既离障碍足够远、又处在不同障碍影响面分界处的那条中轴线。”</p>
+<h3 id="71-先建立一个直觉">7.1 先建立一个直觉 </h3>
+<p>假设地图里有一条走廊：</p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>########........########
+########........########
+########........########
+</code></pre><p>如果把左右两侧障碍都看成“向外扩张”的影响源，那么：</p>
+<ul>
+<li>靠近左墙的格子，会被左墙主导</li>
+<li>靠近右墙的格子，会被右墙主导</li>
+<li>中间那一带，会成为左右两侧影响的分界带</li>
+</ul>
+<p>Voronoi 骨架要找的，就是这条分界带中连通且安全的中线。</p>
+<h3 id="72-先看这-4-个关键结果">7.2 先看这 4 个关键结果 </h3>
+<p>这个函数内部最值得抓住的是 4 个量：</p>
+<ul>
+<li><code>dist_map</code>
+<ul>
+<li>每个格子到最近障碍的距离，先以格子为单位计算</li>
+</ul>
+</li>
+<li><code>seed_map</code>
+<ul>
+<li>每个格子最近的障碍源是谁</li>
+</ul>
+</li>
+<li><code>candidate</code>
+<ul>
+<li>哪些格子被初步判断为骨架候选</li>
+</ul>
+</li>
+<li><code>gvd_map</code>
+<ul>
+<li>最终输出，里面保存米制距离 <code>dist</code> 和骨架标记 <code>is_voronoi</code></li>
+</ul>
+</li>
+</ul>
+<p>只要把这 4 个量对应起来，整段代码就会顺很多。</p>
+<h3 id="73-算法流程">7.3 算法流程 </h3>
+<h4 id="第一步把真正障碍格当成传播种子">第一步：把真正障碍格当成传播种子 </h4>
+<p>代码先扫描整张地图，把真正的硬障碍格压入优先队列，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:699">voronoi_grid_planner.cpp</a>。</p>
+<p>这里要注意，当前实现已经把“骨架传播种子”和“通行约束”分开了：</p>
+<ul>
+<li>骨架传播时，只把值为 <code>100</code> 的真正障碍当作 seed</li>
+<li>动态层里的膨胀代价值，例如 <code>30 / 15 / 5</code>，不会再参与 Voronoi 中轴传播</li>
+<li>但这些膨胀层仍然会通过后续 <code>isObstacle()</code> 和 <code>min_clearance</code> 参与通行约束</li>
+</ul>
+<p>这样可以避免“已经膨胀过的障碍层”再次把骨架整体往中间压缩。</p>
+<p>对于障碍格本身：</p>
+<ul>
+<li><code>dist_map[x][y] = 0</code></li>
+<li><code>seed_map[x][y] = {x, y}</code></li>
+</ul>
+<p>意思很直接：</p>
+<ul>
+<li>障碍到自己的距离是 0</li>
+<li>它自己就是距离传播的源头</li>
+</ul>
+<h4 id="第二步做多源传播得到障碍距离场">第二步：做多源传播，得到障碍距离场 </h4>
+<p>接着代码从优先队列里不断取出当前代价最小的点，并向 8 邻域扩展，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:715">voronoi_grid_planner.cpp</a>。</p>
+<p>最关键的一行是：</p>
+<pre data-role="codeBlock" data-info="cpp" class="language-cpp cpp"><code><span class="token keyword keyword-const">const</span> <span class="token keyword keyword-double">double</span> nd <span class="token operator">=</span> std<span class="token double-colon punctuation">::</span><span class="token function">hypot</span><span class="token punctuation">(</span>
+  <span class="token generic-function"><span class="token function">static_cast</span><span class="token generic class-name"><span class="token operator">&lt;</span><span class="token keyword keyword-double">double</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">(</span>nx <span class="token operator">-</span> cur<span class="token punctuation">.</span>seed_x<span class="token punctuation">)</span><span class="token punctuation">,</span>
+  <span class="token generic-function"><span class="token function">static_cast</span><span class="token generic class-name"><span class="token operator">&lt;</span><span class="token keyword keyword-double">double</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">(</span>ny <span class="token operator">-</span> cur<span class="token punctuation">.</span>seed_y<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+</code></pre><p>它不是简单地“在当前路径长度上再加一步”，而是直接计算邻居格到原始障碍种子的欧氏距离。<br>
+所以传播结束后，每个自由格都会知道两件事：</p>
+<ul>
+<li>自己最近的障碍源是谁</li>
+<li>自己离最近障碍有多远</li>
+</ul>
+<p>你可以把这一步理解成：障碍像墨水一样向外扩散，每个自由格最终都被最近的那团“墨水”染色。</p>
+<h4 id="第三步把距离换成米并先做安全过滤">第三步：把距离换成米，并先做安全过滤 </h4>
+<p>传播时得到的距离还是格子单位，随后代码会乘以地图分辨率，写入 <code>gvd_map[x][y].dist</code>，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:743">voronoi_grid_planner.cpp</a>。</p>
+<p>然后它计算一个最低安全间隙：</p>
+<pre data-role="codeBlock" data-info="cpp" class="language-cpp cpp"><code>min_clearance <span class="token operator">=</span> <span class="token function">max</span><span class="token punctuation">(</span>robot_radius <span class="token operator">+</span> clearance_margin<span class="token punctuation">,</span> <span class="token number">1.5</span> <span class="token operator">*</span> resolution<span class="token punctuation">)</span>
+</code></pre><p>这一步的含义是：</p>
+<ul>
+<li>如果一个自由格离障碍太近</li>
+<li>哪怕它位于几何上的中间位置</li>
+<li>也不能进入骨架候选集合</li>
+</ul>
+<p>所以这里提取的不是“纯数学中轴”，而是“考虑机器人尺寸后的安全中轴”。</p>
+<h4 id="第四步找出不同障碍影响面的分界点">第四步：找出不同障碍影响面的分界点 </h4>
+<p>这是骨架提取最核心的一步，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:755">voronoi_grid_planner.cpp</a> 到 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:796">voronoi_grid_planner.cpp</a>。</p>
+<p>对每一个自由且满足安全距离的格子，代码检查它的 8 邻域，并统计：</p>
+<ul>
+<li><code>valid_neighbors</code>
+<ul>
+<li>周围有多少个邻居本身也是自由且安全的</li>
+</ul>
+</li>
+<li><code>different_seed_neighbors</code>
+<ul>
+<li>这些邻居里，有多少个邻居的最近障碍源与当前点不同</li>
+</ul>
+</li>
+</ul>
+<p>判定条件是：</p>
+<pre data-role="codeBlock" data-info="cpp" class="language-cpp cpp"><code><span class="token keyword keyword-if">if</span> <span class="token punctuation">(</span>valid_neighbors <span class="token operator">&gt;=</span> <span class="token number">2</span> <span class="token operator">&amp;&amp;</span> different_seed_neighbors <span class="token operator">&gt;=</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  candidate<span class="token punctuation">[</span>x<span class="token punctuation">]</span><span class="token punctuation">[</span>y<span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><p>这句可以直接翻成：</p>
+<ul>
+<li>当前点不能是孤点</li>
+<li>并且它周围要能看到不同障碍势力范围的交界</li>
+</ul>
+<p>为什么这就接近中轴？因为 <code>seed_map</code> 记录的是“谁离我最近”。<br>
+当某个位置附近同时出现不同 seed 的交汇时，说明它正处于多个障碍影响面的边界附近，而这个边界正是离散 Voronoi 骨架的来源。</p>
+<h4 id="第五步剪枝去掉毛刺和短小分支">第五步：剪枝，去掉毛刺和短小分支 </h4>
+<p>仅靠 seed 分界提取出来的候选骨架，通常会包含毛刺、孤点和很短的小分支。<br>
+所以代码又做了最多 6 轮剪枝，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:800">voronoi_grid_planner.cpp</a>。</p>
+<p>每轮会删除两类点：</p>
+<ul>
+<li><code>degree == 0</code>
+<ul>
+<li>完全孤立，没有候选邻居</li>
+</ul>
+</li>
+<li><code>degree == 1 &amp;&amp; dist &lt; min_clearance + 2 * resolution</code>
+<ul>
+<li>只有一个邻居，像短毛刺，而且 clearance 也不够大</li>
+</ul>
+</li>
+</ul>
+<p>这一步可以理解成：先粗提一张骨架网，再不断削掉边缘噪声和不稳定末端。</p>
+<h4 id="第六步写回正式结果">第六步：写回正式结果 </h4>
+<p>剪枝完成后，代码把 <code>candidate[x][y]</code> 写回 <code>gvd_map[x][y].is_voronoi</code>，见 <a href="../../../home/xu/project/auto_nav2/src/nav2_voronoi_planner/src/voronoi_grid_planner.cpp:841">voronoi_grid_planner.cpp</a>。</p>
+<p>到这里，Voronoi 骨架就真正生成好了。后续规划阶段只需要继续使用：</p>
+<ul>
+<li><code>gvd_map[x][y].dist</code></li>
+<li><code>gvd_map[x][y].is_voronoi</code></li>
+</ul>
+<h3 id="74-用一张小示意图理解-seed_map">7.4 用一张小示意图理解 <code>seed_map</code> </h3>
+<p>你可以把传播后的自由空间想成这样一张“归属分区图”：</p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>LLLLLLLLLMMMMMRRRRRRRRR
+LLLLLLLLLMMMMMRRRRRRRRR
+LLLLLLLLLMMMMMRRRRRRRRR
+</code></pre><p>其中：</p>
+<ul>
+<li><code>L</code> 表示最近障碍来自左边</li>
+<li><code>R</code> 表示最近障碍来自右边</li>
+<li><code>M</code> 表示处于两种影响交界附近</li>
+</ul>
+<p>代码真正想找的，就是 <code>L</code> 和 <code>R</code> 交界带中最连通、最安全的那部分。</p>
+<h3 id="75-为什么这个骨架适合导航">7.5 为什么这个骨架适合导航 </h3>
+<p>它适合导航，主要因为两点：</p>
+<ul>
+<li>它来自障碍距离场，所以天然偏向通道中间</li>
+<li>它把“整张栅格搜索”压缩成“先接入骨架，再沿骨架搜索”</li>
+</ul>
+<p>所以这个包的整体思路其实就是：</p>
+<ul>
+<li>局部连接段负责把起点和终点接到骨架上</li>
+<li>骨架主干负责给出更稳健的全局走廊</li>
+</ul>
+<h3 id="76-这份实现的局限">7.6 这份实现的局限 </h3>
+<p>虽然工程上很好用，但它不是严格意义上的连续 Voronoi 图：</p>
+<ul>
+<li>它是栅格近似，结果受地图分辨率影响</li>
+<li>8 邻域规则会让骨架在拐角和窄缝处比较粗糙</li>
+<li>剪枝规则是经验式，不保证最优拓扑结构</li>
+<li>地图噪声越大，骨架越容易出现毛刺</li>
+</ul>
+<h2 id="8-关键状态机理解">8. 关键状态机理解 </h2>
+<p>可以把节点内部状态理解成以下几个开关：</p>
+<ul>
+<li><code>has_map_</code>
+<ul>
+<li>是否收到地图</li>
+</ul>
+</li>
+<li><code>has_odom_</code>
+<ul>
+<li>是否收到里程计</li>
+</ul>
+</li>
+<li><code>has_goal_</code>
+<ul>
+<li>是否存在有效目标</li>
+</ul>
+</li>
+<li><code>goal_dirty_</code>
+<ul>
+<li>目标是否发生变化，必须重新规划</li>
+</ul>
+</li>
+<li><code>map_dirty_</code>
+<ul>
+<li>地图是否发生变化，规划结果可能失效</li>
+</ul>
+</li>
+<li><code>need_replan_</code>
+<ul>
+<li>是否需要在定时器回调里触发一次规划</li>
+</ul>
+</li>
+<li><code>goal_reached_</code>
+<ul>
+<li>是否已经到达目标</li>
+</ul>
+</li>
+<li><code>has_published_plan_</code>
+<ul>
+<li>是否已经发布过路径</li>
+</ul>
+</li>
+</ul>
+<p>这些状态位共同实现了“回调只打标记、定时器集中规划”的工作模式。</p>
+<h2 id="9-值得注意的实现细节">9. 值得注意的实现细节 </h2>
+<h3 id="91-真正生效的主干代价是长度优先">9.1 真正生效的主干代价是“长度优先” </h3>
+<p>虽然参数里有 <code>trunk_safety_penalty_scale</code>，而且 <code>searchVoronoiOnly</code> 里也实现了基于 clearance 的安全惩罚，但当前主流程并没有调用 <code>searchVoronoiOnly</code>。</p>
+<p>真正被 <code>makePlanFromMap</code> 调用的是 <code>searchBestVoronoiRoute</code>，它在骨架主干上使用的是纯距离代价，没有把 clearance 惩罚加入总代价。</p>
+<p>这意味着：</p>
+<ul>
+<li>当前主干路径更偏向“最短骨架路”</li>
+<li><code>trunk_safety_penalty_scale</code> 对实际主流程几乎没有效果</li>
+</ul>
+<h3 id="92-有几段辅助函数目前没有接入主流程">9.2 有几段辅助函数目前没有接入主流程 </h3>
+<p>当前未进入实际主链路的函数包括：</p>
+<ul>
+<li><code>lineOfSightFree</code></li>
+<li><code>makeLineGridPath</code></li>
+<li><code>findNearestReachableVoronoiPoint</code></li>
+<li><code>searchVoronoiOnly</code></li>
+</ul>
+<p>这说明作者可能为后续“直连 shortcut”“单一骨架搜索”“安全代价搜索”预留了接口，但现在没有用上。</p>
+<h3 id="93-平滑后没有再次做碰撞校验">9.3 平滑后没有再次做碰撞校验 </h3>
+<p>原始栅格路径是安全的，但 B-spline 平滑后：</p>
+<ul>
+<li>没有重新检查新轨迹是否进入障碍</li>
+<li>没有再次检查 clearance 是否足够</li>
+</ul>
+<p>因此在窄通道或尖角环境里，平滑路径可能比原始骨架路径更容易切角。</p>
+<h3 id="94-终点若被调整最终发布终点仍会回到原始目标">9.4 终点若被调整，最终发布终点仍会回到原始目标 </h3>
+<p>如果原始目标点落在障碍或未知区域，代码会先找到一个最近自由栅格作为规划终点。</p>
+<p>但在生成 <code>plan</code> 后，最后一个 pose 又会被强制改回原始 <code>goal</code>。</p>
+<p>这意味着：</p>
+<ul>
+<li>规划搜索阶段走的是“调整后的安全终点”</li>
+<li>发布给控制器的最终终点却可能仍在障碍/未知区域</li>
+</ul>
+<p>这一点在实际导航中需要特别留意。</p>
+<h2 id="10-详细流程图">10. 详细流程图 </h2>
+<h3 id="101-ros-调度与重规划总流程">10.1 ROS 调度与重规划总流程 </h3>
+<h4 id="1011-节点初始化">10.1.1 节点初始化 </h4>
+<div class="mermaid">flowchart TD
+    A[Node 启动] --&gt; B[声明参数并构造 VoronoiGridPlanner]
+    B --&gt; C[订阅 /combined_grid /goal_pose /odom]
+    C --&gt; D[创建发布器 /path /path2 /voronoi_skeleton]
+    D --&gt; E[启动 plan_timer&lt;br/&gt;每 plan_period_ms 周期触发]
+</div><ul>
+<li><code>Node 启动</code>：Voronoi 规划节点开始运行。</li>
+<li><code>plan_timer</code>：周期定时器，会按照 <code>plan_period_ms</code> 的间隔反复触发规划检查。</li>
+<li>这一小图表达的重点是：节点启动后先完成参数、订阅器、发布器和定时器的初始化，后面的规划都建立在这一步之上。</li>
+</ul>
+<h4 id="1012-地图回调-mapcallback">10.1.2 地图回调 <code>mapCallback</code> </h4>
+<div class="mermaid">flowchart TD
+    A[/combined_grid 更新/] --&gt; B[更新 map_]
+    B --&gt; C[判断 significant_change]
+    B --&gt; D[判断 current path 是否被新地图堵塞]
+    C --&gt; E{goal_dirty or path_blocked or significant_change?}
+    D --&gt; E
+    E -- yes --&gt; F[置位 map_dirty_ 和 need_replan_]
+    E -- no --&gt; G{slow_replan_due?}
+    G -- yes --&gt; H[置位 need_replan_&lt;br/&gt;触发稳定地图下的周期性重规划]
+    G -- no --&gt; I[仅保留最新 map_]
+</div><ul>
+<li><code>significant_change</code>：地图是否发生了“足够明显”的变化，比如障碍分类变化的格子数超过阈值。</li>
+<li><code>current path 是否被新地图堵塞</code>：检查当前已经发布的路径，在机器人前方一小段范围内，是否被新障碍挡住。</li>
+<li><code>goal_dirty</code>：目标点刚刚更新过，说明旧路径已经不适合当前目标。</li>
+<li><code>path_blocked</code>：当前路径被新地图判定为不可走。</li>
+<li><code>slow_replan_due</code>：即使地图没明显变化，也到了稳定地图下允许再次重规划的时间点。</li>
+<li><code>map_dirty_</code>：地图侧的脏标记，表示旧规划可能已经不再匹配当前地图。</li>
+<li><code>need_replan_</code>：重规划请求标记，表示下一轮定时器应该尝试重新规划。</li>
+</ul>
+<h4 id="1013-目标回调-goalcallback">10.1.3 目标回调 <code>goalCallback</code> </h4>
+<div class="mermaid">flowchart TD
+    A[/goal_pose 更新/] --&gt; B[保存 last_goal_]
+    B --&gt; C[清空旧路径状态]
+    C --&gt; D[置位 goal_dirty_ need_replan_ map_dirty_]
+</div><ul>
+<li><code>last_goal_</code>：保存最新收到的目标点。</li>
+<li><code>goal_dirty_</code>：目标发生变化，旧路径已经不对应当前目标。</li>
+<li><code>need_replan_</code>：请求下一轮重新规划。</li>
+<li><code>map_dirty_</code>：这里也一起置位，作用是让定时器不要沿用旧规划，尽快基于当前地图重新算路。</li>
+</ul>
+<h4 id="1014-里程计回调-odomcallback">10.1.4 里程计回调 <code>odomCallback</code> </h4>
+<div class="mermaid">flowchart TD
+    A[/odom 更新/] --&gt; B[更新 odom_]
+    B --&gt; C{距离目标 &lt;= goal_tolerance?}
+    C -- yes --&gt; D[置位 goal_reached_ 并清除规划状态]
+    D --&gt; E[发布空 /path 和 /path2]
+    C -- no --&gt; F[仅保留最新 odom_]
+</div><ul>
+<li><code>odom_</code>：机器人当前里程计位姿。</li>
+<li><code>goal_tolerance</code>：判定“已经到达目标”的距离阈值。</li>
+<li>如果机器人已经进入目标容差范围，就会把 <code>goal_reached_</code> 置为真，并发布空路径，表示这次导航任务结束。</li>
+<li>如果还没到达，就只更新当前位置，不做额外收尾动作。</li>
+</ul>
+<h4 id="1015-定时器主线-plantimercallback">10.1.5 定时器主线 <code>planTimerCallback</code> </h4>
+<div class="mermaid">flowchart TD
+    A[plan_timer 周期触发] --&gt; B{planTimerCallback}
+    B --&gt; C[加锁复制 map odom goal 和状态快照]
+    C --&gt; D{goal_reached_?}
+    D -- yes --&gt; Z1[直接返回]
+    D -- no --&gt; E{has_map_?}
+    E -- no --&gt; Z2[节流告警: 无地图]
+    E -- yes --&gt; F{has_odom_?}
+    F -- no --&gt; Z3[节流告警: 无里程计]
+    F -- yes --&gt; G{has_goal_?}
+    G -- no --&gt; Z4[直接返回]
+    G -- yes --&gt; H{机器人当前是否已到达目标?}
+    H -- yes --&gt; I[清空目标与规划状态]
+    I --&gt; J[发布空 /path 和 /path2]
+    J --&gt; Z5[返回]
+    H -- no --&gt; K{need_replan_ 或 map_dirty_?}
+    K -- no --&gt; Z6[返回]
+    K -- yes --&gt; L{这次是否需要应用最小移动距离门控?}
+    L -- no --&gt; M[调用 tryPlanWithSnapshot]
+    L -- yes --&gt; N{moved &gt;= replan_min_move?}
+    N -- no --&gt; Z7[返回]
+    N -- yes --&gt; M
+</div><ul>
+<li><code>goal_reached_</code>：目标是否已经被确认到达；如果已经到达，定时器会直接返回，不再继续规划。</li>
+<li><code>has_map_ / has_odom_ / has_goal_</code>：地图、里程计、目标是否都已经准备齐全。</li>
+<li><code>need_replan_ 或 map_dirty_</code>：只有存在重规划请求，或者地图发生变化时，才值得继续往下走。</li>
+<li><code>最小移动距离门控</code>：如果这次不是目标变化触发、也不是地图变化触发，就要求机器人至少移动了 <code>replan_min_move</code> 这么远，才允许再次规划。</li>
+<li><code>moved &gt;= replan_min_move</code>：机器人从上次规划位置到现在的移动距离是否达到最小重规划距离。</li>
+</ul>
+<h3 id="102-单次规划内部流程">10.2 单次规划内部流程 </h3>
+<div class="mermaid">flowchart TD
+    A[tryPlanWithSnapshot] --&gt; B{map/odom 快照有效?}
+    B -- no --&gt; X1[返回]
+    B -- yes --&gt; C{当前是否已到达目标?}
+    C -- yes --&gt; X2[清状态并发布空路径]
+    C -- no --&gt; D[构造 start 和 goal]
+    D --&gt; E[调用 makePlanFromMap]
+
+    E --&gt; F[世界坐标转栅格坐标]
+    F --&gt; G{起点终点在地图内?}
+    G -- no --&gt; X3[规划失败]
+    G -- yes --&gt; H{起点/终点是否可通行?}
+    H -- no --&gt; I[在邻域内搜索最近自由栅格]
+    I --&gt; J{找到替代栅格?}
+    J -- no --&gt; X3
+    J -- yes --&gt; K[构建 Voronoi 图]
+    H -- yes --&gt; K
+
+    K --&gt; K1[多源障碍距离传播]
+    K1 --&gt; K2[记录每格最近障碍种子]
+    K2 --&gt; K3[提取候选骨架]
+    K3 --&gt; K4[迭代剪枝弱分支]
+    K4 --&gt; L[生成可视化 skeleton]
+
+    L --&gt; M[从起点搜索可达骨架候选]
+    L --&gt; N[从终点搜索可达骨架候选]
+    M --&gt; O{起点候选非空?}
+    N --&gt; P{终点候选非空?}
+    O -- no --&gt; X3
+    P -- no --&gt; X3
+    O -- yes --&gt; Q[多源 Dijkstra 搜索最优骨架主干]
+    P -- yes --&gt; Q
+
+    Q --&gt; R[得到 start_connector trunk goal_connector]
+    R --&gt; S[拼接完整 GridPath]
+    S --&gt; T{full_path 非空?}
+    T -- no --&gt; X3
+    T -- yes --&gt; U[GridPath 转 nav_msgs/Path]
+    U --&gt; V[把最后一个 pose 覆盖为原始 goal]
+    V --&gt; W[返回 raw plan 和 skeleton]
+
+    W --&gt; Y[路径降采样作为 B-spline 控制点]
+    Y --&gt; Z[执行 B-spline 平滑]
+    Z --&gt; ZA[与当前已发布路径比较]
+    ZA --&gt; ZB{新路径是否足够更优?}
+    ZB -- no --&gt; ZC[保留旧路径避免振荡]
+    ZB -- yes --&gt; ZD[发布 skeleton /path /path2]
+</div><ul>
+<li><code>snapshot</code>：把当前地图、里程计和目标复制成一份局部快照，避免规划过程中共享数据被回调修改。</li>
+<li><code>makePlanFromMap</code>：底层真正执行 Voronoi 规划的核心函数。</li>
+<li><code>raw plan</code>：还没做平滑前的原始路径。</li>
+<li><code>skeleton</code>：Voronoi 骨架可视化结果。</li>
+<li><code>B-spline 平滑</code>：把折线型原始路径变成更平滑、更适合跟踪的轨迹。</li>
+<li><code>新路径是否足够更优</code>：新路径只有在比当前旧路径明显更短、更值得切换时才会发布，否则保留旧路径以减少抖动。</li>
+</ul>
+<h3 id="103-voronoi-骨架构建细流程">10.3 Voronoi 骨架构建细流程 </h3>
+<div class="mermaid">flowchart TD
+    A[输入 OccupancyGrid] --&gt; B[遍历所有栅格]
+    B --&gt; C{是否障碍或未知占用?}
+    C -- yes --&gt; D[作为多源传播种子 dist=0]
+    C -- no --&gt; E[初始化 dist=inf]
+
+    D --&gt; F[优先队列扩张]
+    E --&gt; F
+    F --&gt; G[为每个栅格记录最近障碍种子 seed]
+    G --&gt; H[得到每个自由栅格到最近障碍的距离 dist]
+
+    H --&gt; I[计算最小安全距离 min_clearance]
+    I --&gt; J[再次遍历自由栅格]
+    J --&gt; K{dist &gt;= min_clearance?}
+    K -- no --&gt; L[不是骨架]
+    K -- yes --&gt; M[检查 8 邻域最近障碍种子]
+    M --&gt; N{至少 2 个有效邻居且至少 2 个不同 seed?}
+    N -- no --&gt; L
+    N -- yes --&gt; O[标记为骨架候选]
+
+    O --&gt; P[最多 6 轮剪枝]
+    P --&gt; Q{候选点邻接度为 0?}
+    Q -- yes --&gt; R[删除]
+    Q -- no --&gt; S{邻接度为 1 且 clearance 偏小?}
+    S -- yes --&gt; R
+    S -- no --&gt; T[保留]
+
+    R --&gt; U[输出 candidate]
+    T --&gt; U
+    U --&gt; V[写回 gvd_map xy 的 is_voronoi 标记]
+</div><ul>
+<li><code>OccupancyGrid</code>：输入的栅格地图。</li>
+<li><code>dist=0</code>：障碍格作为距离传播的起点，它到自己的距离是 0。</li>
+<li><code>dist=inf</code>：自由格初始时还不知道离障碍多远，所以先记成无穷大。</li>
+<li><code>seed</code>：每个自由格最近的障碍源是谁。</li>
+<li><code>min_clearance</code>：最小安全间隙，小于它的格子即使在几何中间也不能进入骨架。</li>
+<li><code>candidate</code>：初步判定为 Voronoi 骨架候选的格子集合。</li>
+<li><code>is_voronoi</code>：最终写回到 <code>gvd_map</code> 里的正式骨架标记。</li>
+</ul>
+<h2 id="11-总结">11. 总结 </h2>
+<p>这个包的真实工作模式是：</p>
+<p>“地图、目标、里程计回调只负责更新状态并请求重规划；定时器统一触发规划；规划器先在栅格地图中提取 Voronoi 骨架，再把起点和终点接到骨架上，搜索一条骨架主干，最后做平滑并带抗振荡策略发布路径。”</p>
+
+      </div>
+      
+      
+    
+    
+    <script type="module">
+// TODO: If ZenUML gets integrated into mermaid in the future,
+//      we can remove the following lines.
+
+
+var MERMAID_CONFIG = ({"startOnLoad":false});
+if (typeof MERMAID_CONFIG !== 'undefined') {
+  MERMAID_CONFIG.startOnLoad = false
+  MERMAID_CONFIG.cloneCssStyles = false
+  MERMAID_CONFIG.theme = "default"
+}
+
+mermaid.initialize(MERMAID_CONFIG || {})
+if (typeof(window['Reveal']) !== 'undefined') {
+  function mermaidRevealHelper(event) {
+    var currentSlide = event.currentSlide
+    var diagrams = currentSlide.querySelectorAll('div.mermaid')
+    for (var i = 0; i < diagrams.length; i++) {
+      var diagram = diagrams[i]
+      if (!diagram.hasAttribute('data-processed')) {
+        mermaid.init(null, diagram, ()=> {
+          Reveal.slide(event.indexh, event.indexv)
+        })
+      }
+    }
+  }
+  Reveal.addEventListener('slidetransitionend', mermaidRevealHelper)
+  Reveal.addEventListener('ready', mermaidRevealHelper)
+  await mermaid.run({
+    nodes: document.querySelectorAll('div.mermaid')
+  })
+} else {
+  await mermaid.run({
+    nodes: document.querySelectorAll('div.mermaid')
+  })
+}
+</script>
+    
+    
+    
+  
+    </body></html>
