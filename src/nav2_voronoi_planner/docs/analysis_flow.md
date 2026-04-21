@@ -135,8 +135,7 @@
 4. 如果没有目标，直接返回
 5. 如果已经到达目标，直接返回
 6. 如果既不需要重规划，也没有地图脏标记，直接返回
-7. 如果上次规划后机器人移动距离小于 `replan_min_move`，并且这次不是目标变化/地图变化触发，则跳过
-8. 调用 `tryPlanWithSnapshot`
+7. 调用 `tryPlanWithSnapshot`
 
 这里的设计重点是：
 
@@ -675,18 +674,12 @@ flowchart TD
     J --> Z5[返回]
     H -- no --> K{need_replan_ 或 map_dirty_?}
     K -- no --> Z6[返回]
-    K -- yes --> L{这次是否需要应用最小移动距离门控?}
-    L -- no --> M[调用 tryPlanWithSnapshot]
-    L -- yes --> N{moved >= replan_min_move?}
-    N -- no --> Z7[返回]
-    N -- yes --> M
+    K -- yes --> L[调用 tryPlanWithSnapshot]
 ```
 
 - `goal_reached_`：目标是否已经被确认到达；如果已经到达，定时器会直接返回，不再继续规划。
 - `has_map_ / has_odom_ / has_goal_`：地图、里程计、目标是否都已经准备齐全。
 - `need_replan_ 或 map_dirty_`：只有存在重规划请求，或者地图发生变化时，才值得继续往下走。
-- `最小移动距离门控`：如果这次不是目标变化触发、也不是地图变化触发，就要求机器人至少移动了 `replan_min_move` 这么远，才允许再次规划。
-- `moved >= replan_min_move`：机器人从上次规划位置到现在的移动距离是否达到最小重规划距离。
 
 ### 10.2 单次规划内部流程
 

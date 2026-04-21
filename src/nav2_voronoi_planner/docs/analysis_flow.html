@@ -197,7 +197,6 @@
 <li>如果没有目标，直接返回</li>
 <li>如果已经到达目标，直接返回</li>
 <li>如果既不需要重规划，也没有地图脏标记，直接返回</li>
-<li>如果上次规划后机器人移动距离小于 <code>replan_min_move</code>，并且这次不是目标变化/地图变化触发，则跳过</li>
 <li>调用 <code>tryPlanWithSnapshot</code></li>
 </ol>
 <p>这里的设计重点是：</p>
@@ -723,17 +722,11 @@ LLLLLLLLLMMMMMRRRRRRRRR
     J --&gt; Z5[返回]
     H -- no --&gt; K{need_replan_ 或 map_dirty_?}
     K -- no --&gt; Z6[返回]
-    K -- yes --&gt; L{这次是否需要应用最小移动距离门控?}
-    L -- no --&gt; M[调用 tryPlanWithSnapshot]
-    L -- yes --&gt; N{moved &gt;= replan_min_move?}
-    N -- no --&gt; Z7[返回]
-    N -- yes --&gt; M
+    K -- yes --&gt; L[调用 tryPlanWithSnapshot]
 </div><ul>
 <li><code>goal_reached_</code>：目标是否已经被确认到达；如果已经到达，定时器会直接返回，不再继续规划。</li>
 <li><code>has_map_ / has_odom_ / has_goal_</code>：地图、里程计、目标是否都已经准备齐全。</li>
 <li><code>need_replan_ 或 map_dirty_</code>：只有存在重规划请求，或者地图发生变化时，才值得继续往下走。</li>
-<li><code>最小移动距离门控</code>：如果这次不是目标变化触发、也不是地图变化触发，就要求机器人至少移动了 <code>replan_min_move</code> 这么远，才允许再次规划。</li>
-<li><code>moved &gt;= replan_min_move</code>：机器人从上次规划位置到现在的移动距离是否达到最小重规划距离。</li>
 </ul>
 <h3 id="102-单次规划内部流程">10.2 单次规划内部流程 </h3>
 <div class="mermaid">flowchart TD
