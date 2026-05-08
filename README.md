@@ -97,6 +97,64 @@ ros2 launch nav_slam 2dpoints.launch.py start_nav_rviz:=false
 ros2 launch gazebo_modele gazebo_nav_web.launch.py start_hotspot:=false
 ```
 
+## RTAB-Map 启动命令
+
+RTAB-Map 相关启动已经统一整理到包 `rtabmap_localization_bringup`。
+
+Gazebo 仿真：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup gazebo_nav_superpoint_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_rtabmap_localization.launch.py
+```
+
+真实 D435：
+
+```bash
+ros2 launch rtabmap_localization_bringup real_d435_only_rtabmap.launch.py
+ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_rtabmap.launch.py
+ros2 launch rtabmap_localization_bringup real_d435_nav_rtabmap_localization.launch.py
+```
+
+说明：
+
+- `gazebo_rtabmap_localization.launch.py`：只起 Gazebo 仿真和 RTAB-Map
+- `gazebo_nav_rtabmap_localization.launch.py`：Gazebo + RTAB-Map + 导航
+- `gazebo_nav_superpoint_rtabmap_localization.launch.py`：Gazebo + SuperPoint + RTAB-Map + 导航
+- `gazebo_nav_xfeat_rtabmap_localization.launch.py`：Gazebo + XFeat + RTAB-Map + 导航
+- `real_d435_only_rtabmap.launch.py`：真实 D435 + RTAB-Map
+- `real_d435_only_xfeat_rtabmap.launch.py`：真实 D435 + XFeat + RTAB-Map
+- `real_d435_nav_rtabmap_localization.launch.py`：真实 D435 + RTAB-Map + 导航
+
+XFeat 原生里程计：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
+ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_odometry.launch.py
+```
+
+- `gazebo_nav_xfeat_odometry.launch.py`：Gazebo + XFeat 原版 RGB-D 里程计 + 导航
+- `real_d435_only_xfeat_odometry.launch.py`：真实 D435 + XFeat 原版 RGB-D 里程计
+
+窗口说明：
+
+- `gazebo_nav_rtabmap_localization.launch.py` 默认只开导航自己的 RViz，不开 `rtabmapviz`
+- 如果需要打开 RTAB-Map 窗口：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py \
+  start_rtabmapviz:=true
+```
+
+- 如果需要打开 RTAB-Map 那边的 RViz：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py \
+  start_rtabmap_rviz:=true
+```
+
 ## 当前导航链路
 
 这个工程现在不是 AMCL/SLAM 全局定位方案，而是仿真里程计导航链路：
@@ -231,6 +289,7 @@ ros2 launch nav_eval eval.launch.py output_dir:=~/auto_nav2_eval/manual
 - `src/gazebo_modele/launch/gazebo_nav_web.launch.py`：默认总启动
 - `src/gazebo_modele/launch/gazebo_challenge_nav_web.launch.py`：挑战场景总启动
 - `src/gazebo_modele/launch/gazebo.launch.py`：Gazebo 启动
+- `src/rtabmap_localization_bringup/launch/`：RTAB-Map 相关启动入口
 - `src/gazebo_modele/urdf/model.urdf`：机器人模型
 - `src/nav_slam/launch/2dpoints.launch.py`：导航主启动
 - `src/nav_slam/nav_slam/start_nav.py`：路径跟踪控制

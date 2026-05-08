@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1/Description Topic1
-        - /PointCloud21
+        - /LaserScan1
       Splitter Ratio: 0.5
     Tree Height: 719
   - Class: rviz_common/Selection
@@ -27,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -76,6 +76,15 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        camera_optical_frame:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         caster_link:
           Alpha: 1
           Show Axes: false
@@ -97,6 +106,11 @@ Visualization Manager:
           Show Trail: false
           Value: true
         navsat_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_caster_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -169,29 +183,29 @@ Visualization Manager:
         Value: true
       Axis: Z
       Channel Name: intensity
-      Class: rviz_default_plugins/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: AxisColor
-      Decay Time: 5
+      Class: rviz_default_plugins/LaserScan
+      Color: 224; 27; 36
+      Color Transformer: FlatColor
+      Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 0.9900000095367432
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.10000000149011612
-      Style: Squares
+      Style: Flat Squares
       Topic:
         Depth: 5
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /mapokk
+        Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -216,7 +230,7 @@ Visualization Manager:
         Value: /combined_grid_updates
       Use Timestamp: false
       Value: true
-    - Alpha: 0.7
+    - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
@@ -236,6 +250,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /voronoi_skeleton_updates
       Use Timestamp: false
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -282,7 +297,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 35.066226959228516
+      Distance: 32.14350509643555
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -297,10 +312,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1497972011566162
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.0999293327331543
+      Yaw: 4.7299628257751465
     Saved: ~
 Window Geometry:
   Displays:

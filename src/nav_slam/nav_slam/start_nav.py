@@ -129,8 +129,10 @@ class PathFollowingNode(Node):
         self.blocked_crawl_speed = 0.05
         self.blocked_crawl_distance = 0.30
 
+        self.declare_parameter('odom_topic', '/odom')
+        odom_topic = self.get_parameter('odom_topic').value
         self.odom_subscriber = self.create_subscription(
-            Odometry, '/odom', self.odometry_callback, 10
+            Odometry, odom_topic, self.odometry_callback, 10
         )
         self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.path_subscriber = self.create_subscription(

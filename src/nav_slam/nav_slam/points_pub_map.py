@@ -30,10 +30,12 @@ class PointCloudTransformNode(Node):
         
         # Declare parameters
         self.declare_parameter('frame_id', 'map')
+        self.declare_parameter('odom_topic', '/odom')
         fast_sensor_qos = QoSProfile(depth=1)
         
         # Create subscribers
-        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        odom_topic = self.get_parameter('odom_topic').value
+        self.odom_sub = self.create_subscription(Odometry, odom_topic, self.odom_callback, 10)
         self.pointcloud_sub = self.create_subscription(
             PointCloud2, '/points_raw', self.pointcloud_callback, fast_sensor_qos)
         

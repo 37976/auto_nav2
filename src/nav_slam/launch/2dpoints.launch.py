@@ -40,6 +40,8 @@ def generate_launch_description():
     pointcloud_topic = LaunchConfiguration('pointcloud_topic')
     use_pointcloud_obstacles = LaunchConfiguration('use_pointcloud_obstacles')
     use_dynamic_obstacle_points = LaunchConfiguration('use_dynamic_obstacle_points')
+    odom_topic = LaunchConfiguration('odom_topic')
+    start_odom_map_tf = LaunchConfiguration('start_odom_map_tf')
     start_hotspot = LaunchConfiguration('start_hotspot')
     hotspot_connection_name = LaunchConfiguration('hotspot_connection_name')
     hotspot_ssid = LaunchConfiguration('hotspot_ssid')
@@ -60,6 +62,8 @@ def generate_launch_description():
         DeclareLaunchArgument('pointcloud_topic', default_value='/points_raw'),
         DeclareLaunchArgument('use_pointcloud_obstacles', default_value='true'),
         DeclareLaunchArgument('use_dynamic_obstacle_points', default_value='true'),
+        DeclareLaunchArgument('odom_topic', default_value='/odom'),
+        DeclareLaunchArgument('start_odom_map_tf', default_value='true'),
         DeclareLaunchArgument('start_hotspot', default_value='false'),
         DeclareLaunchArgument('hotspot_connection_name', default_value='dashgo-hotspot'),
         DeclareLaunchArgument('hotspot_ssid', default_value='Dashgo-Robot'),
@@ -75,6 +79,7 @@ def generate_launch_description():
                 'robot_description': robot_description,
                 'publish_frequency': 30.0,
                 'use_sim_time': ParameterValue(use_sim_time, value_type=bool),
+                'odom_topic': odom_topic,
             }],
         ),
         Node(
@@ -127,12 +132,14 @@ def generate_launch_description():
                 'use_dynamic_obstacle_points': ParameterValue(
                     use_dynamic_obstacle_points, value_type=bool),
                 'use_sim_time': ParameterValue(use_sim_time, value_type=bool),
+                'odom_topic': odom_topic,
             }],
         ),
         Node(
             package='nav_slam',
             executable='odom_map_tf',
             name='odom_map_tf',
+            condition=IfCondition(start_odom_map_tf),
             output='screen',
             parameters=[{
                 'use_sim_time': ParameterValue(use_sim_time, value_type=bool),
@@ -146,6 +153,7 @@ def generate_launch_description():
             parameters=[{
                 'frame_id': 'map',
                 'use_sim_time': ParameterValue(use_sim_time, value_type=bool),
+                'odom_topic': odom_topic,
             }],
         ),
         Node(
@@ -155,6 +163,7 @@ def generate_launch_description():
             output='screen',
             parameters=[{
                 'use_sim_time': ParameterValue(use_sim_time, value_type=bool),
+                'odom_topic': odom_topic,
             }],
         ),
         IncludeLaunchDescription(

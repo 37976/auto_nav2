@@ -411,6 +411,444 @@
       </link>
     </model>
 
+    <model name="slam_dense_wall_textures">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="north_a">
+          <pose>-14 14.74 0.5 0 0 0</pose>
+          <geometry><box><size>10.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.82 0.34 0.28 1</ambient><diffuse>0.82 0.34 0.28 1</diffuse></material>
+        </visual>
+        <visual name="north_b">
+          <pose>0 14.74 0.5 0 0 0</pose>
+          <geometry><box><size>11.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.22 0.62 0.58 1</ambient><diffuse>0.22 0.62 0.58 1</diffuse></material>
+        </visual>
+        <visual name="north_c">
+          <pose>14 14.74 0.5 0 0 0</pose>
+          <geometry><box><size>10.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.91 0.75 0.34 1</ambient><diffuse>0.91 0.75 0.34 1</diffuse></material>
+        </visual>
+        <visual name="south_a">
+          <pose>-13 -14.74 0.5 0 0 0</pose>
+          <geometry><box><size>11.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.24 0.45 0.74 1</ambient><diffuse>0.24 0.45 0.74 1</diffuse></material>
+        </visual>
+        <visual name="south_b">
+          <pose>1 -14.74 0.5 0 0 0</pose>
+          <geometry><box><size>10.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.84 0.49 0.24 1</ambient><diffuse>0.84 0.49 0.24 1</diffuse></material>
+        </visual>
+        <visual name="south_c">
+          <pose>14 -14.74 0.5 0 0 0</pose>
+          <geometry><box><size>10.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.46 0.68 0.30 1</ambient><diffuse>0.46 0.68 0.30 1</diffuse></material>
+        </visual>
+        <visual name="west_a">
+          <pose>-19.74 10.5 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 8.0 1.02</size></box></geometry>
+          <material><ambient>0.69 0.41 0.25 1</ambient><diffuse>0.69 0.41 0.25 1</diffuse></material>
+        </visual>
+        <visual name="west_b">
+          <pose>-19.74 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 9.0 1.02</size></box></geometry>
+          <material><ambient>0.25 0.55 0.72 1</ambient><diffuse>0.25 0.55 0.72 1</diffuse></material>
+        </visual>
+        <visual name="west_c">
+          <pose>-19.74 -10.5 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 8.0 1.02</size></box></geometry>
+          <material><ambient>0.85 0.74 0.38 1</ambient><diffuse>0.85 0.74 0.38 1</diffuse></material>
+        </visual>
+        <visual name="east_a">
+          <pose>19.74 10 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 8.0 1.02</size></box></geometry>
+          <material><ambient>0.77 0.31 0.36 1</ambient><diffuse>0.77 0.31 0.36 1</diffuse></material>
+        </visual>
+        <visual name="east_b">
+          <pose>19.74 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 8.5 1.02</size></box></geometry>
+          <material><ambient>0.28 0.67 0.52 1</ambient><diffuse>0.28 0.67 0.52 1</diffuse></material>
+        </visual>
+        <visual name="east_c">
+          <pose>19.74 -10 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 8.0 1.02</size></box></geometry>
+          <material><ambient>0.88 0.57 0.23 1</ambient><diffuse>0.88 0.57 0.23 1</diffuse></material>
+        </visual>
+
+        <visual name="h1_left_a">
+          <pose>-14.7 8.22 0.5 0 0 0</pose>
+          <geometry><box><size>6.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.80 0.52 0.29 1</ambient><diffuse>0.80 0.52 0.29 1</diffuse></material>
+        </visual>
+        <visual name="h1_left_b">
+          <pose>-7.2 8.22 0.5 0 0 0</pose>
+          <geometry><box><size>5.5 0.03 1.02</size></box></geometry>
+          <material><ambient>0.31 0.61 0.71 1</ambient><diffuse>0.31 0.61 0.71 1</diffuse></material>
+        </visual>
+        <visual name="h1_right_a">
+          <pose>9.5 8.22 0.5 0 0 0</pose>
+          <geometry><box><size>5.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.72 0.36 0.28 1</ambient><diffuse>0.72 0.36 0.28 1</diffuse></material>
+        </visual>
+        <visual name="h1_right_b">
+          <pose>15.2 8.22 0.5 0 0 0</pose>
+          <geometry><box><size>5.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.48 0.68 0.28 1</ambient><diffuse>0.48 0.68 0.28 1</diffuse></material>
+        </visual>
+        <visual name="h2_left_a">
+          <pose>-15.2 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>4.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.89 0.74 0.32 1</ambient><diffuse>0.89 0.74 0.32 1</diffuse></material>
+        </visual>
+        <visual name="h2_left_b">
+          <pose>-10.7 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>4.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.24 0.56 0.70 1</ambient><diffuse>0.24 0.56 0.70 1</diffuse></material>
+        </visual>
+        <visual name="h2_mid_a">
+          <pose>-1.8 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>3.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.79 0.33 0.31 1</ambient><diffuse>0.79 0.33 0.31 1</diffuse></material>
+        </visual>
+        <visual name="h2_mid_b">
+          <pose>1.8 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>3.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.30 0.69 0.56 1</ambient><diffuse>0.30 0.69 0.56 1</diffuse></material>
+        </visual>
+        <visual name="h2_right_a">
+          <pose>10.8 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>4.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.87 0.57 0.24 1</ambient><diffuse>0.87 0.57 0.24 1</diffuse></material>
+        </visual>
+        <visual name="h2_right_b">
+          <pose>15.2 -1.78 0.5 0 0 0</pose>
+          <geometry><box><size>4.0 0.03 1.02</size></box></geometry>
+          <material><ambient>0.43 0.63 0.77 1</ambient><diffuse>0.43 0.63 0.77 1</diffuse></material>
+        </visual>
+
+        <visual name="v1_top_a">
+          <pose>-7.78 12.7 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.0 1.02</size></box></geometry>
+          <material><ambient>0.79 0.47 0.28 1</ambient><diffuse>0.79 0.47 0.28 1</diffuse></material>
+        </visual>
+        <visual name="v1_top_b">
+          <pose>-7.78 9.1 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.0 1.02</size></box></geometry>
+          <material><ambient>0.28 0.61 0.71 1</ambient><diffuse>0.28 0.61 0.71 1</diffuse></material>
+        </visual>
+        <visual name="v1_bottom_a">
+          <pose>-7.78 3.7 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 4.0 1.02</size></box></geometry>
+          <material><ambient>0.86 0.72 0.34 1</ambient><diffuse>0.86 0.72 0.34 1</diffuse></material>
+        </visual>
+        <visual name="v1_bottom_b">
+          <pose>-7.78 -1.0 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 4.0 1.02</size></box></geometry>
+          <material><ambient>0.75 0.33 0.35 1</ambient><diffuse>0.75 0.33 0.35 1</diffuse></material>
+        </visual>
+        <visual name="v2_top_a">
+          <pose>6.22 13.4 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.31 0.69 0.55 1</ambient><diffuse>0.31 0.69 0.55 1</diffuse></material>
+        </visual>
+        <visual name="v2_top_b">
+          <pose>6.22 10.5 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.84 0.53 0.25 1</ambient><diffuse>0.84 0.53 0.25 1</diffuse></material>
+        </visual>
+        <visual name="v2_bottom_a">
+          <pose>6.22 4.3 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 4.0 1.02</size></box></geometry>
+          <material><ambient>0.40 0.60 0.77 1</ambient><diffuse>0.40 0.60 0.77 1</diffuse></material>
+        </visual>
+        <visual name="v2_bottom_b">
+          <pose>6.22 -0.4 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 4.0 1.02</size></box></geometry>
+          <material><ambient>0.77 0.34 0.30 1</ambient><diffuse>0.77 0.34 0.30 1</diffuse></material>
+        </visual>
+        <visual name="v3_top_a">
+          <pose>14.72 5.9 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.6 1.02</size></box></geometry>
+          <material><ambient>0.89 0.72 0.31 1</ambient><diffuse>0.89 0.72 0.31 1</diffuse></material>
+        </visual>
+        <visual name="v3_top_b">
+          <pose>14.72 1.7 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.6 1.02</size></box></geometry>
+          <material><ambient>0.29 0.63 0.73 1</ambient><diffuse>0.29 0.63 0.73 1</diffuse></material>
+        </visual>
+        <visual name="v3_bottom_a">
+          <pose>14.72 -8.7 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.0 1.02</size></box></geometry>
+          <material><ambient>0.80 0.46 0.28 1</ambient><diffuse>0.80 0.46 0.28 1</diffuse></material>
+        </visual>
+        <visual name="v3_bottom_b">
+          <pose>14.72 -12.1 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 3.0 1.02</size></box></geometry>
+          <material><ambient>0.36 0.68 0.54 1</ambient><diffuse>0.36 0.68 0.54 1</diffuse></material>
+        </visual>
+
+        <visual name="ring_top_a">
+          <pose>0.3 5.19 0.5 0 0 0</pose>
+          <geometry><box><size>2.3 0.03 1.02</size></box></geometry>
+          <material><ambient>0.77 0.32 0.35 1</ambient><diffuse>0.77 0.32 0.35 1</diffuse></material>
+        </visual>
+        <visual name="ring_top_b">
+          <pose>3.7 5.19 0.5 0 0 0</pose>
+          <geometry><box><size>2.3 0.03 1.02</size></box></geometry>
+          <material><ambient>0.90 0.70 0.32 1</ambient><diffuse>0.90 0.70 0.32 1</diffuse></material>
+        </visual>
+        <visual name="ring_bottom_a">
+          <pose>0.3 1.19 0.5 0 0 0</pose>
+          <geometry><box><size>2.3 0.03 1.02</size></box></geometry>
+          <material><ambient>0.28 0.60 0.75 1</ambient><diffuse>0.28 0.60 0.75 1</diffuse></material>
+        </visual>
+        <visual name="ring_bottom_b">
+          <pose>3.7 1.19 0.5 0 0 0</pose>
+          <geometry><box><size>2.3 0.03 1.02</size></box></geometry>
+          <material><ambient>0.45 0.69 0.30 1</ambient><diffuse>0.45 0.69 0.30 1</diffuse></material>
+        </visual>
+        <visual name="ring_left_a">
+          <pose>-0.81 3.9 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 1.5 1.02</size></box></geometry>
+          <material><ambient>0.81 0.48 0.26 1</ambient><diffuse>0.81 0.48 0.26 1</diffuse></material>
+        </visual>
+        <visual name="ring_left_b">
+          <pose>-0.81 2.1 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 1.5 1.02</size></box></geometry>
+          <material><ambient>0.32 0.68 0.56 1</ambient><diffuse>0.32 0.68 0.56 1</diffuse></material>
+        </visual>
+        <visual name="ring_right_a">
+          <pose>5.19 3.9 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 1.5 1.02</size></box></geometry>
+          <material><ambient>0.79 0.33 0.33 1</ambient><diffuse>0.79 0.33 0.33 1</diffuse></material>
+        </visual>
+        <visual name="ring_right_b">
+          <pose>5.19 2.1 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 1.5 1.02</size></box></geometry>
+          <material><ambient>0.88 0.60 0.24 1</ambient><diffuse>0.88 0.60 0.24 1</diffuse></material>
+        </visual>
+
+        <visual name="u_left_a">
+          <pose>-13.78 -7.3 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.28 0.60 0.74 1</ambient><diffuse>0.28 0.60 0.74 1</diffuse></material>
+        </visual>
+        <visual name="u_left_b">
+          <pose>-13.78 -10.6 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.85 0.72 0.33 1</ambient><diffuse>0.85 0.72 0.33 1</diffuse></material>
+        </visual>
+        <visual name="u_right_a">
+          <pose>-9.78 -7.3 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.77 0.35 0.31 1</ambient><diffuse>0.77 0.35 0.31 1</diffuse></material>
+        </visual>
+        <visual name="u_right_b">
+          <pose>-9.78 -10.6 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.35 0.67 0.55 1</ambient><diffuse>0.35 0.67 0.55 1</diffuse></material>
+        </visual>
+        <visual name="u_bottom_a">
+          <pose>-13.0 -11.79 0.5 0 0 0</pose>
+          <geometry><box><size>1.7 0.03 1.02</size></box></geometry>
+          <material><ambient>0.84 0.53 0.24 1</ambient><diffuse>0.84 0.53 0.24 1</diffuse></material>
+        </visual>
+        <visual name="u_bottom_b">
+          <pose>-11.0 -11.79 0.5 0 0 0</pose>
+          <geometry><box><size>1.7 0.03 1.02</size></box></geometry>
+          <material><ambient>0.33 0.63 0.75 1</ambient><diffuse>0.33 0.63 0.75 1</diffuse></material>
+        </visual>
+
+        <visual name="dead_left_a">
+          <pose>9.22 -6.2 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.88 0.71 0.32 1</ambient><diffuse>0.88 0.71 0.32 1</diffuse></material>
+        </visual>
+        <visual name="dead_left_b">
+          <pose>9.22 -9.6 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.78 0.45 0.27 1</ambient><diffuse>0.78 0.45 0.27 1</diffuse></material>
+        </visual>
+        <visual name="dead_right_a">
+          <pose>12.22 -6.2 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.32 0.69 0.55 1</ambient><diffuse>0.32 0.69 0.55 1</diffuse></material>
+        </visual>
+        <visual name="dead_right_b">
+          <pose>12.22 -9.6 0.5 0 0 0</pose>
+          <geometry><box><size>0.03 2.4 1.02</size></box></geometry>
+          <material><ambient>0.30 0.58 0.74 1</ambient><diffuse>0.30 0.58 0.74 1</diffuse></material>
+        </visual>
+        <visual name="dead_cap_a">
+          <pose>9.7 -10.79 0.5 0 0 0</pose>
+          <geometry><box><size>1.2 0.03 1.02</size></box></geometry>
+          <material><ambient>0.80 0.32 0.34 1</ambient><diffuse>0.80 0.32 0.34 1</diffuse></material>
+        </visual>
+        <visual name="dead_cap_b">
+          <pose>11.3 -10.79 0.5 0 0 0</pose>
+          <geometry><box><size>1.2 0.03 1.02</size></box></geometry>
+          <material><ambient>0.88 0.58 0.22 1</ambient><diffuse>0.88 0.58 0.22 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="slam_region_textures">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="link">
+        <visual name="region_northwest_panel">
+          <pose>-13.5 11.2 0.55 0 0 0</pose>
+          <geometry><box><size>2.8 0.02 1.08</size></box></geometry>
+          <material><ambient>0.92 0.83 0.42 1</ambient><diffuse>0.92 0.83 0.42 1</diffuse></material>
+        </visual>
+        <visual name="region_northwest_bar">
+          <pose>-10.1 8.6 0.55 0 0 1.5708</pose>
+          <geometry><box><size>0.02 2.8 1.08</size></box></geometry>
+          <material><ambient>0.27 0.62 0.76 1</ambient><diffuse>0.27 0.62 0.76 1</diffuse></material>
+        </visual>
+
+        <visual name="region_north_center_panel">
+          <pose>-0.8 8.25 0.55 0 0 0</pose>
+          <geometry><box><size>3.4 0.02 1.08</size></box></geometry>
+          <material><ambient>0.86 0.36 0.31 1</ambient><diffuse>0.86 0.36 0.31 1</diffuse></material>
+        </visual>
+        <visual name="region_north_center_bar">
+          <pose>2.7 8.25 0.55 0 0 0</pose>
+          <geometry><box><size>2.0 0.02 1.08</size></box></geometry>
+          <material><ambient>0.34 0.73 0.58 1</ambient><diffuse>0.34 0.73 0.58 1</diffuse></material>
+        </visual>
+
+        <visual name="region_northeast_panel">
+          <pose>12.0 8.25 0.55 0 0 0</pose>
+          <geometry><box><size>3.4 0.02 1.08</size></box></geometry>
+          <material><ambient>0.89 0.61 0.24 1</ambient><diffuse>0.89 0.61 0.24 1</diffuse></material>
+        </visual>
+        <visual name="region_northeast_bar">
+          <pose>14.72 4.8 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 2.8 1.08</size></box></geometry>
+          <material><ambient>0.28 0.56 0.78 1</ambient><diffuse>0.28 0.56 0.78 1</diffuse></material>
+        </visual>
+
+        <visual name="region_ring_top_panel">
+          <pose>2.0 4.82 0.55 0 0 0</pose>
+          <geometry><box><size>4.8 0.02 1.08</size></box></geometry>
+          <material><ambient>0.79 0.32 0.43 1</ambient><diffuse>0.79 0.32 0.43 1</diffuse></material>
+        </visual>
+        <visual name="region_ring_right_bar">
+          <pose>4.82 3.0 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 2.9 1.08</size></box></geometry>
+          <material><ambient>0.94 0.76 0.34 1</ambient><diffuse>0.94 0.76 0.34 1</diffuse></material>
+        </visual>
+
+        <visual name="region_midwest_panel">
+          <pose>-13.0 -1.72 0.55 0 0 0</pose>
+          <geometry><box><size>6.0 0.02 1.08</size></box></geometry>
+          <material><ambient>0.28 0.66 0.69 1</ambient><diffuse>0.28 0.66 0.69 1</diffuse></material>
+        </visual>
+        <visual name="region_midcenter_panel">
+          <pose>0.0 -1.72 0.55 0 0 0</pose>
+          <geometry><box><size>5.0 0.02 1.08</size></box></geometry>
+          <material><ambient>0.90 0.49 0.25 1</ambient><diffuse>0.90 0.49 0.25 1</diffuse></material>
+        </visual>
+        <visual name="region_mideast_panel">
+          <pose>13.0 -1.72 0.55 0 0 0</pose>
+          <geometry><box><size>6.0 0.02 1.08</size></box></geometry>
+          <material><ambient>0.43 0.70 0.31 1</ambient><diffuse>0.43 0.70 0.31 1</diffuse></material>
+        </visual>
+
+        <visual name="region_u_left_bar">
+          <pose>-13.82 -8.9 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 4.6 1.08</size></box></geometry>
+          <material><ambient>0.86 0.73 0.33 1</ambient><diffuse>0.86 0.73 0.33 1</diffuse></material>
+        </visual>
+        <visual name="region_u_right_bar">
+          <pose>-9.82 -8.9 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 4.6 1.08</size></box></geometry>
+          <material><ambient>0.31 0.60 0.79 1</ambient><diffuse>0.31 0.60 0.79 1</diffuse></material>
+        </visual>
+        <visual name="region_u_floor_band">
+          <pose>-12.0 -11.72 0.55 0 0 0</pose>
+          <geometry><box><size>3.4 0.02 1.08</size></box></geometry>
+          <material><ambient>0.82 0.34 0.29 1</ambient><diffuse>0.82 0.34 0.29 1</diffuse></material>
+        </visual>
+
+        <visual name="region_deadend_left_bar">
+          <pose>9.18 -8.0 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 4.5 1.08</size></box></geometry>
+          <material><ambient>0.94 0.79 0.36 1</ambient><diffuse>0.94 0.79 0.36 1</diffuse></material>
+        </visual>
+        <visual name="region_deadend_right_bar">
+          <pose>12.18 -8.0 0.55 0 0 0</pose>
+          <geometry><box><size>0.02 4.5 1.08</size></box></geometry>
+          <material><ambient>0.29 0.66 0.61 1</ambient><diffuse>0.29 0.66 0.61 1</diffuse></material>
+        </visual>
+        <visual name="region_deadend_cap">
+          <pose>10.5 -10.82 0.55 0 0 0</pose>
+          <geometry><box><size>2.2 0.02 1.08</size></box></geometry>
+          <material><ambient>0.83 0.45 0.25 1</ambient><diffuse>0.83 0.45 0.25 1</diffuse></material>
+        </visual>
+
+        <visual name="region_narrow_1_top">
+          <pose>-2.0 -5.98 1.02 0 0 0</pose>
+          <geometry><box><size>1.7 1.7 0.04</size></box></geometry>
+          <material><ambient>0.77 0.31 0.36 1</ambient><diffuse>0.77 0.31 0.36 1</diffuse></material>
+        </visual>
+        <visual name="region_narrow_2_top">
+          <pose>1.2 -5.98 1.02 0 0 0</pose>
+          <geometry><box><size>1.7 1.7 0.04</size></box></geometry>
+          <material><ambient>0.88 0.70 0.30 1</ambient><diffuse>0.88 0.70 0.30 1</diffuse></material>
+        </visual>
+        <visual name="region_narrow_3_top">
+          <pose>4.4 -5.98 1.02 0 0 0</pose>
+          <geometry><box><size>1.7 1.7 0.04</size></box></geometry>
+          <material><ambient>0.26 0.58 0.77 1</ambient><diffuse>0.26 0.58 0.77 1</diffuse></material>
+        </visual>
+
+        <visual name="region_scatter_1_top">
+          <pose>-16.0 11.0 1.02 0 0 0</pose>
+          <geometry><box><size>1.0 1.0 0.04</size></box></geometry>
+          <material><ambient>0.87 0.52 0.25 1</ambient><diffuse>0.87 0.52 0.25 1</diffuse></material>
+        </visual>
+        <visual name="region_scatter_2_top">
+          <pose>-4.0 11.0 1.02 0 0 0</pose>
+          <geometry><box><size>1.2 0.8 0.04</size></box></geometry>
+          <material><ambient>0.34 0.69 0.52 1</ambient><diffuse>0.34 0.69 0.52 1</diffuse></material>
+        </visual>
+        <visual name="region_scatter_3_top">
+          <pose>10.0 10.5 1.02 0 0 0</pose>
+          <geometry><box><size>1.4 0.9 0.04</size></box></geometry>
+          <material><ambient>0.80 0.33 0.33 1</ambient><diffuse>0.80 0.33 0.33 1</diffuse></material>
+        </visual>
+        <visual name="region_scatter_4_top">
+          <pose>-6.0 -12.0 1.02 0 0 0</pose>
+          <geometry><box><size>1.1 1.1 0.04</size></box></geometry>
+          <material><ambient>0.91 0.78 0.35 1</ambient><diffuse>0.91 0.78 0.35 1</diffuse></material>
+        </visual>
+        <visual name="region_scatter_5_top">
+          <pose>3.0 -12.5 1.02 0 0 0</pose>
+          <geometry><box><size>1.3 0.7 0.04</size></box></geometry>
+          <material><ambient>0.31 0.57 0.78 1</ambient><diffuse>0.31 0.57 0.78 1</diffuse></material>
+        </visual>
+
+        <visual name="region_cyl_1_band">
+          <pose>-15.0 3.0 0.55 1.5708 0 0</pose>
+          <geometry><cylinder><radius>0.74</radius><length>0.05</length></cylinder></geometry>
+          <material><ambient>0.84 0.43 0.26 1</ambient><diffuse>0.84 0.43 0.26 1</diffuse></material>
+        </visual>
+        <visual name="region_cyl_2_band">
+          <pose>-1.0 12.5 0.55 1.5708 0 0</pose>
+          <geometry><cylinder><radius>0.64</radius><length>0.05</length></cylinder></geometry>
+          <material><ambient>0.32 0.69 0.57 1</ambient><diffuse>0.32 0.69 0.57 1</diffuse></material>
+        </visual>
+        <visual name="region_cyl_3_band">
+          <pose>16.0 -4.0 0.55 1.5708 0 0</pose>
+          <geometry><cylinder><radius>0.84</radius><length>0.05</length></cylinder></geometry>
+          <material><ambient>0.81 0.33 0.38 1</ambient><diffuse>0.81 0.33 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
     <!-- ===================================================== -->
     <!-- 动态障碍：由 ROS 节点驱动在仿真中移动 -->
     <!-- ===================================================== -->

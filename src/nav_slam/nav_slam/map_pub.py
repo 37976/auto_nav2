@@ -33,6 +33,7 @@ class ObstacleGridNode(Node):
 
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
+        self.declare_parameter('odom_topic', '/odom')
         self.declare_parameter('static_map_yaml', '/home/xu/automatic-navigation/src/nav_slam/map/gpt.yaml')
 
         self.grid_width = self.get_parameter('grid_width').get_parameter_value().double_value
@@ -89,8 +90,9 @@ class ObstacleGridNode(Node):
         self.dynamic_obstacle_sub = self.create_subscription(
             PointCloud2, '/dynamic_obstacle_points', self.dynamic_obstacle_callback, fast_map_qos
         )
+        odom_topic = self.get_parameter('odom_topic').get_parameter_value().string_value
         self.odom_sub = self.create_subscription(
-            Odometry, '/odom', self.odom_callback, 10
+            Odometry, odom_topic, self.odom_callback, 10
         )
         self.grid_combined_pub = self.create_publisher(
             OccupancyGrid, '/combined_grid', fast_map_qos
