@@ -27,6 +27,7 @@ setup(
         "console_scripts": [
             "xfeat_rtabmap_bridge = rtabmap_localization_bringup.xfeat_rtabmap_bridge:main",
             "xfeat_rgbd_odometry = rtabmap_localization_bringup.xfeat_rgbd_odometry:main",
+            "odom_fusion_node = rtabmap_localization_bringup.odom_fusion_node:main",
         ],
     },
 )

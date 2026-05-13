@@ -138,6 +138,16 @@ ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_odometry.launch.py
 - `gazebo_nav_xfeat_odometry.launch.py`：Gazebo + XFeat 原版 RGB-D 里程计 + 导航
 - `real_d435_only_xfeat_odometry.launch.py`：真实 D435 + XFeat 原版 RGB-D 里程计
 
+XFeat 增量融合版说明：
+
+- `gazebo_nav_xfeat_odometry.launch.py` 当前不是直接拿 `/xfeat/odom` 绝对位姿去拉导航
+- 当前做法是：
+  - `XFeat` 输出 `/xfeat/delta_odom`
+  - `odom_fusion_node` 用 `/odom` 的本帧增量和 `XFeat` 的本帧增量做比较
+  - 状态会打印为 `base_only / fused / rejected`
+- 调试 CSV 默认输出到：
+  - `/home/xu/xfeat_pose/sim_odom_fusion_debug.csv`
+
 窗口说明：
 
 - `gazebo_nav_rtabmap_localization.launch.py` 默认只开导航自己的 RViz，不开 `rtabmapviz`

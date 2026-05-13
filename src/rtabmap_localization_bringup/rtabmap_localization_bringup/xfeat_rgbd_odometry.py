@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import csv
 import math
 import os
 import sys
@@ -12,9 +13,12 @@ import rclpy
 import torch
 from cv_bridge import CvBridge
 from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from nav_msgs.msg import Path
 from rclpy.node import Node
 from sensor_msgs.msg import CameraInfo, Image
+from std_msgs.msg import String
 from tf2_ros import Buffer, TransformBroadcaster, TransformException, TransformListener
 
 
@@ -141,10 +145,15 @@ class XFeatRgbdOdometry(Node):
         self.declare_parameter("pnp_iterations", 200)
         self.declare_parameter("sync_queue_size", 10)
         self.declare_parameter("odom_topic", "/xfeat/odom")
+        self.declare_parameter("delta_odom_topic", "/xfeat/delta_odom")
         self.declare_parameter("odom_frame", "xfeat_odom")
         self.declare_parameter("base_frame", "base_footprint")
         self.declare_parameter("camera_frame", "camera_link")
         self.declare_parameter("publish_tf", True)
+        self.declare_parameter("path_topic", "/path")
+        self.declare_parameter("control_mode_topic", "/control_mode")
+        self.declare_parameter("cmd_vel_topic", "/cmd_vel")
+        self.declare_parameter("nav_idle_timeout_sec", 2.0)
 
         self._rgb_topic = str(self.get_parameter("rgb_topic").value)
         self._depth_topic = str(self.get_parameter("depth_topic").value)
@@ -161,10 +170,15 @@ class XFeatRgbdOdometry(Node):
         self._pnp_reproj_error = float(self.get_parameter("pnp_reproj_error").value)
         self._pnp_iterations = int(self.get_parameter("pnp_iterations").value)
         self._odom_topic = str(self.get_parameter("odom_topic").value)
+        self._delta_odom_topic = str(self.get_parameter("delta_odom_topic").value)
         self._odom_frame = str(self.get_parameter("odom_frame").value)
         self._base_frame = str(self.get_parameter("base_frame").value)
         self._camera_frame = str(self.get_parameter("camera_frame").value)
         self._publish_tf = bool(self.get_parameter("publish_tf").value)
+        self._path_topic = str(self.get_parameter("path_topic").value)
+        self._control_mode_topic = str(self.get_parameter("control_mode_topic").value)
+        self._cmd_vel_topic = str(self.get_parameter("cmd_vel_topic").value)
+        self._nav_idle_timeout_sec = max(0.5, float(self.get_parameter("nav_idle_timeout_sec").value))
 
         self._bridge = CvBridge()
         self._camera_info: Optional[CameraInfo] = None
@@ -174,6 +188,16 @@ class XFeatRgbdOdometry(Node):
         self._last_translation = np.zeros((3,), dtype=np.float64)
         self._last_logged_translation = np.zeros((3,), dtype=np.float64)
         self._base_to_camera_tf: Optional[np.ndarray] = None
+        self._camera_frame_warned = False
+        self._control_mode = "nav"
+        self._path_active = False
+        self._last_path_sec: Optional[float] = None
+        self._last_nonzero_cmd_sec: Optional[float] = None
+        self._last_delta_debug = {
+            "dx": 0.0,
+            "dy": 0.0,
+            "dyaw_deg": 0.0,
+        }
 
         configured_repo_dir = str(self.get_parameter("xfeat_repo_dir").value)
         self._xfeat_repo_dir = _resolve_xfeat_repo_dir(configured_repo_dir)
@@ -191,6 +215,7 @@ class XFeatRgbdOdometry(Node):
         )
 
         self._odom_pub = self.create_publisher(Odometry, self._odom_topic, 10)
+        self._delta_odom_pub = self.create_publisher(Odometry, self._delta_odom_topic, 10)
         self._tf_broadcaster = TransformBroadcaster(self) if self._publish_tf else None
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
@@ -200,6 +225,9 @@ class XFeatRgbdOdometry(Node):
         self._camera_info_sub = self.create_subscription(
             CameraInfo, self._camera_info_topic, self._camera_info_callback, 10
         )
+        self.create_subscription(Path, self._path_topic, self._path_cb, 10)
+        self.create_subscription(String, self._control_mode_topic, self._control_mode_cb, 10)
+        self.create_subscription(Twist, self._cmd_vel_topic, self._cmd_vel_cb, 10)
         sync_queue_size = int(self.get_parameter("sync_queue_size").value)
         self._sync = message_filters.ApproximateTimeSynchronizer(
             [self._rgb_sub, self._depth_sub],
@@ -217,6 +245,32 @@ class XFeatRgbdOdometry(Node):
 
     def _camera_info_callback(self, msg: CameraInfo) -> None:
         self._camera_info = msg
+        optical_frame = msg.header.frame_id.strip()
+        if (
+            optical_frame
+            and optical_frame != self._camera_frame
+            and "optical" in optical_frame
+        ):
+            if not self._camera_frame_warned:
+                self.get_logger().warn(
+                    f"Switching camera_frame from {self._camera_frame} to optical frame {optical_frame} "
+                    "for PnP/base transform consistency."
+                )
+                self._camera_frame_warned = True
+            self._camera_frame = optical_frame
+            self._base_to_camera_tf = None
+
+    def _path_cb(self, msg: Path) -> None:
+        self._path_active = len(msg.poses) >= 2
+        if self._path_active:
+            self._last_path_sec = self.get_clock().now().nanoseconds * 1e-9
+
+    def _control_mode_cb(self, msg: String) -> None:
+        self._control_mode = msg.data.strip().lower()
+
+    def _cmd_vel_cb(self, msg: Twist) -> None:
+        if abs(float(msg.linear.x)) > 1e-3 or abs(float(msg.angular.z)) > 1e-3:
+            self._last_nonzero_cmd_sec = self.get_clock().now().nanoseconds * 1e-9
 
     def _rgbd_callback(self, rgb_msg: Image, depth_msg: Image) -> None:
         if self._camera_info is None:
@@ -242,24 +296,19 @@ class XFeatRgbdOdometry(Node):
 
         observation = self._make_observation(color_image, depth_image, output)
         if self._prev_obs is not None:
+            prev_world_base = self._world_base_pose().copy()
             pose_result = self._estimate_relative_pose(self._prev_obs, observation)
             if pose_result is not None:
                 self._pose_world_cam = self._pose_world_cam @ _invert_pose(pose_result["transform_curr_prev"])
                 self._publish_odometry(rgb_msg)
+                self._publish_delta_odometry(rgb_msg, prev_world_base, self._world_base_pose())
                 self._log_motion_status(pose_result)
-                self.get_logger().info(
-                    "Pose OK | matches %d | PnP %d | inliers %d" % (
-                        pose_result["num_matches"],
-                        pose_result["num_pnp_points"],
-                        pose_result["num_inliers"],
-                    ),
-                    throttle_duration_sec=2.0,
-                )
             else:
-                self.get_logger().warn(
-                    "Pose unavailable | insufficient stable 3D-2D correspondences",
-                    throttle_duration_sec=2.0,
-                )
+                if self._should_log_pose():
+                    self.get_logger().warn(
+                        "Pose unavailable | insufficient stable 3D-2D correspondences",
+                        throttle_duration_sec=2.0,
+                    )
         else:
             self._publish_odometry(rgb_msg)
 
@@ -432,28 +481,78 @@ class XFeatRgbdOdometry(Node):
             tf_msg.transform.rotation = odom.pose.pose.orientation
             self._tf_broadcaster.sendTransform(tf_msg)
 
+    def _publish_delta_odometry(self, rgb_msg: Image, prev_world_base: np.ndarray, curr_world_base: np.ndarray) -> None:
+        delta_local = _invert_pose(prev_world_base) @ curr_world_base
+        local_dx = float(delta_local[0, 3])
+        local_dy = float(delta_local[1, 3])
+        local_yaw = math.atan2(delta_local[1, 0], delta_local[0, 0])
+        self._last_delta_debug = {
+            "dx": local_dx,
+            "dy": local_dy,
+            "dyaw_deg": math.degrees(local_yaw),
+        }
+        quat = _rotation_matrix_to_quaternion(
+            np.array(
+                [
+                    [math.cos(local_yaw), -math.sin(local_yaw), 0.0],
+                    [math.sin(local_yaw), math.cos(local_yaw), 0.0],
+                    [0.0, 0.0, 1.0],
+                ],
+                dtype=np.float32,
+            )
+        )
+
+        odom = Odometry()
+        odom.header = rgb_msg.header
+        odom.header.frame_id = self._base_frame
+        odom.child_frame_id = f"{self._base_frame}_delta"
+        odom.pose.pose.position.x = local_dx
+        odom.pose.pose.position.y = local_dy
+        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.orientation.x = float(quat[0])
+        odom.pose.pose.orientation.y = float(quat[1])
+        odom.pose.pose.orientation.z = float(quat[2])
+        odom.pose.pose.orientation.w = float(quat[3])
+        self._delta_odom_pub.publish(odom)
+
     def _log_motion_status(self, pose_result: dict) -> None:
+        if not self._should_log_pose():
+            return
         position = self._world_base_pose()[:3, 3].astype(np.float64)
         delta = position - self._last_logged_translation
-        planar_step = float(np.linalg.norm(delta[[0, 2]]))
-        total_dist = float(np.linalg.norm(position[[0, 2]]))
-        moving = planar_step > 0.005
+        moving = float(np.linalg.norm(delta[:2])) > 0.005
         self._last_logged_translation = position.copy()
+        dx = self._last_delta_debug["dx"]
+        dy = self._last_delta_debug["dy"]
+        dyaw_deg = self._last_delta_debug["dyaw_deg"]
 
         self.get_logger().info(
-            "Motion %s | pos xyz=(%.3f, %.3f, %.3f) m | step_xz=%.3f m | total_xz=%.3f m | matches=%d inliers=%d"
+            "Motion %s | delta dx=%.3f dy=%.3f dyaw=%.1fdeg | matches=%d inliers=%d"
             % (
                 "MOVING" if moving else "STABLE",
-                position[0],
-                position[1],
-                position[2],
-                planar_step,
-                total_dist,
+                dx,
+                dy,
+                dyaw_deg,
                 pose_result["num_matches"],
                 pose_result["num_inliers"],
             ),
             throttle_duration_sec=0.5,
         )
+
+    def _should_log_pose(self) -> bool:
+        if self._control_mode != "nav":
+            return False
+        now_sec = self.get_clock().now().nanoseconds * 1e-9
+        if self._path_active:
+            return True
+        if self._last_path_sec is None:
+            return False
+        recent_path = (now_sec - self._last_path_sec) <= self._nav_idle_timeout_sec
+        recent_motion = (
+            self._last_nonzero_cmd_sec is not None
+            and (now_sec - self._last_nonzero_cmd_sec) <= self._nav_idle_timeout_sec
+        )
+        return recent_path or recent_motion
 
     def _world_base_pose(self) -> np.ndarray:
         base_to_camera = self._lookup_base_to_camera()

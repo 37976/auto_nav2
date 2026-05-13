@@ -58,11 +58,16 @@ def generate_launch_description():
     pnp_reproj_error = LaunchConfiguration("pnp_reproj_error")
     pnp_iterations = LaunchConfiguration("pnp_iterations")
     odom_topic = LaunchConfiguration("odom_topic")
+    delta_odom_topic = LaunchConfiguration("delta_odom_topic")
     odom_frame = LaunchConfiguration("odom_frame")
     base_frame = LaunchConfiguration("base_frame")
     camera_frame = LaunchConfiguration("camera_frame")
     publish_tf = LaunchConfiguration("publish_tf")
-    nav_odom_topic = LaunchConfiguration("nav_odom_topic")
+    fused_odom_topic = LaunchConfiguration("fused_odom_topic")
+    correction_gain_xy = LaunchConfiguration("correction_gain_xy")
+    correction_gain_yaw = LaunchConfiguration("correction_gain_yaw")
+    max_delta_translation_diff_m = LaunchConfiguration("max_delta_translation_diff_m")
+    max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
 
     return LaunchDescription([
         DeclareLaunchArgument("world_name", default_value="gpt.world"),
@@ -95,11 +100,16 @@ def generate_launch_description():
         DeclareLaunchArgument("pnp_reproj_error", default_value="8.0"),
         DeclareLaunchArgument("pnp_iterations", default_value="200"),
         DeclareLaunchArgument("odom_topic", default_value="/xfeat/odom"),
+        DeclareLaunchArgument("delta_odom_topic", default_value="/xfeat/delta_odom"),
         DeclareLaunchArgument("odom_frame", default_value="xfeat_odom"),
         DeclareLaunchArgument("base_frame", default_value="base_footprint"),
-        DeclareLaunchArgument("camera_frame", default_value="camera_link"),
+        DeclareLaunchArgument("camera_frame", default_value="camera_optical_frame"),
         DeclareLaunchArgument("publish_tf", default_value="false"),
-        DeclareLaunchArgument("nav_odom_topic", default_value="/odom"),
+        DeclareLaunchArgument("fused_odom_topic", default_value="/localized_odom"),
+        DeclareLaunchArgument("correction_gain_xy", default_value="0.15"),
+        DeclareLaunchArgument("correction_gain_yaw", default_value="0.10"),
+        DeclareLaunchArgument("max_delta_translation_diff_m", default_value="0.20"),
+        DeclareLaunchArgument("max_delta_yaw_diff_deg", default_value="20.0"),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(gazebo_launch),
             launch_arguments={
@@ -136,6 +146,7 @@ def generate_launch_description():
                         "max_depth_m": depth_max_m,
                         "sync_queue_size": 10,
                         "odom_topic": odom_topic,
+                        "delta_odom_topic": delta_odom_topic,
                         "odom_frame": odom_frame,
                         "base_frame": base_frame,
                         "camera_frame": camera_frame,
@@ -148,18 +159,19 @@ def generate_launch_description():
                     }],
                 ),
                 Node(
-                    package="gazebo_modele",
-                    executable="localized_odom_bridge",
-                    name="localized_odom_bridge",
+                    package="rtabmap_localization_bringup",
+                    executable="odom_fusion_node",
+                    name="odom_fusion_node",
                     output="screen",
-                    parameters=[
-                        {"use_sim_time": use_sim_time},
-                        {"input_odom_topic": odom_topic},
-                        {"output_odom_topic": "/localized_odom"},
-                        {"map_frame": "map"},
-                        {"odom_frame": odom_frame},
-                        {"publish_tf": False},
-                    ],
+                    parameters=[{
+                        "base_odom_topic": "/odom",
+                        "xfeat_delta_topic": delta_odom_topic,
+                        "output_odom_topic": fused_odom_topic,
+                        "correction_gain_xy": correction_gain_xy,
+                        "correction_gain_yaw": correction_gain_yaw,
+                        "max_delta_translation_diff_m": max_delta_translation_diff_m,
+                        "max_delta_yaw_diff_deg": max_delta_yaw_diff_deg,
+                    }],
                 ),
                 IncludeLaunchDescription(
                     PythonLaunchDescriptionSource(nav_launch),
@@ -182,7 +194,8 @@ def generate_launch_description():
                         "hotspot_ssid": hotspot_ssid,
                         "hotspot_password": hotspot_password,
                         "hotspot_ifname": hotspot_ifname,
-                        "odom_topic": nav_odom_topic,
+                        "map_odom_topic": "/odom",
+                        "control_odom_topic": fused_odom_topic,
                         "start_odom_map_tf": "true",
                     }.items(),
                 ),

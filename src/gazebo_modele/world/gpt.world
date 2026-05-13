@@ -46,7 +46,12 @@
           <geometry>
             <box><size>40 0.5 1</size></box>
           </geometry>
-          <material><ambient>0.7 0.7 0.7 1</ambient></material>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+            </script>
+          </material>
         </visual>
       </link>
     </model>
@@ -64,7 +69,12 @@
           <geometry>
             <box><size>40 0.5 1</size></box>
           </geometry>
-          <material><ambient>0.7 0.7 0.7 1</ambient></material>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+            </script>
+          </material>
         </visual>
       </link>
     </model>
@@ -82,7 +92,12 @@
           <geometry>
             <box><size>0.5 30 1</size></box>
           </geometry>
-          <material><ambient>0.7 0.7 0.7 1</ambient></material>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+            </script>
+          </material>
         </visual>
       </link>
     </model>
@@ -100,7 +115,12 @@
           <geometry>
             <box><size>0.5 30 1</size></box>
           </geometry>
-          <material><ambient>0.7 0.7 0.7 1</ambient></material>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+            </script>
+          </material>
         </visual>
       </link>
     </model>
@@ -113,7 +133,7 @@
       <pose>-11 8 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>16 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>16 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>16 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -122,7 +142,7 @@
       <pose>12.5 8 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>13 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>13 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>13 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -131,7 +151,7 @@
       <pose>-13 -2 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>10 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>10 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>10 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -140,7 +160,7 @@
       <pose>0 -2 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>8 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -149,7 +169,7 @@
       <pose>13 -2 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>10 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>10 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>10 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -158,7 +178,7 @@
       <pose>-8 11 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>8 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -167,7 +187,7 @@
       <pose>-8 1 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>11 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>11 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>11 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -176,7 +196,7 @@
       <pose>6 12 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -185,7 +205,7 @@
       <pose>6 1.5 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>11 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>11 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>11 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -194,7 +214,7 @@
       <pose>14.5 3.5 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>9 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>9 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>9 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -203,7 +223,7 @@
       <pose>14.5 -10.5 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>8 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>8 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -215,7 +235,7 @@
       <pose>2 5 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.35 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.35 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.35 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -224,7 +244,7 @@
       <pose>2 1 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.35 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.35 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.35 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -233,7 +253,7 @@
       <pose>-1 3 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>4 0.35 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>4 0.35 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>4 0.35 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -242,7 +262,7 @@
       <pose>5 3 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>4 0.35 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>4 0.35 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>4 0.35 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -254,7 +274,7 @@
       <pose>-14 -9 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -263,7 +283,7 @@
       <pose>-10 -9 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -272,7 +292,7 @@
       <pose>-12 -12 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>4 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>4 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>4 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -284,7 +304,7 @@
       <pose>9 -8 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -293,7 +313,7 @@
       <pose>12 -8 0.5 0 0 1.5708</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>6 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>6 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -302,7 +322,7 @@
       <pose>10.5 -11 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>3 0.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>3 0.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>3 0.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -314,7 +334,7 @@
       <pose>-2 -7 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>2.0 2.0 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -323,7 +343,7 @@
       <pose>1.2 -7 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>2.0 2.0 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -332,7 +352,7 @@
       <pose>4.4 -7 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>2.0 2.0 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>2.0 2.0 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -344,7 +364,7 @@
       <pose>-16 11 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>1.2 1.2 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>1.2 1.2 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>1.2 1.2 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -353,7 +373,7 @@
       <pose>-4 11 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>1.5 1.0 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>1.5 1.0 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>1.5 1.0 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -362,7 +382,7 @@
       <pose>10 10.5 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>1.8 1.2 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>1.8 1.2 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>1.8 1.2 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -371,7 +391,7 @@
       <pose>-6 -12 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>1.4 1.4 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>1.4 1.4 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>1.4 1.4 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -380,7 +400,7 @@
       <pose>3 -12.5 0.5 0 0 0</pose>
       <link name="link">
         <collision name="collision"><geometry><box><size>1.6 1.0 1</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>1.6 1.0 1</size></box></geometry></visual>
+        <visual name="visual"><geometry><box><size>1.6 1.0 1</size></box></geometry><material><script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Wood</name></script></material></visual>
       </link>
     </model>
 
@@ -845,6 +865,135 @@
           <pose>16.0 -4.0 0.55 1.5708 0 0</pose>
           <geometry><cylinder><radius>0.84</radius><length>0.05</length></cylinder></geometry>
           <material><ambient>0.81 0.33 0.38 1</ambient><diffuse>0.81 0.33 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===================================================== -->
+    <!-- 视觉纹理增强：给前向相机更多可重复特征 -->
+    <!-- ===================================================== -->
+    <model name="xfeat_texture_landmarks">
+      <static>true</static>
+      <link name="link">
+        <!-- 墙上海报：高对比、不同颜色、不同尺寸 -->
+        <visual name="poster_north_left">
+          <pose>-13.0 14.73 1.25 1.5708 0 0</pose>
+          <geometry><box><size>2.4 0.02 1.4</size></box></geometry>
+          <material><ambient>0.92 0.18 0.18 1</ambient><diffuse>0.92 0.18 0.18 1</diffuse></material>
+        </visual>
+        <visual name="poster_north_mid">
+          <pose>-1.0 14.73 1.35 1.5708 0 0</pose>
+          <geometry><box><size>2.0 0.02 1.2</size></box></geometry>
+          <material><ambient>0.18 0.74 0.92 1</ambient><diffuse>0.18 0.74 0.92 1</diffuse></material>
+        </visual>
+        <visual name="poster_north_right">
+          <pose>12.0 14.73 1.20 1.5708 0 0</pose>
+          <geometry><box><size>2.6 0.02 1.5</size></box></geometry>
+          <material><ambient>0.96 0.82 0.18 1</ambient><diffuse>0.96 0.82 0.18 1</diffuse></material>
+        </visual>
+
+        <visual name="poster_south_left">
+          <pose>-10.0 -14.73 1.25 1.5708 0 0</pose>
+          <geometry><box><size>2.3 0.02 1.3</size></box></geometry>
+          <material><ambient>0.22 0.86 0.44 1</ambient><diffuse>0.22 0.86 0.44 1</diffuse></material>
+        </visual>
+        <visual name="poster_south_right">
+          <pose>11.0 -14.73 1.30 1.5708 0 0</pose>
+          <geometry><box><size>2.1 0.02 1.4</size></box></geometry>
+          <material><ambient>0.80 0.30 0.90 1</ambient><diffuse>0.80 0.30 0.90 1</diffuse></material>
+        </visual>
+
+        <visual name="poster_west_top">
+          <pose>-19.73 8.0 1.25 1.5708 0 1.5708</pose>
+          <geometry><box><size>2.2 0.02 1.3</size></box></geometry>
+          <material><ambient>0.94 0.54 0.14 1</ambient><diffuse>0.94 0.54 0.14 1</diffuse></material>
+        </visual>
+        <visual name="poster_west_bottom">
+          <pose>-19.73 -8.0 1.25 1.5708 0 1.5708</pose>
+          <geometry><box><size>2.0 0.02 1.2</size></box></geometry>
+          <material><ambient>0.20 0.54 0.96 1</ambient><diffuse>0.20 0.54 0.96 1</diffuse></material>
+        </visual>
+        <visual name="poster_east_mid">
+          <pose>19.73 0.0 1.35 1.5708 0 1.5708</pose>
+          <geometry><box><size>2.6 0.02 1.5</size></box></geometry>
+          <material><ambient>0.95 0.27 0.52 1</ambient><diffuse>0.95 0.27 0.52 1</diffuse></material>
+        </visual>
+
+        <!-- 走廊边框线：给地面增加稳定边缘 -->
+        <visual name="lane_line_main_1">
+          <pose>-10.0 10.0 0.011 0 0 0</pose>
+          <geometry><box><size>12.0 0.10 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="lane_line_main_2">
+          <pose>8.0 -6.0 0.011 0 0 0</pose>
+          <geometry><box><size>14.0 0.10 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="lane_line_vertical_1">
+          <pose>-5.0 2.5 0.011 0 0 1.5708</pose>
+          <geometry><box><size>11.0 0.10 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="lane_line_vertical_2">
+          <pose>11.0 4.0 0.011 0 0 1.5708</pose>
+          <geometry><box><size>10.0 0.10 0.02</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+
+        <!-- 棋盘地贴：局部高频纹理 -->
+        <visual name="checker_a1">
+          <pose>-15.0 -10.0 0.012 0 0 0</pose>
+          <geometry><box><size>0.9 0.9 0.02</size></box></geometry>
+          <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+        </visual>
+        <visual name="checker_a2">
+          <pose>-14.1 -10.0 0.012 0 0 0</pose>
+          <geometry><box><size>0.9 0.9 0.02</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <visual name="checker_a3">
+          <pose>-15.0 -9.1 0.012 0 0 0</pose>
+          <geometry><box><size>0.9 0.9 0.02</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <visual name="checker_a4">
+          <pose>-14.1 -9.1 0.012 0 0 0</pose>
+          <geometry><box><size>0.9 0.9 0.02</size></box></geometry>
+          <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material>
+        </visual>
+
+        <visual name="checker_b1">
+          <pose>13.5 9.0 0.012 0 0 0</pose>
+          <geometry><box><size>0.8 0.8 0.02</size></box></geometry>
+          <material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse></material>
+        </visual>
+        <visual name="checker_b2">
+          <pose>14.3 9.0 0.012 0 0 0</pose>
+          <geometry><box><size>0.8 0.8 0.02</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <visual name="checker_b3">
+          <pose>13.5 9.8 0.012 0 0 0</pose>
+          <geometry><box><size>0.8 0.8 0.02</size></box></geometry>
+          <material><ambient>0.95 0.95 0.95 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <visual name="checker_b4">
+          <pose>14.3 9.8 0.012 0 0 0</pose>
+          <geometry><box><size>0.8 0.8 0.02</size></box></geometry>
+          <material><ambient>0.08 0.08 0.08 1</ambient><diffuse>0.08 0.08 0.08 1</diffuse></material>
+        </visual>
+
+        <!-- 箭头/标识牌替代：亮色方向块 -->
+        <visual name="sign_zone_1">
+          <pose>-2.0 6.5 0.35 0 0 0</pose>
+          <geometry><box><size>1.2 0.5 0.7</size></box></geometry>
+          <material><ambient>0.98 0.46 0.12 1</ambient><diffuse>0.98 0.46 0.12 1</diffuse></material>
+        </visual>
+        <visual name="sign_zone_2">
+          <pose>9.5 -8.0 0.35 0 0 0</pose>
+          <geometry><box><size>1.0 0.5 0.7</size></box></geometry>
+          <material><ambient>0.14 0.84 0.78 1</ambient><diffuse>0.14 0.84 0.78 1</diffuse></material>
         </visual>
       </link>
     </model>
