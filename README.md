@@ -1,14 +1,13 @@
 # AUTO_NAV2_VORONOI
 
-基于 ROS 2 Humble 的 Gazebo 仿真导航工程，当前包含：
+基于 ROS 2 Humble 的 Gazebo 仿真导航工程，核心特性：
 
-- Gazebo 差速机器人仿真
-- Voronoi 全局路径规划
-- 栅格地图融合与路径跟踪控制
-- RViz 与网页端可视化/控制
-- 自动导航评估包 `nav_eval`
-
-当前工程已经针对 `challenge_maze.world` 做过一轮稳定性收敛，适合继续做参数调优、算法评估和学习型局部控制实验。
+- **双定位分工**：AMCL 一次性全局定位 + XFeat 视觉融合持续里程计
+- **Voronoi 全局路径规划**：基于 GVD 骨架搜索 + B-spline 平滑
+- **Pure Pursuit 路径跟踪**：自适应前视距离 + 卡滞恢复
+- **栅格地图融合**：静态 PGM + 实时动态障碍物
+- **随机初始位姿**：每次启动随机 spawn 到地图安全空闲区域
+- **自动导航评估**：批量随机目标点 + 中文评估报告
 
 ## 环境准备
 
@@ -21,38 +20,176 @@ source install/setup.bash
 
 ## 快速启动
 
-默认场景是 `gpt.world`，会同时启动 Gazebo、导航、RViz 和网页控制：
+### 主方案（XFeat 视觉融合 + AMCL 初始定位）
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
+```
+
+每次启动会：
+1. 读取地图随机选安全空闲位姿
+2. Gazebo 用随机位姿 spawn 机器人
+3. AMCL 用同一位姿初始化，快速收敛
+4. `amcl_init_bridge` 锁定 `map→odom` 静态 TF
+5. XFeat 融合里程计接管后续导航
+
+### 纯底盘里程计方案（无视觉，无 AMCL）
 
 ```bash
 ros2 launch gazebo_modele gazebo_nav_web.launch.py
 ```
 
-网页默认地址：
+### 网页控制
 
 ```text
 http://<本机IP>:8080
 ```
 
-如果需要机器人自己开热点，并在弹窗里显示“连接 Wi-Fi / 打开网页”二维码：
+---
 
-```bash
-ros2 launch gazebo_modele gazebo_nav_web.launch.py start_hotspot:=true
+## 定位架构
+
+> **2D 雷达 + AMCL = GPS（一次性全局定位）**
+> **XFeat 视觉融合 = 高精度计步器（持续局部里程计）**
+
+两者分工明确，互不冲突：
+
+```mermaid
+flowchart TD
+    subgraph 启动阶段
+        A[读 PGM 地图] --> B[随机选空闲位姿]
+        B --> C[Gazebo spawn 机器人]
+        B --> D[AMCL 初始化粒子]
+    end
+
+    subgraph 全局定位 - AMCL
+        D --> E[AMCL 匹配 /scan + /map]
+        E --> F{协方差收敛?}
+        F -- 是 --> G[amcl_init_bridge 锁定 map→odom TF]
+    end
+
+    subgraph 持续导航 - XFeat
+        H[RGB-D 相机] --> I[XFeat 提特征 + PnP]
+        I --> J[输出 /xfeat/delta_odom 局部增量]
+        K[/odom 轮式] --> L[odom_fusion_node 增量融合]
+        J --> L
+        L --> M[/localized_odom 融合里程计]
+        M --> N[Pure Pursuit 路径跟踪]
+    end
 ```
 
+TF 树：
+
+```
+map ──(amcl_init_bridge 静态)──→ odom ──(odom_tf_bridge)──→ base_footprint
+```
+
+### 关键节点
+
+| 节点                  | 包                            | 职责                               |
+| --------------------- | ----------------------------- | ---------------------------------- |
+| `static_map_server`   | `nav_slam`                    | 发布 PGM 地图到 `/map`，仅供 AMCL   |
+| `odom_tf_bridge`      | `gazebo_modele`               | 监听 `/localized_odom`，发 TF       |
+| `xfeat_rgbd_odometry` | `rtabmap_localization_bringup` | XFeat 视觉里程计 → `/xfeat/delta_odom` |
+| `odom_fusion_node`    | `rtabmap_localization_bringup` | 轮式 + XFeat 增量融合 → `/localized_odom` |
+| `amcl`                | `nav2_amcl`                   | 蒙特卡洛全局定位（不发 TF）          |
+| `amcl_init_bridge`    | `nav_slam`                    | AMCL 收敛后锁定 `map→odom` 静态 TF   |
+| `map_pub`             | `nav_slam`                    | 静态地图 + 动态障碍 → `/combined_grid` |
+| `voronoi`             | `nav2_voronoi_planner`        | Voronoi 路径规划                    |
+| `start_nav`           | `nav_slam`                    | Pure Pursuit 跟踪 → `/cmd_vel`      |
+
+### 地图话题分离
+
+| 话题             | 来源                 | 用途               | 内容                 |
+| ---------------- | -------------------- | ------------------ | -------------------- |
+| `/map`           | `static_map_server`  | AMCL 全局定位      | 纯静态 PGM           |
+| `/combined_grid` | `map_pub`            | Voronoi 规划 + RViz | 静态地图 + 动态障碍物 |
+
+### XFeat 增量融合状态
+
+| 状态         | 含义                              |
+| ------------ | --------------------------------- |
+| `base_only`  | 此步未使用 XFeat（超时/无观测）    |
+| `fused`      | 此步使用了 XFeat 增量修正          |
+| `rejected`   | XFeat 与底盘增量差异过大，丢弃     |
+
+调试 CSV：`/home/xu/xfeat_pose/sim_odom_fusion_debug.csv`
+
+---
+
+## 常用启动参数
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
+  world_name:=gpt.world \
+  start_nav_rviz:=true \
+  start_web_ui:=false \
+  start_moving_obstacle:=false
+```
+
+XFeat 参数：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
+  top_k:=768 \
+  detection_threshold:=0.05 \
+  match_min_cossim:=0.65 \
+  min_pnp_points:=6 \
+  pnp_reproj_error:=8.0
+```
+
+融合参数：
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
+  correction_gain_xy:=0.15 \
+  correction_gain_yaw:=0.10 \
+  max_delta_translation_diff_m:=0.20 \
+  max_delta_yaw_diff_deg:=20.0
+```
+
+---
+
+## 其他启动方式
+
+### Gazebo 单独
+
+```bash
+ros2 launch gazebo_modele gazebo.launch.py
+```
+
+### 导航单独
+
+```bash
+ros2 launch nav_slam 2dpoints.launch.py
+ros2 launch nav_slam 2dpoints.launch.py start_web_ui:=false
+ros2 launch nav_slam 2dpoints.launch.py start_nav_rviz:=false
+```
+
+### RTAB-Map（Gazebo）
+
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup gazebo_nav_superpoint_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_rtabmap_localization.launch.py
+```
+
+### RTAB-Map（真实 D435）
+
+```bash
+ros2 launch rtabmap_localization_bringup real_d435_nav_rtabmap_localization.launch.py
+ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_rtabmap.launch.py
+```
+
+---
+
 ## 挑战场景
-
-挑战场景使用更复杂的迷宫地图：
-
-- world: `src/gazebo_modele/world/challenge_maze.world`
-- map: `src/nav_slam/map/challenge_maze.yaml`
-
-直接启动挑战场景：
 
 ```bash
 ros2 launch gazebo_modele gazebo_challenge_nav_web.launch.py
 ```
 
-或者使用总启动传参：
+或传参：
 
 ```bash
 ros2 launch gazebo_modele gazebo_nav_web.launch.py \
@@ -60,167 +197,26 @@ ros2 launch gazebo_modele gazebo_nav_web.launch.py \
   static_map_yaml:=/home/xu/project/auto_nav2/src/nav_slam/map/challenge_maze.yaml
 ```
 
-## 常用启动方式
+---
 
-只启动 Gazebo：
+## 雷达配置
 
-```bash
-ros2 launch gazebo_modele gazebo.launch.py
-```
+| 参数       | 值                |
+| ---------- | ----------------- |
+| 采样点数   | 360（1° 分辨率）   |
+| 角度范围   | -180° ~ 180°      |
+| 距离范围   | 0.1m ~ 50m        |
+| 更新率     | 10Hz              |
 
-只启动导航：
-
-```bash
-ros2 launch nav_slam 2dpoints.launch.py
-```
-
-说明：
-
-- 这个启动现在会自动补起 `robot_state_publisher` 和 `joint_state_publisher`
-- 所以即使不经过 Gazebo，总能在 RViz 里看到完整底盘和轮子连接
-
-导航但不打开网页：
-
-```bash
-ros2 launch nav_slam 2dpoints.launch.py start_web_ui:=false
-```
-
-导航但不打开 RViz：
-
-```bash
-ros2 launch nav_slam 2dpoints.launch.py start_nav_rviz:=false
-```
-
-默认场景但不开热点：
-
-```bash
-ros2 launch gazebo_modele gazebo_nav_web.launch.py start_hotspot:=false
-```
-
-## RTAB-Map 启动命令
-
-RTAB-Map 相关启动已经统一整理到包 `rtabmap_localization_bringup`。
-
-Gazebo 仿真：
-
-```bash
-ros2 launch rtabmap_localization_bringup gazebo_rtabmap_localization.launch.py
-ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py
-ros2 launch rtabmap_localization_bringup gazebo_nav_superpoint_rtabmap_localization.launch.py
-ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_rtabmap_localization.launch.py
-```
-
-真实 D435：
-
-```bash
-ros2 launch rtabmap_localization_bringup real_d435_only_rtabmap.launch.py
-ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_rtabmap.launch.py
-ros2 launch rtabmap_localization_bringup real_d435_nav_rtabmap_localization.launch.py
-```
-
-说明：
-
-- `gazebo_rtabmap_localization.launch.py`：只起 Gazebo 仿真和 RTAB-Map
-- `gazebo_nav_rtabmap_localization.launch.py`：Gazebo + RTAB-Map + 导航
-- `gazebo_nav_superpoint_rtabmap_localization.launch.py`：Gazebo + SuperPoint + RTAB-Map + 导航
-- `gazebo_nav_xfeat_rtabmap_localization.launch.py`：Gazebo + XFeat + RTAB-Map + 导航
-- `real_d435_only_rtabmap.launch.py`：真实 D435 + RTAB-Map
-- `real_d435_only_xfeat_rtabmap.launch.py`：真实 D435 + XFeat + RTAB-Map
-- `real_d435_nav_rtabmap_localization.launch.py`：真实 D435 + RTAB-Map + 导航
-
-XFeat 原生里程计：
-
-```bash
-ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
-ros2 launch rtabmap_localization_bringup real_d435_only_xfeat_odometry.launch.py
-```
-
-- `gazebo_nav_xfeat_odometry.launch.py`：Gazebo + XFeat 原版 RGB-D 里程计 + 导航
-- `real_d435_only_xfeat_odometry.launch.py`：真实 D435 + XFeat 原版 RGB-D 里程计
-
-XFeat 增量融合版说明：
-
-- `gazebo_nav_xfeat_odometry.launch.py` 当前不是直接拿 `/xfeat/odom` 绝对位姿去拉导航
-- 当前做法是：
-  - `XFeat` 输出 `/xfeat/delta_odom`
-  - `odom_fusion_node` 用 `/odom` 的本帧增量和 `XFeat` 的本帧增量做比较
-  - 状态会打印为 `base_only / fused / rejected`
-- 调试 CSV 默认输出到：
-  - `/home/xu/xfeat_pose/sim_odom_fusion_debug.csv`
-
-窗口说明：
-
-- `gazebo_nav_rtabmap_localization.launch.py` 默认只开导航自己的 RViz，不开 `rtabmapviz`
-- 如果需要打开 RTAB-Map 窗口：
-
-```bash
-ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py \
-  start_rtabmapviz:=true
-```
-
-- 如果需要打开 RTAB-Map 那边的 RViz：
-
-```bash
-ros2 launch rtabmap_localization_bringup gazebo_nav_rtabmap_localization.launch.py \
-  start_rtabmap_rviz:=true
-```
-
-## 当前导航链路
-
-这个工程现在不是 AMCL/SLAM 全局定位方案，而是仿真里程计导航链路：
-
-1. Gazebo `diff_drive` 插件发布 `/odom`
-2. `odom_map_tf.py` 发布 `map -> odom` 和 `odom -> base_footprint`
-3. `map_pub.py` 结合静态地图与点云生成 `/combined_grid`
-4. `voronoi_node` 基于 `/combined_grid` 规划 `/path`
-5. `start_nav.py` 对 `/path` 做 Pure Pursuit 风格跟踪并发布 `/cmd_vel`
-
-当前默认配置里：
-
-- 规划地图默认会叠加静态地图与动态障碍层
-- `voronoi_node` 不再发布 `/cmd_vel`
-- `/cmd_vel` 由 `start_nav.py` 单独负责
-- 轮子 TF 由 Gazebo `diff_drive` 直接发布，避免 RViz 轮子 frame 报红
-- 如果不启 Gazebo，只跑 `2dpoints.launch.py`，则由 `joint_state_publisher` 提供静态轮子 joint state，保证 RViz 模型完整
-
-## 当前稳定性修复
-
-相对最初版本，当前工程已经做了这些关键修复：
-
-- 机器人底盘 URDF 重做为更稳定的圆形差速底盘
-- 关闭了仿真动态障碍的默认启动
-- 规划地图支持通过 launch 参数开关动态障碍层，当前默认开启
-- `start_nav.py` 增加了路径可见性检查，减少隔墙追点
-- `start_nav.py` 增加了进度 watchdog 和恢复逻辑
-- 新路径到来时会按当前位姿选择路径锚点，而不是一律从 `idx=0` 起步
-- `voronoi_node` 不再与控制器争抢 `/cmd_vel`
+---
 
 ## 自动评估
-
-工程内新增了 `nav_eval` 包，可以自动启动挑战场景、自动随机发目标点并输出中文评估表。
-
-一键评估：
 
 ```bash
 ros2 launch nav_eval auto_challenge_eval.launch.py
 ```
 
-这个 launch 默认会：
-
-- 启动 `gazebo_nav_web.launch.py`
-- 使用 `challenge_maze.world`
-- 打开动态障碍层
-- 关闭网页 UI
-- 自动随机选择目标点
-- 记录 `/odom`、`/cmd_vel`、`/path`、`/combined_grid` 等指标
-
-默认输出目录：
-
-```text
-~/auto_nav2_eval/challenge_maze_auto
-```
-
-可直接调的常用参数：
+参数：
 
 ```bash
 ros2 launch nav_eval auto_challenge_eval.launch.py \
@@ -230,85 +226,41 @@ ros2 launch nav_eval auto_challenge_eval.launch.py \
   start_nav_rviz:=true
 ```
 
-如果想只开评估节点，不自动发目标：
+输出：`~/auto_nav2_eval/challenge_maze_auto`
 
-```bash
-ros2 launch nav_eval eval.launch.py output_dir:=~/auto_nav2_eval/manual
-```
+---
 
-## 评估表字段
+## 网页功能
 
-评估会输出中文 CSV 和 Markdown，主要字段包括：
+地图显示、路径显示、目标点确认、手动摇杆、暂停/继续、雷达点云
 
-- `状态`：成功 / 超时
-- `耗时_秒`
-- `实际路程_米`
-- `最终目标距离_米`
-- `最小障碍净距_米`
-- `重规划次数`
-- `速度样本数`
-- `停滞时间_秒`
-- `是否超时`
-- `备注`
+---
 
-说明：
+## 关键文件
 
-- 当前评估逻辑里，超时后不会自动切下一个目标，而是继续等待当前目标完成
-- 所以有些样本会显示 `状态=超时`，但备注是“超时后进入目标容差范围”
+| 文件 | 说明 |
+|------|------|
+| `src/rtabmap_localization_bringup/launch/gazebo_nav_xfeat_odometry.launch.py` | 主启动（双定位方案） |
+| `src/gazebo_modele/launch/gazebo.launch.py` | Gazebo 启动 |
+| `src/nav_slam/launch/2dpoints.launch.py` | 导航核心启动 |
+| `src/nav_slam/config/amcl_params.yaml` | AMCL 参数 |
+| `src/nav_slam/nav_slam/amcl_init_bridge.py` | AMCL 收敛→TF 锁定 |
+| `src/nav_slam/nav_slam/static_map_server.py` | 静态地图 → `/map` |
+| `src/nav_slam/nav_slam/start_nav.py` | Pure Pursuit 路径跟踪 |
+| `src/nav_slam/nav_slam/map_pub.py` | 障碍物栅格 → `/combined_grid` |
+| `src/rtabmap_localization_bringup/rtabmap_localization_bringup/xfeat_rgbd_odometry.py` | XFeat 视觉里程计 |
+| `src/rtabmap_localization_bringup/rtabmap_localization_bringup/odom_fusion_node.py` | 里程计增量融合 |
+| `src/gazebo_modele/gazebo_modele/odom_tf_bridge.py` | odom→TF 桥接 |
+| `src/gazebo_modele/urdf/model.urdf` | 机器人模型 |
+| `src/nav2_voronoi_planner/src/voronoi_node.cpp` | Voronoi 规划调度 |
+| `src/nav_eval/launch/auto_challenge_eval.launch.py` | 自动评估启动 |
+| `docs/voronoi_route_improvement_record.md` | Voronoi 路径优化记录 |
+| `对比.md` | XFeat/RTAB-Map 链路对比 + 双定位架构文档 |
 
-## 当前挑战场景基线
-
-基于 `challenge_maze.world` 的一组 100 次自动评估结果：
-
-- 直接成功率：`94%`
-- 最终到达率：`100%`
-- 碰撞数：`0`
-- 近碰数：`0`
-- 平均耗时：约 `118s`
-- 成功样本平均耗时：约 `113s`
-- 平均最小障碍净距：约 `0.50m`
-
-说明：
-
-- 这组 100 次基线主要用于验证“长轮次运行稳定性”和“第 N 次后是否僵死”
-- 如果重新打开动态障碍层，成功率、超时率和最小障碍净距可能会发生变化，建议重新跑一组评估表作为新基线
-
-这说明当前版本已经能连续完成长轮次评估，主要剩余问题不再是“第 N 次直接卡死”，而更偏向：
-
-- 长路径任务偶尔超过 `180s` 超时阈值
-- 某些路段仍然会贴障碍走，安全余量还能继续优化
-
-## 网页能力
-
-当前网页支持：
-
-- 地图显示、路径显示、目标点确认
-- 手动摇杆控制 `/cmd_vel`
-- 顶部按钮暂停/继续导航
-- 地图拖拽、滚轮缩放、双指缩放
-- 雷达点云显示
-- 热点二维码和网页二维码弹窗
-
-说明：
-
-- 当前仿真工程没有接入真实相机话题，所以网页里不显示相机区块
-- 仿真雷达网页显示来自 `/points_raw`
-
-## 主要文件
-
-- `src/gazebo_modele/launch/gazebo_nav_web.launch.py`：默认总启动
-- `src/gazebo_modele/launch/gazebo_challenge_nav_web.launch.py`：挑战场景总启动
-- `src/gazebo_modele/launch/gazebo.launch.py`：Gazebo 启动
-- `src/rtabmap_localization_bringup/launch/`：RTAB-Map 相关启动入口
-- `src/gazebo_modele/urdf/model.urdf`：机器人模型
-- `src/nav_slam/launch/2dpoints.launch.py`：导航主启动
-- `src/nav_slam/nav_slam/start_nav.py`：路径跟踪控制
-- `src/nav2_voronoi_planner/src/voronoi_node.cpp`：Voronoi 规划调度节点
-- `src/nav_eval/launch/auto_challenge_eval.launch.py`：一键自动评估
-- `src/nav_eval/nav_eval/nav_eval_node.py`：评估统计节点
+---
 
 ## 参考仓库
 
-- https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-system
-- https://github.com/dxs1224/voronoi_planner_ros2
-- https://github.com/Hongtai-Yuan/Voronoi_Planner_ROS2
+- <https://github.com/Ming2zun/Pure-tracking-slam-automatic-navigation-system>
+- <https://github.com/dxs1224/voronoi_planner_ros2>
+- <https://github.com/Hongtai-Yuan/Voronoi_Planner_ROS2>

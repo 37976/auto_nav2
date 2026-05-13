@@ -21,6 +21,9 @@ def generate_launch_description():
     world_name = LaunchConfiguration('world_name')
     start_moving_obstacle = LaunchConfiguration('start_moving_obstacle')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    spawn_x = LaunchConfiguration('spawn_x')
+    spawn_y = LaunchConfiguration('spawn_y')
+    spawn_yaw = LaunchConfiguration('spawn_yaw')
     urdf_model_path = PathJoinSubstitution([pkg_share, 'urdf', 'model.urdf'])
     gazebo_world_path = PathJoinSubstitution([pkg_share, 'world', world_name])
     robot_model_file = os.path.join(pkg_share_dir, 'urdf', 'model.urdf')
@@ -40,7 +43,8 @@ def generate_launch_description():
     spawn_entity_cmd = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-entity', robot_name_in_model, '-file', urdf_model_path],
+        arguments=['-entity', robot_name_in_model, '-file', urdf_model_path,
+                   '-x', spawn_x, '-y', spawn_y, '-z', '0.0', '-Y', spawn_yaw],
         output='screen')
 
     start_robot_state_publisher_cmd = Node(
@@ -79,6 +83,9 @@ def generate_launch_description():
         DeclareLaunchArgument('world_name', default_value='gpt.world'),
         DeclareLaunchArgument('start_moving_obstacle', default_value='false'),
         DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('spawn_x', default_value='0.0'),
+        DeclareLaunchArgument('spawn_y', default_value='0.0'),
+        DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,

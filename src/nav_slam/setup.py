@@ -31,6 +31,8 @@ setup(
             'points_pub_map = nav_slam.points_pub_map:main',
             'dynamic_obstacle_publisher = nav_slam.dynamic_obstacle_publisher:main',
             'start_nav = nav_slam.start_nav:main',
+            'static_map_server = nav_slam.static_map_server:main',
+            'amcl_init_bridge = nav_slam.amcl_init_bridge:main',
             
         ],
     },

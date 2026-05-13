@@ -10,8 +10,11 @@ from tf2_ros import TransformBroadcaster
 class OdomTfBridge(Node):
     def __init__(self):
         super().__init__("odom_tf_bridge")
+        self.declare_parameter("odom_topic", "/odom")
+        odom_topic = str(self.get_parameter("odom_topic").value)
         self._broadcaster = TransformBroadcaster(self)
-        self._sub = self.create_subscription(Odometry, "/odom", self._odom_cb, 20)
+        self._sub = self.create_subscription(Odometry, odom_topic, self._odom_cb, 20)
+        self.get_logger().info(f"odom_tf_bridge 监听 {odom_topic} → 发布 odom→base_footprint TF")
 
     def _odom_cb(self, msg: Odometry):
         t = TransformStamped()
