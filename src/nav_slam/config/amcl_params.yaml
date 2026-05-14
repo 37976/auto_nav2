@@ -11,25 +11,15 @@ amcl:
     scan_topic: "/scan"
 
     # ---- 粒子滤波器 ----
-    min_particles: 500
-    max_particles: 4000
-    pf_err: 0.05
+    # 全局定位需要更多粒子覆盖地图自由空间
+    min_particles: 1000
+    max_particles: 15000
+    pf_err: 0.01
     pf_z: 0.99
-    recovery_alpha_fast: 0.0
-    recovery_alpha_slow: 0.0
+    recovery_alpha_fast: 0.001
+    recovery_alpha_slow: 0.001
     resample_interval: 1
     save_pose_rate: 0.5
-
-    # ---- 初始位姿 ----
-    # 设置为 true 并填入已知起点，AMCL 立刻发布 map->odom TF
-    # 之后可通过 RViz "2D Pose Estimate" 或 /initialpose 话题覆盖
-    set_initial_pose: true
-    always_reset_initial_pose: false
-    initial_pose:
-      x: 0.0
-      y: 0.0
-      z: 0.0
-      yaw: 0.0
 
     # ---- 更新条件 ----
     # 平移>=update_min_d 或 旋转>=update_min_a 时触发一次滤波更新
@@ -46,7 +36,7 @@ amcl:
 
     # ---- 激光模型 (likelihood_field 更适合2D LiDAR + 已知地图) ----
     laser_model_type: "likelihood_field"
-    laser_max_range: 40.0    # 增大以匹配传感器 40m
+    laser_max_range: 100.0    # 匹配 100m 真实激光雷达
     laser_min_range: -1.0    # -1 表示使用传感器自报的最小范围
     z_hit: 0.5
     z_max: 0.05
@@ -61,7 +51,7 @@ amcl:
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
-    max_beams: 60
+    max_beams: 120
 
     # ---- TF 广播 ----
     tf_broadcast: false      # 由 amcl_init_bridge 锁定后发静态 TF

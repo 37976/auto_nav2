@@ -284,10 +284,16 @@ class ObstacleGridNode(Node):
     def pointcloud_callback(self, msg):
         if not self.use_pointcloud_obstacles:
             return
-        if self.odom_data is None:
-            return
 
-        points = pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True)
+        points = list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True))
+        if not hasattr(self, '_pc_msg_count'):
+            self._pc_msg_count = 0
+        self._pc_msg_count += 1
+        if self._pc_msg_count % 50 == 1:
+            self.get_logger().info(
+                f"收到点云障碍物数据: {len(points)} 个点 (第 {self._pc_msg_count} 条消息)"
+            )
+
         (
             new_obstacles,
             new_dilated_obstacles_layer1,

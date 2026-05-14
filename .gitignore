@@ -24,6 +24,7 @@ venv/
 *.swp
 *.swo
 *~
+.agents
 
 # OS / temp
 .DS_Store

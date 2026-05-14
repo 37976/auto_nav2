@@ -179,7 +179,7 @@ def generate_launch_description():
         DeclareLaunchArgument("web_host", default_value="0.0.0.0"),
         DeclareLaunchArgument("web_port", default_value="8080"),
         DeclareLaunchArgument("web_image_topic", default_value="/camera/camera/image_raw"),
-        DeclareLaunchArgument("use_pointcloud_obstacles", default_value="false"),
+        DeclareLaunchArgument("use_pointcloud_obstacles", default_value="true"),
         DeclareLaunchArgument("use_dynamic_obstacle_points", default_value="false"),
         DeclareLaunchArgument("start_hotspot", default_value="false"),
         DeclareLaunchArgument("hotspot_connection_name", default_value="dashgo-hotspot"),
@@ -226,7 +226,7 @@ def generate_launch_description():
         TimerAction(
             period=2.0,
             actions=[
-                # 2. 静态地图服务器 → 发布干净地图到 /map 给 AMCL
+                # 2. 静态地图服务器 → 发布干净地图到 /map
                 Node(
                     package="nav_slam",
                     executable="static_map_server",
@@ -237,6 +237,27 @@ def generate_launch_description():
                         "map_yaml_path": static_map_yaml,
                         "publish_period_sec": 1.0,
                         "frame_id": "map",
+                    }],
+                ),
+                # 2.5. 一次性地图转发 → 避免 AMCL 反复重建似然场
+                Node(
+                    package="nav_slam",
+                    executable="map_once_relay",
+                    name="map_once_relay",
+                    output="screen",
+                    parameters=[{"use_sim_time": use_sim_time}],
+                ),
+                # 2.6. 激光扫描转点云 → TF→map 帧 → /mapokk，直接供 map_pub 使用
+                Node(
+                    package="nav_slam",
+                    executable="laser_scan_to_points",
+                    name="laser_scan_to_points",
+                    output="screen",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
+                        "scan_topic": "/scan",
+                        "output_topic": "/mapokk",
+                        "target_frame": "map",
                     }],
                 ),
                 # 3. odom TF 桥接 → 监听融合里程计, 发布 odom→base_footprint TF
@@ -297,7 +318,7 @@ def generate_launch_description():
                         "max_delta_yaw_diff_deg": max_delta_yaw_diff_deg,
                     }],
                 ),
-                # 6. AMCL 全局定位（用随机初始位姿，加速收敛）
+                # 6. AMCL 全局定位（不设初始位姿，通过 global localization 自主收敛）
                 Node(
                     package="nav2_amcl",
                     executable="amcl",
@@ -309,22 +330,14 @@ def generate_launch_description():
                         "global_frame_id": "map",
                         "odom_frame_id": "odom",
                         "scan_topic": "/scan",
-                        "min_particles": 500,
-                        "max_particles": 4000,
-                        "pf_err": 0.05,
+                        "min_particles": 1000,
+                        "max_particles": 15000,
+                        "pf_err": 0.01,
                         "pf_z": 0.99,
-                        "recovery_alpha_fast": 0.0,
-                        "recovery_alpha_slow": 0.0,
+                        "recovery_alpha_fast": 0.001,
+                        "recovery_alpha_slow": 0.001,
                         "resample_interval": 1,
                         "save_pose_rate": 0.5,
-                        "set_initial_pose": True,
-                        "always_reset_initial_pose": False,
-                        "initial_pose": {
-                            "x": random_spawn_x,
-                            "y": random_spawn_y,
-                            "z": "0.0",
-                            "yaw": random_spawn_yaw,
-                        },
                         "update_min_a": 0.2,
                         "update_min_d": 0.25,
                         "robot_model_type": "nav2_amcl::DifferentialMotionModel",
@@ -333,7 +346,7 @@ def generate_launch_description():
                         "alpha3": 0.2,
                         "alpha4": 0.2,
                         "laser_model_type": "likelihood_field",
-                        "laser_max_range": 40.0,
+                        "laser_max_range": 100.0,
                         "laser_min_range": -1.0,
                         "z_hit": 0.5,
                         "z_max": 0.05,
@@ -343,12 +356,13 @@ def generate_launch_description():
                         "lambda_short": 0.1,
                         "laser_likelihood_max_dist": 2.0,
                         "do_beamskip": False,
-                        "max_beams": 60,
+                        "max_beams": 120,
                         "tf_broadcast": False,
                         "transform_tolerance": 2.0,
                     }],
                     remappings=[
                         ("/scan", "/scan"),
+                        ("/map", "/map_for_amcl"),
                     ],
                 ),
                 # 7. 生命周期管理器 → 自动激活 AMCL
@@ -361,6 +375,16 @@ def generate_launch_description():
                         "use_sim_time": use_sim_time,
                         "node_names": ["amcl"],
                         "autostart": True,
+                    }],
+                ),
+                # 7.5. AMCL 全局定位触发器 → 等待 AMCL 激活后将粒子散布到全地图
+                Node(
+                    package="nav_slam",
+                    executable="amcl_global_localize",
+                    name="amcl_global_localize",
+                    output="screen",
+                    parameters=[{
+                        "use_sim_time": use_sim_time,
                     }],
                 ),
                 # 8. AMCL 收敛后锁定 map→odom 静态 TF，后续导航不再依赖 AMCL

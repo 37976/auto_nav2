@@ -26,14 +26,17 @@ setup(
     entry_points={
         'console_scripts': [
             'astar = nav_slam.astar:main',
+            'laser_scan_to_points = nav_slam.laser_scan_to_points:main',
+            'map_once_relay = nav_slam.map_once_relay:main',
             'map_pub = nav_slam.map_pub:main',
             'odom_map_tf = nav_slam.odom_map_tf:main',
             'points_pub_map = nav_slam.points_pub_map:main',
             'dynamic_obstacle_publisher = nav_slam.dynamic_obstacle_publisher:main',
             'start_nav = nav_slam.start_nav:main',
             'static_map_server = nav_slam.static_map_server:main',
+            'amcl_global_localize = nav_slam.amcl_global_localize:main',
             'amcl_init_bridge = nav_slam.amcl_init_bridge:main',
-            
+
         ],
     },
 )
