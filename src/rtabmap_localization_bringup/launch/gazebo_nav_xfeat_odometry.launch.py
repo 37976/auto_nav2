@@ -278,6 +278,7 @@ def generate_launch_description():
                     name="xfeat_rgbd_odometry",
                     output="screen",
                     parameters=[{
+                        "use_sim_time": use_sim_time,
                         "rgb_topic": "/camera/camera/image_raw",
                         "depth_topic": "/camera/camera/depth/image_raw",
                         "camera_info_topic": "/camera/camera/camera_info",
