@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-amcl_global_localize.py -- 等待 AMCL 就绪后触发全局定位。
+amcl_global_localize.py -- 等待 AMCL 就绪且地图到位后触发全局定位。
 
 工作流程:
-1. 轮询等待 AMCL 的 /reinitialize_global_localization 服务就绪
-2. 服务就绪后调用 Empty 请求，将所有粒子均匀分布到地图自由空间
-3. AMCL 随后通过激光扫描自主收敛到正确位姿
+1. 等待 /map_for_amcl 话题收到地图（确保 AMCL 已加载地图）
+2. 轮询等待 AMCL 的 /reinitialize_global_localization 服务就绪
+3. 服务就绪后调用 Empty 请求，将所有粒子均匀分布到地图自由空间
+4. AMCL 随后通过激光扫描自主收敛到正确位姿
 """
 
+from nav_msgs.msg import OccupancyGrid
 import rclpy
 from rclpy.node import Node
 from std_srvs.srv import Empty
@@ -21,18 +23,53 @@ class AmclGlobalLocalize(Node):
         self.declare_parameter("service_name", "/reinitialize_global_localization")
         self.declare_parameter("retry_period_sec", 1.0)
         self.declare_parameter("max_retries", 60)
+        self.declare_parameter("map_topic", "/map_for_amcl")
+        self.declare_parameter("map_wait_timeout_sec", 10.0)
 
         self._service_name = str(self.get_parameter("service_name").value)
         self._retry_period_sec = float(self.get_parameter("retry_period_sec").value)
         self._max_retries = int(self.get_parameter("max_retries").value)
+        self._map_topic = str(self.get_parameter("map_topic").value)
+        self._map_wait_timeout_sec = float(self.get_parameter("map_wait_timeout_sec").value)
 
         self._retry_count = 0
         self._done = False
+        self._map_received = False
 
+        self._map_sub = self.create_subscription(
+            OccupancyGrid, self._map_topic, self._on_map, 10
+        )
+        self.get_logger().info(
+            f"等待地图话题 {self._map_topic} (超时 {self._map_wait_timeout_sec}s)..."
+        )
+
+        self._map_timer = self.create_timer(0.5, self._check_map_timeout)
+        self._map_start_time = self.get_clock().now()
+
+    def _on_map(self, msg: OccupancyGrid):
+        if self._map_received:
+            return
+        self._map_received = True
+        self.get_logger().info(
+            f"地图已收到 ({msg.info.width}×{msg.info.height} @ {msg.info.resolution:.3f}m/格)，"
+            f"开始等待 AMCL 服务..."
+        )
+        self._map_timer.cancel()
         self._timer = self.create_timer(self._retry_period_sec, self._try_global_localize)
         self.get_logger().info(
             f"等待 AMCL 服务 {self._service_name} 就绪 (最多重试 {self._max_retries} 次)..."
         )
+
+    def _check_map_timeout(self):
+        if self._map_received or self._done:
+            return
+        elapsed = (self.get_clock().now() - self._map_start_time).nanoseconds * 1e-9
+        if elapsed > self._map_wait_timeout_sec:
+            self.get_logger().error(
+                f"等待地图 {self._map_topic} 超时 ({self._map_wait_timeout_sec}s)，"
+                f"请确认 static_map_server / map_once_relay 已正常启动。"
+            )
+            self._map_timer.cancel()
 
     def _try_global_localize(self):
         if self._done:

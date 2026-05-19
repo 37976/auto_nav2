@@ -470,10 +470,10 @@
             <max_angle>3.141593</max_angle>
           </horizontal>
           <vertical>
-            <samples>4</samples>
+            <samples>1</samples>
             <resolution>1.000000</resolution>
             <min_angle>0.000000</min_angle>
-            <max_angle>0.400000</max_angle>
+            <max_angle>0.000000</max_angle>
           </vertical>
         </scan>
         <range>

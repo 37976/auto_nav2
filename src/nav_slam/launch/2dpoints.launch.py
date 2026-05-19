@@ -18,7 +18,7 @@ def generate_launch_description():
     robot_model_dir = get_package_share_directory('gazebo_modele')
     rviz_config_file = os.path.join(config_dir, 'config', 'rviz.rviz')
     robot_model_file = os.path.join(robot_model_dir, 'urdf', 'model.urdf')
-    default_static_map_yaml = os.path.join(config_dir, 'map', 'gpt.yaml')
+    default_static_map_yaml = os.path.join(config_dir, 'map', 'voronoi_50m.yaml')
     web_control_launch = os.path.join(
         get_package_share_directory('dashgo_web_control'),
         'launch',

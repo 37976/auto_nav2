@@ -76,6 +76,9 @@ class AmclInitBridge(Node):
         self._publish_identity_tf()
         self._identity_timer = self.create_timer(2.0, self._publish_identity_tf)
 
+        # 定期打印收敛状态，方便诊断
+        self._status_timer = self.create_timer(3.0, self._log_status)
+
         self.get_logger().info(
             f"等待 AMCL 收敛 (cov_xy<{self._cov_xy_threshold}, cov_yaw<{self._cov_yaw_threshold})..."
         )
@@ -87,6 +90,25 @@ class AmclInitBridge(Node):
     def _odom_cb(self, msg: Odometry):
         self._latest_odom = msg
         self._try_lock()
+
+    def _log_status(self):
+        if self._locked:
+            return
+        if self._latest_amcl is None:
+            self.get_logger().warn(
+                f"尚未收到 /amcl_pose，请确认 AMCL 已激活且正在发布位姿。"
+            )
+        elif self._latest_odom is None:
+            self.get_logger().warn(
+                f"已收到 /amcl_pose，但尚未收到 /localized_odom。"
+            )
+        else:
+            cov = self._latest_amcl.pose.covariance
+            self.get_logger().info(
+                f"AMCL cov: x={cov[0]:.6f} (需<{self._cov_xy_threshold}) "
+                f"y={cov[7]:.6f} (需<{self._cov_xy_threshold}) "
+                f"yaw={cov[35]:.6f} (需<{self._cov_yaw_threshold})"
+            )
 
     def _try_lock(self):
         if self._locked:
@@ -100,18 +122,15 @@ class AmclInitBridge(Node):
         cov_y = cov[7]
         cov_yaw = cov[35]
 
-        self.get_logger().debug(
-            f"AMCL cov: x={cov_x:.6f} y={cov_y:.6f} yaw={cov_yaw:.6f}"
-        )
-
         if cov_x >= self._cov_xy_threshold or cov_y >= self._cov_xy_threshold:
             return
         if cov_yaw >= self._cov_yaw_threshold:
             return
 
         self._locked = True
-        # 停止发送 identity TF
+        # 停止发送 identity TF 和状态日志
         self._identity_timer.cancel()
+        self._status_timer.cancel()
         self._publish_static_tf()
 
     def _publish_identity_tf(self):
