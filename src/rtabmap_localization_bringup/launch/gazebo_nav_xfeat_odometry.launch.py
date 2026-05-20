@@ -23,8 +23,9 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-# ---- 机器人安全半径（米），用于避开障碍物 ----
-ROBOT_SAFE_RADIUS_M = 0.25
+# ---- 随机出生安全参数 ----
+ROBOT_SAFE_RADIUS_M = 0.35
+MIN_CLEARANCE_PREFERRED_M = 0.60
 
 
 def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE_RADIUS_M):
@@ -53,28 +54,33 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
 
     height, width = image.shape
 
-    # 构建占用栅格：0=free, 100=occupied, -1=unknown
-    if mode == "trinary":
-        if negate:
-            free_mask = (image / 255.0) <= free_thresh
-            occupied_mask = (image / 255.0) >= occupied_thresh
-        else:
-            free_mask = (image / 255.0) <= free_thresh
-            occupied_mask = (image / 255.0) >= occupied_thresh
+    image_norm = image.astype(np.float32) / 255.0
+    if negate:
+        occ_prob = image_norm
     else:
-        # raw/scale: 简单阈值
-        if negate:
-            free_mask = (image / 255.0) <= free_thresh
-        else:
-            free_mask = (image / 255.0) <= free_thresh
+        occ_prob = 1.0 - image_norm
 
-    # 腐蚀安全半径区域
-    safe_cells = int(math.ceil(safe_radius_m / resolution))
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * safe_cells + 1, 2 * safe_cells + 1))
-    free_mask_eroded = cv2.erode(free_mask.astype(np.uint8), kernel).astype(bool)
+    if mode == "trinary":
+        free_mask = occ_prob < free_thresh
+        occupied_mask = occ_prob > occupied_thresh
+    else:
+        free_mask = occ_prob < free_thresh
+        occupied_mask = occ_prob >= occupied_thresh
 
-    # 收集所有空闲栅格坐标
-    free_rows, free_cols = np.where(free_mask_eroded)
+    # 把 unknown 一并视为不可出生区域，只允许已知 free 区域
+    valid_free_mask = free_mask & ~occupied_mask
+
+    # 距离变换：只在离障碍足够远的 free 区域中出生，并优先更空旷的位置
+    distance_cells = cv2.distanceTransform(valid_free_mask.astype(np.uint8), cv2.DIST_L2, 5)
+    safe_cells = float(safe_radius_m / resolution)
+    preferred_cells = float(MIN_CLEARANCE_PREFERRED_M / resolution)
+
+    eligible_mask = distance_cells >= safe_cells
+    preferred_mask = distance_cells >= preferred_cells
+    candidate_mask = preferred_mask if np.any(preferred_mask) else eligible_mask
+
+    # 收集所有候选空闲栅格坐标
+    free_rows, free_cols = np.where(candidate_mask)
     if len(free_rows) == 0:
         raise RuntimeError("地图中没有足够的安全空闲区域！请检查 safe_radius_m 或地图。")
 
@@ -83,14 +89,16 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
     px = free_cols[idx]
     py = free_rows[idx]
 
-    # 栅格坐标 → 世界坐标 (地图中心在 origin + size/2)
-    x_m = origin_x + px * resolution
-    y_m = origin_y + py * resolution
+    # 图像像素中心 → 地图世界坐标
+    x_m = origin_x + (px + 0.5) * resolution
+    y_m = origin_y + ((height - py - 1) + 0.5) * resolution
     yaw_rad = random.uniform(-math.pi, math.pi)
+    clearance_m = float(distance_cells[py, px] * resolution)
 
     print(f"[random_spawn] 地图 {width}×{height} @ {resolution:.3f}m/格, "
           f"空闲候选 {len(free_rows)} 个, "
-          f"选中 px=({px},{py}) → world=({x_m:.2f}, {y_m:.2f}, {math.degrees(yaw_rad):.1f}°)")
+          f"选中 px=({px},{py}) clearance={clearance_m:.2f}m "
+          f"→ world=({x_m:.2f}, {y_m:.2f}, {math.degrees(yaw_rad):.1f}°)")
 
     return x_m, y_m, yaw_rad
 
@@ -191,7 +199,7 @@ def generate_launch_description():
         DeclareLaunchArgument("min_score", default_value="0.0"),
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="8.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value="/home/xu/project/XFeat"),
+        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("match_min_cossim", default_value="0.65"),
         DeclareLaunchArgument("min_pnp_points", default_value="6"),
@@ -220,6 +228,7 @@ def generate_launch_description():
                 "use_sim_time": use_sim_time,
                 "spawn_x": random_spawn_x,
                 "spawn_y": random_spawn_y,
+                "spawn_z": "0.03",
                 "spawn_yaw": random_spawn_yaw,
             }.items(),
         ),

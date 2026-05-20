@@ -70,7 +70,7 @@ def generate_launch_description():
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="3.0"),
         DeclareLaunchArgument("sync_queue_size", default_value="10"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value="/home/xu/project/XFeat"),
+        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("odom_topic", default_value="/xfeat/odom"),
         DeclareLaunchArgument("odom_frame", default_value="xfeat_odom"),

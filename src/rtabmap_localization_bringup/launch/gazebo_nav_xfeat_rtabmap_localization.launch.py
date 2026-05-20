@@ -101,7 +101,7 @@ def generate_launch_description():
         DeclareLaunchArgument("detection_threshold", default_value="0.05"),
         DeclareLaunchArgument("min_score", default_value="0.05"),
         DeclareLaunchArgument("depth_max_m", default_value="8.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value="/home/xu/project/XFeat"),
+        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("xfeat_log_level", default_value="error"),
         DeclareLaunchArgument("rtabmap_log_level", default_value="error"),

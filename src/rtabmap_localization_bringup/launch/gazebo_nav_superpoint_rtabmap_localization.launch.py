@@ -118,7 +118,7 @@ def generate_launch_description():
                         "depth_topic": "/camera/camera/depth/image_raw",
                         "camera_info_topic": "/camera/camera/camera_info",
                         "output_rgbd_topic": "/superpoint/rgbd_image",
-                        "superpoint_model_file": "/home/xu/project/sp_orb_slam_localization/vendor/superpoint_orb_slam3/weights/superpoint.ts",
+                        "superpoint_model_file": os.path.expanduser("~/project/sp_orb_slam_localization/vendor/superpoint_orb_slam3/weights/superpoint.ts"),
                         "max_features": max_features,
                         "depth_max_m": depth_max_m,
                         "output_rate_hz": output_rate_hz,

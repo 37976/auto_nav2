@@ -89,7 +89,7 @@ def generate_launch_description():
         DeclareLaunchArgument("output_rgbd_topic", default_value="/superpoint/rgbd_image"),
         DeclareLaunchArgument(
             "superpoint_model_file",
-            default_value="/home/xu/project/sp_orb_slam_localization/vendor/superpoint_orb_slam3/weights/superpoint.ts",
+            default_value=os.path.expanduser("~/project/sp_orb_slam_localization/vendor/superpoint_orb_slam3/weights/superpoint.ts"),
         ),
         DeclareLaunchArgument("max_features", default_value="400"),
         DeclareLaunchArgument("pyramid_levels", default_value="1"),

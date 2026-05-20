@@ -70,8 +70,7 @@ public:
     declare_parameter<std::string>("camera_info_topic", "/camera/camera/color/camera_info");
     declare_parameter<std::string>("output_rgbd_topic", "/superpoint/rgbd_image");
     declare_parameter<std::string>(
-      "superpoint_model_file",
-      "/home/xu/project/sp_orb_slam_localization/vendor/superpoint_orb_slam3/weights/superpoint.ts");
+      "superpoint_model_file", "");
     declare_parameter<int>("max_features", 400);
     declare_parameter<int>("pyramid_levels", 1);
     declare_parameter<double>("scale_factor", 1.2);

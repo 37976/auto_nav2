@@ -1,7 +1,15 @@
 import struct
 import random
+import os  # 引入 os 库来处理路径
 
 # ================= 配置参数 =================
+# 🌟 1. PGM 和 YAML 的导出路径（例如：地图包的 maps 目录）
+MAP_EXPORT_DIR = "./src/nav_slam/map"
+
+# 🌟 2. World 文件的导出路径（例如：仿真包的 worlds 目录）
+WORLD_EXPORT_DIR = "./src/gazebo_modele/world"
+
+
 RESOLUTION = 0.05  # 0.05m/pixel
 WIDTH_PIXELS = int(52.0 / RESOLUTION)   # 1040 像素
 HEIGHT_PIXELS = int(52.0 / RESOLUTION)  # 1040 像素
@@ -53,15 +61,12 @@ def generate_world():
     links = ""
     for i, (x, y, w, h) in enumerate(OBSTACLES):
         if i < 4:
-            # 边界墙保持 2.5m 高
             z_height = 2.5 
             z_pose = z_height / 2.0
         else:
-            # 内部随机障碍物高度错落有致
             z_height = random.uniform(0.5, 2.0)
             z_pose = z_height / 2.0
             
-        # 🌟 核心修改：所有障碍物统一使用红砖材质！
         color = "Gazebo/Bricks"
 
         links += f"""      <link name="obs_{i}">
@@ -70,9 +75,11 @@ def generate_world():
         <visual name="vis_{i}"><geometry><box><size>{w:.3f} {h:.3f} {z_height:.3f}</size></box></geometry><material><script><name>{color}</name></script></material></visual>
       </link>\n"""
     
-    with open('voronoi_50m.world', 'w') as f:
+    # 🌟 使用独立的 World 路径
+    file_path = os.path.join(WORLD_EXPORT_DIR, 'voronoi_50m.world')
+    with open(file_path, 'w') as f:
         f.write(world_header + links + world_footer)
-    print("✅ 已生成 全红砖材质 Gazebo 世界文件: voronoi_50m.world")
+    print(f"✅ 已生成 Gazebo 世界文件: {file_path}")
 
 # ================= 2. 生成 PGM 栅格地图 =================
 def generate_pgm():
@@ -86,15 +93,18 @@ def generate_pgm():
                 if abs(x - x_center) <= w/2.0 and abs(y - y_center) <= h/2.0:
                     grid[r][c] = 0
 
-    with open('voronoi_50m.pgm', 'wb') as f:
+    # 🌟 使用独立的 Map 路径
+    file_path = os.path.join(MAP_EXPORT_DIR, 'voronoi_50m.pgm')
+    with open(file_path, 'wb') as f:
         f.write(f"P5\n{WIDTH_PIXELS} {HEIGHT_PIXELS}\n255\n".encode('ascii'))
         for r in range(HEIGHT_PIXELS):
             for c in range(WIDTH_PIXELS):
                 f.write(struct.pack('B', grid[r][c]))
-    print("✅ 已生成高精度对齐地图: voronoi_50m.pgm")
+    print(f"✅ 已生成高精度对齐地图: {file_path}")
 
 # ================= 3. 生成 YAML 配置文件 =================
 def generate_yaml():
+    # 因为 PGM 和 YAML 在同一个目录下，所以这里的 image 保持相对路径文件名即可，ROS 能自动识别
     yaml_content = f"""image: voronoi_50m.pgm
 resolution: {RESOLUTION}
 origin: [{ORIGIN_X}, {ORIGIN_Y}, 0.0]
@@ -103,13 +113,21 @@ free_thresh: 0.196
 negate: 0
 mode: trinary
 """
-    with open('voronoi_50m.yaml', 'w') as f:
+    # 🌟 使用独立的 Map 路径
+    file_path = os.path.join(MAP_EXPORT_DIR, 'voronoi_50m.yaml')
+    with open(file_path, 'w') as f:
         f.write(yaml_content)
-    print("✅ 已生成地图配置文件: voronoi_50m.yaml")
+    print(f"✅ 已生成地图配置文件: {file_path}")
 
 if __name__ == "__main__":
+    # 自动检查并创建不存在的文件夹
+    for directory in [MAP_EXPORT_DIR, WORLD_EXPORT_DIR]:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print(f"📁 已自动创建目录: {directory}")
+
     print("正在构建 全砖墙版 测试环境...")
     generate_world()
     generate_pgm()
     generate_yaml()
-    print("🎉 顺利完成！去 Gazebo 里看看你的红砖迷宫吧！")
+    print("🎉 顺利完成！")

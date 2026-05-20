@@ -31,7 +31,7 @@ def _resolve_xfeat_repo_dir(configured_dir: str) -> str:
         os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "XFeat")
     )
     candidates.append(workspace_candidate)
-    candidates.append("/home/xu/project/XFeat")
+    candidates.append(os.path.expanduser("~/project/XFeat"))
 
     for candidate in candidates:
         if os.path.isfile(os.path.join(candidate, "modules", "xfeat.py")):

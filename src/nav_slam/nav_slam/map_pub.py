@@ -11,6 +11,7 @@ from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
 import sensor_msgs_py.point_cloud2 as pc2
+from ament_index_python.packages import get_package_share_directory
 
 
 class ObstacleGridNode(Node):
@@ -34,7 +35,7 @@ class ObstacleGridNode(Node):
         # 新增：静态地图参数
         self.declare_parameter('use_static_map', True)
         self.declare_parameter('odom_topic', '/odom')
-        self.declare_parameter('static_map_yaml', '/home/xu/automatic-navigation/src/nav_slam/map/gpt.yaml')
+        self.declare_parameter('static_map_yaml', os.path.join(get_package_share_directory('nav_slam'), 'map', 'gpt.yaml'))
 
         self.grid_width = self.get_parameter('grid_width').get_parameter_value().double_value
         self.grid_height = self.get_parameter('grid_height').get_parameter_value().double_value

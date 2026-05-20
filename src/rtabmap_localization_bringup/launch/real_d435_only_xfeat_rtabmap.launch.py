@@ -88,7 +88,7 @@ def generate_launch_description():
         DeclareLaunchArgument("depth_scale", default_value="0.001"),
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="3.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value="/home/xu/project/XFeat"),
+        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(realsense_launch),

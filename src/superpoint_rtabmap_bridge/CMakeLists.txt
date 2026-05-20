@@ -20,7 +20,7 @@ find_package(OpenCV REQUIRED)
 set(SP_RTABMAP_TORCH_PREFIX "" CACHE PATH "Path to the libtorch root directory")
 set(SP_RTABMAP_EXTRA_RPATH "" CACHE STRING "Extra runtime library path, for example libtorch/lib")
 
-set(SP_RTABMAP_DEFAULT_TORCH_PREFIX "/home/xu/project/SuperPointSLAM3-main_internet/third_party/libtorch-cpu-2.11.0/libtorch")
+set(SP_RTABMAP_DEFAULT_TORCH_PREFIX "$ENV{HOME}/project/SuperPointSLAM3-main_internet/third_party/libtorch-cpu-2.11.0/libtorch")
 
 if(NOT SP_RTABMAP_TORCH_PREFIX AND EXISTS "${SP_RTABMAP_DEFAULT_TORCH_PREFIX}/share/cmake/Torch/TorchConfig.cmake")
   set(SP_RTABMAP_TORCH_PREFIX "${SP_RTABMAP_DEFAULT_TORCH_PREFIX}")

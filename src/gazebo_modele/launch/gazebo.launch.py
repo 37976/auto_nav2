@@ -23,13 +23,13 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     spawn_x = LaunchConfiguration('spawn_x')
     spawn_y = LaunchConfiguration('spawn_y')
+    spawn_z = LaunchConfiguration('spawn_z')
     spawn_yaw = LaunchConfiguration('spawn_yaw')
     urdf_model_path = PathJoinSubstitution([pkg_share, 'urdf', 'model.urdf'])
     gazebo_world_path = PathJoinSubstitution([pkg_share, 'world', world_name])
     robot_model_file = os.path.join(pkg_share_dir, 'urdf', 'model.urdf')
     with open(robot_model_file, 'r', encoding='utf-8') as robot_model_stream:
         robot_description = robot_model_stream.read()
-
     start_gazebo_cmd = ExecuteProcess(
         cmd=[
             'gazebo',
@@ -44,7 +44,7 @@ def generate_launch_description():
         package='gazebo_ros',
         executable='spawn_entity.py',
         arguments=['-entity', robot_name_in_model, '-file', urdf_model_path,
-                   '-x', spawn_x, '-y', spawn_y, '-z', '0.0', '-Y', spawn_yaw],
+                   '-x', spawn_x, '-y', spawn_y, '-z', spawn_z, '-Y', spawn_yaw],
         output='screen')
 
     start_robot_state_publisher_cmd = Node(
@@ -57,6 +57,7 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
         }],
     )
+
     moving_obstacle_cmd = Node(
         package='gazebo_modele',
         executable='moving_obstacle_controller',
@@ -85,6 +86,7 @@ def generate_launch_description():
         DeclareLaunchArgument('use_sim_time', default_value='true'),
         DeclareLaunchArgument('spawn_x', default_value='0.0'),
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
+        DeclareLaunchArgument('spawn_z', default_value='0.03'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
