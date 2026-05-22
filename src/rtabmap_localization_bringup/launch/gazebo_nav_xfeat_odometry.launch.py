@@ -114,21 +114,237 @@ def _set_random_spawn(context, *args, **kwargs):
     return []
 
 
+def _build_timed_actions(context, *args, **kwargs):
+    """根据 use_amcl 参数动态构建 TimerAction 内部的节点列表。"""
+    use_amcl = LaunchConfiguration("use_amcl").perform(context).lower() == "true"
+    start_odom_map_tf = "false" if use_amcl else "true"
+
+    actions = [
+        # 2. 静态地图服务器
+        Node(
+            package="nav_slam",
+            executable="static_map_server",
+            name="static_map_server",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "map_yaml_path": LaunchConfiguration("static_map_yaml"),
+                "publish_period_sec": 1.0,
+                "frame_id": "map",
+            }],
+        ),
+        # 2.5. 一次性地图转发
+        Node(
+            package="nav_slam",
+            executable="map_once_relay",
+            name="map_once_relay",
+            output="screen",
+            parameters=[{"use_sim_time": LaunchConfiguration("use_sim_time")}],
+        ),
+        # 2.6. 激光扫描转点云
+        Node(
+            package="nav_slam",
+            executable="laser_scan_to_points",
+            name="laser_scan_to_points",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "scan_topic": "/scan",
+                "output_topic": "/mapokk",
+                "target_frame": "map",
+            }],
+        ),
+        # 3. odom TF 桥接
+        Node(
+            package="gazebo_modele",
+            executable="odom_tf_bridge",
+            name="odom_tf_bridge",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "odom_topic": LaunchConfiguration("fused_odom_topic"),
+            }],
+        ),
+        # 4. XFeat 视觉里程计
+        Node(
+            package="rtabmap_localization_bringup",
+            executable="xfeat_rgbd_odometry",
+            name="xfeat_rgbd_odometry",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "rgb_topic": "/camera/camera/image_raw",
+                "depth_topic": "/camera/camera/depth/image_raw",
+                "camera_info_topic": "/camera/camera/camera_info",
+                "xfeat_repo_dir": LaunchConfiguration("xfeat_repo_dir"),
+                "xfeat_weights_path": LaunchConfiguration("xfeat_weights_path"),
+                "top_k": LaunchConfiguration("top_k"),
+                "detection_threshold": LaunchConfiguration("detection_threshold"),
+                "min_score": LaunchConfiguration("min_score"),
+                "min_depth_m": LaunchConfiguration("depth_min_m"),
+                "max_depth_m": LaunchConfiguration("depth_max_m"),
+                "sync_queue_size": 10,
+                "odom_topic": LaunchConfiguration("odom_topic"),
+                "delta_odom_topic": LaunchConfiguration("delta_odom_topic"),
+                "odom_frame": LaunchConfiguration("odom_frame"),
+                "base_frame": LaunchConfiguration("base_frame"),
+                "camera_frame": LaunchConfiguration("camera_frame"),
+                "publish_tf": LaunchConfiguration("publish_tf"),
+                "match_min_cossim": LaunchConfiguration("match_min_cossim"),
+                "min_pnp_points": LaunchConfiguration("min_pnp_points"),
+                "min_inliers": LaunchConfiguration("min_inliers"),
+                "pnp_reproj_error": LaunchConfiguration("pnp_reproj_error"),
+                "pnp_iterations": LaunchConfiguration("pnp_iterations"),
+            }],
+        ),
+        # 5. 里程计融合
+        Node(
+            package="rtabmap_localization_bringup",
+            executable="odom_fusion_node",
+            name="odom_fusion_node",
+            output="screen",
+            parameters=[{
+                "base_odom_topic": "/odom",
+                "xfeat_delta_topic": LaunchConfiguration("delta_odom_topic"),
+                "output_odom_topic": LaunchConfiguration("fused_odom_topic"),
+                "correction_gain_xy": LaunchConfiguration("correction_gain_xy"),
+                "correction_gain_yaw": LaunchConfiguration("correction_gain_yaw"),
+                "max_delta_translation_diff_m": LaunchConfiguration("max_delta_translation_diff_m"),
+                "max_delta_yaw_diff_deg": LaunchConfiguration("max_delta_yaw_diff_deg"),
+            }],
+        ),
+    ]
+
+    if use_amcl:
+        actions += [
+            # 6. AMCL 全局定位
+            Node(
+                package="nav2_amcl",
+                executable="amcl",
+                name="amcl",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                    "base_frame_id": "base_footprint",
+                    "global_frame_id": "map",
+                    "odom_frame_id": "odom",
+                    "scan_topic": "/scan",
+                    "min_particles": 1000,
+                    "max_particles": 15000,
+                    "pf_err": 0.01,
+                    "pf_z": 0.99,
+                    "recovery_alpha_fast": 0.001,
+                    "recovery_alpha_slow": 0.001,
+                    "resample_interval": 1,
+                    "save_pose_rate": 5.0,
+                    "update_min_a": 0.0,
+                    "update_min_d": 0.0,
+                    "robot_model_type": "nav2_amcl::DifferentialMotionModel",
+                    "alpha1": 0.2,
+                    "alpha2": 0.2,
+                    "alpha3": 0.2,
+                    "alpha4": 0.2,
+                    "laser_model_type": "likelihood_field",
+                    "laser_max_range": 100.0,
+                    "laser_min_range": -1.0,
+                    "z_hit": 0.95,
+                    "z_max": 0.05,
+                    "z_rand": 0.05,
+                    "z_short": 0.05,
+                    "sigma_hit": 0.2,
+                    "lambda_short": 0.1,
+                    "laser_likelihood_max_dist": 1.0,
+                    "do_beamskip": False,
+                    "max_beams": 120,
+                    "tf_broadcast": False,
+                    "transform_tolerance": 2.0,
+                }],
+                remappings=[
+                    ("/scan", "/scan"),
+                    ("/map", "/map_for_amcl"),
+                ],
+            ),
+            # 7. 生命周期管理器
+            Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_amcl",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                    "node_names": ["amcl"],
+                    "autostart": True,
+                }],
+            ),
+            
+            Node(
+                package="nav_slam",
+                executable="lidar_global_localize",
+                name="lidar_global_localize",
+                output="screen",
+            ),
+            # 8. AMCL 收敛后锁定 map→odom 静态 TF
+            Node(
+                package="nav_slam",
+                executable="amcl_init_bridge",
+                name="amcl_init_bridge",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                    "cov_xy_threshold": 0.05,
+                    "cov_yaw_threshold": 0.03,
+                }],
+            ),
+        ]
+
+    # 9. 导航核心
+    nav_launch_file = os.path.join(
+        get_package_share_directory("nav_slam"),
+        "launch",
+        "2dpoints.launch.py",
+    )
+    actions.append(
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(nav_launch_file),
+            launch_arguments={
+                "start_nav_rviz": LaunchConfiguration("start_nav_rviz"),
+                "start_web_ui": LaunchConfiguration("start_web_ui"),
+                "publish_robot_model": "true",
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "use_static_map": LaunchConfiguration("use_static_map"),
+                "static_map_yaml": LaunchConfiguration("static_map_yaml"),
+                "web_host": LaunchConfiguration("web_host"),
+                "web_port": LaunchConfiguration("web_port"),
+                "web_image_topic": LaunchConfiguration("web_image_topic"),
+                "scan_topic": "/scan",
+                "pointcloud_topic": "",
+                "use_pointcloud_obstacles": LaunchConfiguration("use_pointcloud_obstacles"),
+                "use_dynamic_obstacle_points": LaunchConfiguration("use_dynamic_obstacle_points"),
+                "start_hotspot": LaunchConfiguration("start_hotspot"),
+                "hotspot_connection_name": LaunchConfiguration("hotspot_connection_name"),
+                "hotspot_ssid": LaunchConfiguration("hotspot_ssid"),
+                "hotspot_password": LaunchConfiguration("hotspot_password"),
+                "hotspot_ifname": LaunchConfiguration("hotspot_ifname"),
+                "map_odom_topic": LaunchConfiguration("fused_odom_topic"),
+                "control_odom_topic": LaunchConfiguration("fused_odom_topic"),
+                "start_odom_map_tf": start_odom_map_tf,
+            }.items(),
+        )
+    )
+
+    return [TimerAction(period=2.0, actions=actions)]
+
+
 def generate_launch_description():
     gazebo_launch = os.path.join(
         get_package_share_directory("gazebo_modele"),
         "launch",
         "gazebo.launch.py",
     )
-    nav_launch = os.path.join(
-        get_package_share_directory("nav_slam"),
-        "launch",
-        "2dpoints.launch.py",
-    )
     default_static_map_yaml = os.path.join(
         get_package_share_directory("nav_slam"),
         "map",
-        "voronoi_50m.yaml",
+        "gpt.yaml",
     )
 
     world_name = LaunchConfiguration("world_name")
@@ -177,7 +393,7 @@ def generate_launch_description():
     random_spawn_yaw = LaunchConfiguration("random_spawn_yaw", default="0.0")
 
     return LaunchDescription([
-        DeclareLaunchArgument("world_name", default_value="voronoi_50m.world"),
+        DeclareLaunchArgument("world_name", default_value="gpt.world"),
         DeclareLaunchArgument("start_moving_obstacle", default_value="false"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("start_nav_rviz", default_value="true"),
@@ -217,6 +433,7 @@ def generate_launch_description():
         DeclareLaunchArgument("correction_gain_yaw", default_value="0.10"),
         DeclareLaunchArgument("max_delta_translation_diff_m", default_value="0.20"),
         DeclareLaunchArgument("max_delta_yaw_diff_deg", default_value="20.0"),
+        DeclareLaunchArgument("use_amcl", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
         OpaqueFunction(function=_set_random_spawn),
         # 1. 启动 Gazebo（用随机位姿 spawn 机器人）
@@ -232,210 +449,5 @@ def generate_launch_description():
                 "spawn_yaw": random_spawn_yaw,
             }.items(),
         ),
-        TimerAction(
-            period=2.0,
-            actions=[
-                # 2. 静态地图服务器 → 发布干净地图到 /map
-                Node(
-                    package="nav_slam",
-                    executable="static_map_server",
-                    name="static_map_server",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "map_yaml_path": static_map_yaml,
-                        "publish_period_sec": 1.0,
-                        "frame_id": "map",
-                    }],
-                ),
-                # 2.5. 一次性地图转发 → 避免 AMCL 反复重建似然场
-                Node(
-                    package="nav_slam",
-                    executable="map_once_relay",
-                    name="map_once_relay",
-                    output="screen",
-                    parameters=[{"use_sim_time": use_sim_time}],
-                ),
-                # 2.6. 激光扫描转点云 → TF→map 帧 → /mapokk，直接供 map_pub 使用
-                Node(
-                    package="nav_slam",
-                    executable="laser_scan_to_points",
-                    name="laser_scan_to_points",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "scan_topic": "/scan",
-                        "output_topic": "/mapokk",
-                        "target_frame": "map",
-                    }],
-                ),
-                # 3. odom TF 桥接 → 监听融合里程计, 发布 odom→base_footprint TF
-                Node(
-                    package="gazebo_modele",
-                    executable="odom_tf_bridge",
-                    name="odom_tf_bridge",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "odom_topic": fused_odom_topic,
-                    }],
-                ),
-                # 4. XFeat 视觉里程计
-                Node(
-                    package="rtabmap_localization_bringup",
-                    executable="xfeat_rgbd_odometry",
-                    name="xfeat_rgbd_odometry",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "rgb_topic": "/camera/camera/image_raw",
-                        "depth_topic": "/camera/camera/depth/image_raw",
-                        "camera_info_topic": "/camera/camera/camera_info",
-                        "xfeat_repo_dir": xfeat_repo_dir,
-                        "xfeat_weights_path": xfeat_weights_path,
-                        "top_k": top_k,
-                        "detection_threshold": detection_threshold,
-                        "min_score": min_score,
-                        "min_depth_m": depth_min_m,
-                        "max_depth_m": depth_max_m,
-                        "sync_queue_size": 10,
-                        "odom_topic": odom_topic,
-                        "delta_odom_topic": delta_odom_topic,
-                        "odom_frame": odom_frame,
-                        "base_frame": base_frame,
-                        "camera_frame": camera_frame,
-                        "publish_tf": publish_tf,
-                        "match_min_cossim": match_min_cossim,
-                        "min_pnp_points": min_pnp_points,
-                        "min_inliers": min_inliers,
-                        "pnp_reproj_error": pnp_reproj_error,
-                        "pnp_iterations": pnp_iterations,
-                    }],
-                ),
-                # 5. 里程计融合 → 轮式 + XFeat → /localized_odom
-                Node(
-                    package="rtabmap_localization_bringup",
-                    executable="odom_fusion_node",
-                    name="odom_fusion_node",
-                    output="screen",
-                    parameters=[{
-                        "base_odom_topic": "/odom",
-                        "xfeat_delta_topic": delta_odom_topic,
-                        "output_odom_topic": fused_odom_topic,
-                        "correction_gain_xy": correction_gain_xy,
-                        "correction_gain_yaw": correction_gain_yaw,
-                        "max_delta_translation_diff_m": max_delta_translation_diff_m,
-                        "max_delta_yaw_diff_deg": max_delta_yaw_diff_deg,
-                    }],
-                ),
-                # 6. AMCL 全局定位（不设初始位姿，通过 global localization 自主收敛）
-                Node(
-                    package="nav2_amcl",
-                    executable="amcl",
-                    name="amcl",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "base_frame_id": "base_footprint",
-                        "global_frame_id": "map",
-                        "odom_frame_id": "odom",
-                        "scan_topic": "/scan",
-                        "min_particles": 1000,
-                        "max_particles": 15000,
-                        "pf_err": 0.01,
-                        "pf_z": 0.99,
-                        "recovery_alpha_fast": 0.001,
-                        "recovery_alpha_slow": 0.001,
-                        "resample_interval": 1,
-                        "save_pose_rate": 0.5,
-                        "update_min_a": 0.2,
-                        "update_min_d": 0.25,
-                        "robot_model_type": "nav2_amcl::DifferentialMotionModel",
-                        "alpha1": 0.2,
-                        "alpha2": 0.2,
-                        "alpha3": 0.2,
-                        "alpha4": 0.2,
-                        "laser_model_type": "likelihood_field",
-                        "laser_max_range": 100.0,
-                        "laser_min_range": -1.0,
-                        "z_hit": 0.5,
-                        "z_max": 0.05,
-                        "z_rand": 0.5,
-                        "z_short": 0.05,
-                        "sigma_hit": 0.2,
-                        "lambda_short": 0.1,
-                        "laser_likelihood_max_dist": 2.0,
-                        "do_beamskip": False,
-                        "max_beams": 120,
-                        "tf_broadcast": False,
-                        "transform_tolerance": 2.0,
-                    }],
-                    remappings=[
-                        ("/scan", "/scan"),
-                        ("/map", "/map_for_amcl"),
-                    ],
-                ),
-                # 7. 生命周期管理器 → 自动激活 AMCL
-                Node(
-                    package="nav2_lifecycle_manager",
-                    executable="lifecycle_manager",
-                    name="lifecycle_manager_amcl",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "node_names": ["amcl"],
-                        "autostart": True,
-                    }],
-                ),
-                # 7.5. AMCL 全局定位触发器 → 等待 AMCL 激活后将粒子散布到全地图
-                Node(
-                    package="nav_slam",
-                    executable="amcl_global_localize",
-                    name="amcl_global_localize",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                    }],
-                ),
-                # 8. AMCL 收敛后锁定 map→odom 静态 TF，后续导航不再依赖 AMCL
-                Node(
-                    package="nav_slam",
-                    executable="amcl_init_bridge",
-                    name="amcl_init_bridge",
-                    output="screen",
-                    parameters=[{
-                        "use_sim_time": use_sim_time,
-                        "cov_xy_threshold": 0.005,
-                        "cov_yaw_threshold": 0.003,
-                    }],
-                ),
-                # 9. 导航核心
-                IncludeLaunchDescription(
-                    PythonLaunchDescriptionSource(nav_launch),
-                    launch_arguments={
-                        "start_nav_rviz": start_nav_rviz,
-                        "start_web_ui": start_web_ui,
-                        "publish_robot_model": "true",
-                        "use_sim_time": use_sim_time,
-                        "use_static_map": use_static_map,
-                        "static_map_yaml": static_map_yaml,
-                        "web_host": web_host,
-                        "web_port": web_port,
-                        "web_image_topic": web_image_topic,
-                        "scan_topic": "/scan",
-                        "pointcloud_topic": "",
-                        "use_pointcloud_obstacles": use_pointcloud_obstacles,
-                        "use_dynamic_obstacle_points": use_dynamic_obstacle_points,
-                        "start_hotspot": start_hotspot,
-                        "hotspot_connection_name": hotspot_connection_name,
-                        "hotspot_ssid": hotspot_ssid,
-                        "hotspot_password": hotspot_password,
-                        "hotspot_ifname": hotspot_ifname,
-                        "map_odom_topic": fused_odom_topic,
-                        "control_odom_topic": fused_odom_topic,
-                        "start_odom_map_tf": "false",
-                    }.items(),
-                ),
-            ],
-        ),
+        OpaqueFunction(function=_build_timed_actions),
     ])
