@@ -154,7 +154,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "target_frame": "map",
             }],
         ),
-        # 3. odom TF 桥接
+        # 3. odom TF 桥接（用 Gazebo 地面真值 /odom，避免依赖 /localized_odom→XFeat 的循环等待）
         Node(
             package="gazebo_modele",
             executable="odom_tf_bridge",
@@ -162,7 +162,7 @@ def _build_timed_actions(context, *args, **kwargs):
             output="screen",
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
-                "odom_topic": LaunchConfiguration("fused_odom_topic"),
+                "odom_topic": "/odom",
             }],
         ),
         # 4. XFeat 视觉里程计
