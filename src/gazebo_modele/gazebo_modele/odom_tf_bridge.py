@@ -18,7 +18,7 @@ class OdomTfBridge(Node):
 
     def _odom_cb(self, msg: Odometry):
         t = TransformStamped()
-        t.header.stamp = msg.header.stamp
+        t.header.stamp = self.get_clock().now().to_msg()
         t.header.frame_id = msg.header.frame_id or "odom"
         t.child_frame_id = "base_footprint"
         t.transform.translation.x = msg.pose.pose.position.x

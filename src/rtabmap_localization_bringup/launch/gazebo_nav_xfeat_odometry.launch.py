@@ -164,7 +164,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "target_frame": "map",
             }],
         ),
-        # 3. odom TF 桥接（用 Gazebo 地面真值 /odom，避免依赖 /localized_odom→XFeat 的循环等待）
+        # 3. odom TF 桥接 (统一用 /localized_odom, 与 map→odom TF 校准源一致)
         Node(
             package="gazebo_modele",
             executable="odom_tf_bridge",
@@ -172,10 +172,10 @@ def _build_timed_actions(context, *args, **kwargs):
             output="screen",
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
-                "odom_topic": "/odom",
+                "odom_topic": "/localized_odom",
             }],
         ),
-        # 3.5. odom→map 坐标转发 (用融合里程计，模拟真实环境传感器输入)
+        # 3.5. odom→map 坐标转发 (统一用 /localized_odom)
         Node(
             package="nav_slam",
             executable="odom_to_map_relay",
