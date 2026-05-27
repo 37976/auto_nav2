@@ -95,12 +95,12 @@ class AmclInitBridge(Node):
         if self._locked:
             return
         if self._latest_amcl is None:
-            self.get_logger().warn(
-                f"尚未收到 /amcl_pose，请确认 AMCL 已激活且正在发布位姿。"
+            self.get_logger().info(
+                f"等待 /amcl_pose ...", throttle_duration_sec=5.0
             )
         elif self._latest_odom is None:
-            self.get_logger().warn(
-                f"已收到 /amcl_pose，但尚未收到 /localized_odom。"
+            self.get_logger().info(
+                f"已收到 /amcl_pose，等待 /localized_odom ...", throttle_duration_sec=5.0
             )
         else:
             cov = self._latest_amcl.pose.covariance

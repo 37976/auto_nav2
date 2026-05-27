@@ -236,7 +236,7 @@ def _build_timed_actions(context, *args, **kwargs):
                     "recovery_alpha_fast": 0.001,
                     "recovery_alpha_slow": 0.001,
                     "resample_interval": 1,
-                    "save_pose_rate": 5.0,
+                    "save_pose_rate": 0.5,
                     "update_min_a": 0.0,
                     "update_min_d": 0.0,
                     "robot_model_type": "nav2_amcl::DifferentialMotionModel",
@@ -247,13 +247,13 @@ def _build_timed_actions(context, *args, **kwargs):
                     "laser_model_type": "likelihood_field",
                     "laser_max_range": 100.0,
                     "laser_min_range": -1.0,
-                    "z_hit": 0.95,
+                    "z_hit": 0.5,
                     "z_max": 0.05,
-                    "z_rand": 0.05,
+                    "z_rand": 0.5,
                     "z_short": 0.05,
                     "sigma_hit": 0.2,
                     "lambda_short": 0.1,
-                    "laser_likelihood_max_dist": 1.0,
+                    "laser_likelihood_max_dist": 2.0,
                     "do_beamskip": False,
                     "max_beams": 120,
                     "tf_broadcast": False,
@@ -276,12 +276,16 @@ def _build_timed_actions(context, *args, **kwargs):
                     "autostart": True,
                 }],
             ),
-            
+            # 7.5. 激光全局定位（词典匹配 + 发布 /initialpose 给 AMCL）
             Node(
                 package="nav_slam",
                 executable="lidar_global_localize",
                 name="lidar_global_localize",
                 output="screen",
+                parameters=[{
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                    "map_yaml_path": LaunchConfiguration("static_map_yaml"),
+                }],
             ),
             # 8. AMCL 收敛后锁定 map→odom 静态 TF
             Node(
@@ -309,7 +313,7 @@ def _build_timed_actions(context, *args, **kwargs):
             launch_arguments={
                 "start_nav_rviz": LaunchConfiguration("start_nav_rviz"),
                 "start_web_ui": LaunchConfiguration("start_web_ui"),
-                "publish_robot_model": "true",
+                "publish_robot_model": "false",
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
                 "use_static_map": LaunchConfiguration("use_static_map"),
                 "static_map_yaml": LaunchConfiguration("static_map_yaml"),
@@ -344,7 +348,7 @@ def generate_launch_description():
     default_static_map_yaml = os.path.join(
         get_package_share_directory("nav_slam"),
         "map",
-        "gpt.yaml",
+        "localization_10m.yaml",
     )
 
     world_name = LaunchConfiguration("world_name")
@@ -393,7 +397,7 @@ def generate_launch_description():
     random_spawn_yaw = LaunchConfiguration("random_spawn_yaw", default="0.0")
 
     return LaunchDescription([
-        DeclareLaunchArgument("world_name", default_value="gpt.world"),
+        DeclareLaunchArgument("world_name", default_value="localization_10m.world"),
         DeclareLaunchArgument("start_moving_obstacle", default_value="false"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("start_nav_rviz", default_value="true"),
