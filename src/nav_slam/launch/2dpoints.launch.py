@@ -102,6 +102,7 @@ def generate_launch_description():
             executable='voronoi_node',
             name='voronoi',
             output='screen',
+            remappings=[('/odom', '/odom_in_map')],
             parameters=[{
                 'robot_radius': 0.14,
                 'clearance_margin': 0.01,

@@ -14,8 +14,10 @@ import numpy as np
 import rclpy
 import yaml
 from rclpy.node import Node
-from geometry_msgs.msg import PoseWithCovarianceStamped, Quaternion
+from geometry_msgs.msg import TransformStamped
+from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
+from tf2_ros import StaticTransformBroadcaster
 
 # 动态 import kidnapped_robot_finder
 import sys
@@ -26,13 +28,6 @@ _krf_path = os.path.join(_base, "src", "kidnapped_robot_finder")
 if os.path.isdir(_krf_path) and _krf_path not in sys.path:
     sys.path.insert(0, _krf_path)
 from global_localizer import kidnap_solver  # type: ignore[import-unresolved]
-
-
-def _quat_from_yaw(yaw):
-    q = Quaternion()
-    q.z = math.sin(yaw * 0.5)
-    q.w = math.cos(yaw * 0.5)
-    return q
 
 
 class LidarGlobalLocalize(Node):
@@ -90,13 +85,14 @@ class LidarGlobalLocalize(Node):
 
         self._scan_sub = self.create_subscription(
             LaserScan, self._scan_topic, self._scan_callback, 10)
-        self._pose_pub = self.create_publisher(
-            PoseWithCovarianceStamped, "/initialpose", 10)
+        self._odom_sub = self.create_subscription(
+            Odometry, "/odom", self._odom_callback, 10)
+        self._tf_broadcaster = StaticTransformBroadcaster(self)
 
-        # AMCL 是 lifecycle 节点, 启动有延迟, 需要重复发布确保它收到
-        self._pending_pose = None   # (x, y, yaw)
+        self._latest_odom = None
+        self._pending_pose = None   # (x, y)
         self._repub_count = 0
-        self._repub_timer = self.create_timer(0.5, self._repub_initial_pose)
+        self._repub_timer = self.create_timer(0.5, self._publish_map_odom_tf)
 
         self.get_logger().info(
             f"kidnapped_robot_finder ORB 匹配定位已就绪, 地图: {self._map_file_path}")
@@ -214,36 +210,45 @@ class LidarGlobalLocalize(Node):
         self.get_logger().info(
             f"定位完成: x={x:.3f} y={y:.3f} yaw={math.degrees(yaw):.1f}° F1={f1:.1f}"
         )
-        self._publish_initial_pose(x, y, yaw)
-
-    # ============== 发布 ==============
-
-    def _publish_initial_pose(self, x, y, yaw):
+        # ORB 给出 (x, y) + 补偿后的 yaw
         self._pending_pose = (x, y, yaw)
         self._repub_count = 0
 
-    def _repub_initial_pose(self):
-        if self._pending_pose is None:
+    # ============== 发布 ==============
+
+    def _odom_callback(self, msg: Odometry):
+        self._latest_odom = msg
+
+    def _publish_map_odom_tf(self):
+        if self._pending_pose is None or self._latest_odom is None:
             return
-        x, y, yaw = self._pending_pose
-        msg = PoseWithCovarianceStamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "map"
-        msg.pose.pose.position.x = x
-        msg.pose.pose.position.y = y
-        msg.pose.pose.orientation = _quat_from_yaw(yaw)
-        msg.pose.covariance = [
-            0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.03,
-        ]
-        self._pose_pub.publish(msg)
+        map_x, map_y, map_yaw = self._pending_pose
+
+        q = self._latest_odom.pose.pose.orientation
+        sin_yaw = 2.0 * (q.w * q.z + q.x * q.y)
+        cos_yaw = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+        odom_yaw = math.atan2(sin_yaw, cos_yaw)
+
+        tf_yaw = math.atan2(math.sin(map_yaw - odom_yaw),
+                            math.cos(map_yaw - odom_yaw))
+
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = "map"
+        t.child_frame_id = "odom"
+        t.transform.translation.x = map_x - self._latest_odom.pose.pose.position.x
+        t.transform.translation.y = map_y - self._latest_odom.pose.pose.position.y
+        t.transform.translation.z = 0.0
+        t.transform.rotation.z = math.sin(tf_yaw * 0.5)
+        t.transform.rotation.w = math.cos(tf_yaw * 0.5)
+        self._tf_broadcaster.sendTransform(t)
+
         self._repub_count += 1
         self.get_logger().info(
-            f"已发布 /initialpose 给 AMCL ({self._repub_count}/5)")
+            f"已发布 map→odom 静态 TF: x={t.transform.translation.x:.3f} "
+            f"y={t.transform.translation.y:.3f} yaw={math.degrees(tf_yaw):.1f}° "
+            f"({self._repub_count}/5)"
+        )
         if self._repub_count >= 5:
             self._pending_pose = None
             self._repub_timer.cancel()

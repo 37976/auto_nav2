@@ -171,12 +171,11 @@ class AmclInitBridge(Node):
             odom.pose.pose.orientation.w,
         )
 
-        # T_map_odom = T_map_base * inv(T_odom_base)
-        cos_d = math.cos(yaw_m - yaw_o)
-        sin_d = math.sin(yaw_m - yaw_o)
-        t_x = x_m - (cos_d * x_o - sin_d * y_o)
-        t_y = y_m - (sin_d * x_o + cos_d * y_o)
-        t_yaw = _normalize_angle(yaw_m - yaw_o)
+        # T_map_odom: 平移取 AMCL 定位结果，旋转置 0（yaw 由里程计提供）
+        # 避免 AMCL yaw 偏差被锁入静态 TF 导致后续导航漂移
+        t_x = x_m - x_o
+        t_y = y_m - y_o
+        t_yaw = 0.0
 
         t = TransformStamped()
         t.header.stamp = self.get_clock().now().to_msg()

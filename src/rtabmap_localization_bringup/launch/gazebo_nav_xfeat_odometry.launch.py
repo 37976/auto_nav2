@@ -115,11 +115,21 @@ def _set_random_spawn(context, *args, **kwargs):
 
 
 def _build_timed_actions(context, *args, **kwargs):
-    """根据 use_amcl 参数动态构建 TimerAction 内部的节点列表。"""
-    use_amcl = LaunchConfiguration("use_amcl").perform(context).lower() == "true"
-    start_odom_map_tf = "false" if use_amcl else "true"
+    """构建 TimerAction 内部的节点列表。"""
+    start_odom_map_tf = "false"
 
     actions = [
+        # 1.5. 激光 ORB 全局定位 → 锁定 map→odom 静态 TF
+        Node(
+            package="nav_slam",
+            executable="lidar_global_localize",
+            name="lidar_global_localize",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "map_yaml_path": LaunchConfiguration("static_map_yaml"),
+            }],
+        ),
         # 2. 静态地图服务器
         Node(
             package="nav_slam",
@@ -163,6 +173,18 @@ def _build_timed_actions(context, *args, **kwargs):
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
                 "odom_topic": "/odom",
+            }],
+        ),
+        # 3.5. odom→map 坐标转发 (用融合里程计，模拟真实环境传感器输入)
+        Node(
+            package="nav_slam",
+            executable="odom_to_map_relay",
+            name="odom_to_map_relay",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "odom_topic": "/localized_odom",
+                "output_topic": "/odom_in_map",
             }],
         ),
         # 4. XFeat 视觉里程计
@@ -215,92 +237,6 @@ def _build_timed_actions(context, *args, **kwargs):
         ),
     ]
 
-    if use_amcl:
-        actions += [
-            # 6. AMCL 全局定位
-            Node(
-                package="nav2_amcl",
-                executable="amcl",
-                name="amcl",
-                output="screen",
-                parameters=[{
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                    "base_frame_id": "base_footprint",
-                    "global_frame_id": "map",
-                    "odom_frame_id": "odom",
-                    "scan_topic": "/scan",
-                    "min_particles": 1000,
-                    "max_particles": 15000,
-                    "pf_err": 0.01,
-                    "pf_z": 0.99,
-                    "recovery_alpha_fast": 0.001,
-                    "recovery_alpha_slow": 0.001,
-                    "resample_interval": 1,
-                    "save_pose_rate": 0.5,
-                    "update_min_a": 0.0,
-                    "update_min_d": 0.0,
-                    "robot_model_type": "nav2_amcl::DifferentialMotionModel",
-                    "alpha1": 0.2,
-                    "alpha2": 0.2,
-                    "alpha3": 0.2,
-                    "alpha4": 0.2,
-                    "laser_model_type": "likelihood_field",
-                    "laser_max_range": 100.0,
-                    "laser_min_range": -1.0,
-                    "z_hit": 0.5,
-                    "z_max": 0.05,
-                    "z_rand": 0.5,
-                    "z_short": 0.05,
-                    "sigma_hit": 0.2,
-                    "lambda_short": 0.1,
-                    "laser_likelihood_max_dist": 2.0,
-                    "do_beamskip": False,
-                    "max_beams": 120,
-                    "tf_broadcast": False,
-                    "transform_tolerance": 2.0,
-                }],
-                remappings=[
-                    ("/scan", "/scan"),
-                    ("/map", "/map_for_amcl"),
-                ],
-            ),
-            # 7. 生命周期管理器
-            Node(
-                package="nav2_lifecycle_manager",
-                executable="lifecycle_manager",
-                name="lifecycle_manager_amcl",
-                output="screen",
-                parameters=[{
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                    "node_names": ["amcl"],
-                    "autostart": True,
-                }],
-            ),
-            # 7.5. 激光全局定位（词典匹配 + 发布 /initialpose 给 AMCL）
-            Node(
-                package="nav_slam",
-                executable="lidar_global_localize",
-                name="lidar_global_localize",
-                output="screen",
-                parameters=[{
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                    "map_yaml_path": LaunchConfiguration("static_map_yaml"),
-                }],
-            ),
-            # 8. AMCL 收敛后锁定 map→odom 静态 TF
-            Node(
-                package="nav_slam",
-                executable="amcl_init_bridge",
-                name="amcl_init_bridge",
-                output="screen",
-                parameters=[{
-                    "use_sim_time": LaunchConfiguration("use_sim_time"),
-                    "cov_xy_threshold": 0.05,
-                    "cov_yaw_threshold": 0.03,
-                }],
-            ),
-        ]
-
     # 9. 导航核心
     nav_launch_file = os.path.join(
         get_package_share_directory("nav_slam"),
@@ -330,7 +266,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "hotspot_password": LaunchConfiguration("hotspot_password"),
                 "hotspot_ifname": LaunchConfiguration("hotspot_ifname"),
                 "map_odom_topic": LaunchConfiguration("fused_odom_topic"),
-                "control_odom_topic": LaunchConfiguration("fused_odom_topic"),
+                "control_odom_topic": "/odom_in_map",
                 "start_odom_map_tf": start_odom_map_tf,
             }.items(),
         )
