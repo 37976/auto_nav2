@@ -25,7 +25,7 @@ for _ in range(6):
 _krf_path = os.path.join(_base, "src", "kidnapped_robot_finder")
 if os.path.isdir(_krf_path) and _krf_path not in sys.path:
     sys.path.insert(0, _krf_path)
-from global_localizer import kidnap_solver
+from global_localizer import kidnap_solver  # type: ignore[import-unresolved]
 
 
 def _quat_from_yaw(yaw):
