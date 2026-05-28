@@ -1,0 +1,6 @@
+map_file_path: "/home/xu/project/auto_nav2/src/nav_slam/map/localization_10m.pgm"
+scan_topic: "/scan"
+map_resolution: 0.05
+lidar_max_range: 8.0
+max_iterations: 250
+stop_search_threshold_f1: 50
