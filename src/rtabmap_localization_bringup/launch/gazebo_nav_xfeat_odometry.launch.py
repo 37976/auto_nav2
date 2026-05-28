@@ -284,7 +284,7 @@ def generate_launch_description():
     default_static_map_yaml = os.path.join(
         get_package_share_directory("nav_slam"),
         "map",
-        "localization_10m.yaml",
+        "voronoi_50m.yaml",
     )
 
     world_name = LaunchConfiguration("world_name")
@@ -333,7 +333,7 @@ def generate_launch_description():
     random_spawn_yaw = LaunchConfiguration("random_spawn_yaw", default="0.0")
 
     return LaunchDescription([
-        DeclareLaunchArgument("world_name", default_value="localization_10m.world"),
+        DeclareLaunchArgument("world_name", default_value="voronoi_50m.world"),
         DeclareLaunchArgument("start_moving_obstacle", default_value="false"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("start_nav_rviz", default_value="true"),

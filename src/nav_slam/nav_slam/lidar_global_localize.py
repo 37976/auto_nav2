@@ -34,7 +34,7 @@ class LidarGlobalLocalize(Node):
         self.declare_parameter("map_file_path", "")
         self.declare_parameter("map_yaml_path", "")
         self.declare_parameter("scan_topic", "/scan")
-        self.declare_parameter("max_iterations", 30)
+        self.declare_parameter("max_iterations", 250)
         self.declare_parameter("stop_search_threshold_f1", 50.0)
         self.declare_parameter("lidar_max_range", 8.0)
         self.declare_parameter("map_resolution", 0.05)
@@ -84,6 +84,9 @@ class LidarGlobalLocalize(Node):
         self._pending_pose = None
         self._repub_count = 0
         self._repub_timer = self.create_timer(0.5, self._publish_map_odom_tf)
+
+        # 立即发布默认 TF, 建立 map 帧, 避免 ORB 计算期间系统瘫痪
+        self._publish_default_tf()
 
         self.get_logger().info(
             f"ORB 全局定位已就绪, 地图: {self._map_file_path}")
@@ -154,6 +157,18 @@ class LidarGlobalLocalize(Node):
 
     # ============== 定位 ==============
 
+    def _publish_default_tf(self):
+        t = TransformStamped()
+        t.header.stamp = rclpy.time.Time(seconds=0, nanoseconds=0).to_msg()
+        t.header.frame_id = "map"
+        t.child_frame_id = "odom"
+        t.transform.translation.x = 0.0
+        t.transform.translation.y = 0.0
+        t.transform.translation.z = 0.0
+        t.transform.rotation.w = 1.0
+        self._tf_broadcaster.sendTransform(t)
+        self.get_logger().info("已发送默认 map→odom TF (0,0,0), 等待 ORB 定位...")
+
     def _run_localization(self):
         self._localized = True
         self.get_logger().info(f"ORB 匹配中... min_dist={self._min_distance:.2f}m")
@@ -190,6 +205,9 @@ class LidarGlobalLocalize(Node):
     def _publish_map_odom_tf(self):
         if self._pending_pose is None or self._latest_odom is None:
             return
+        if self._repub_count >= 5:
+            self._repub_timer.cancel()
+            return
         map_x, map_y, map_yaw = self._pending_pose
         odom = self._latest_odom
         q = odom.pose.pose.orientation
@@ -216,9 +234,6 @@ class LidarGlobalLocalize(Node):
             f"y={t.transform.translation.y:.3f} yaw={math.degrees(tf_yaw):.1f}° "
             f"({self._repub_count}/5)"
         )
-        if self._repub_count >= 5:
-            self._pending_pose = None
-            self._repub_timer.cancel()
 
 
 def main(args=None):
