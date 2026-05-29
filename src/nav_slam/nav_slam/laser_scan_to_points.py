@@ -59,7 +59,6 @@ class LaserScanToPoints(Node):
             return
 
         try:
-            # 使用 latest available TF，避免精确时间戳匹配失败
             transform = self._tf_buffer.lookup_transform(
                 self._target_frame,
                 source_frame,
@@ -118,7 +117,7 @@ class LaserScanToPoints(Node):
         cloud = np.array(points, dtype=np.float32)
 
         header = msg.header
-        header.stamp = self.get_clock().now().to_msg()
+        header.stamp = msg.header.stamp
         header.frame_id = self._target_frame
         cloud_msg = pc2.create_cloud_xyz32(header, cloud)
         self._pub.publish(cloud_msg)
