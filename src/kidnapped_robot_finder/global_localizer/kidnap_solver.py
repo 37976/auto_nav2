@@ -62,7 +62,7 @@ def _compute_adaptive_iterations(num_candidates, user_max_iterations, time_budge
     """根据候选区域像素数自适应计算迭代次数，保持与小地图相同的采样密度."""
     BASE_ITERS = 30
     BASE_CANDIDATE_PX = 5000       # 10m 地图典型候选像素数
-    MS_PER_ITER = 30               # 每次迭代约 30ms (模拟扫描+ORB匹配+F1打分)
+    MS_PER_ITER = 50               # 每次迭代约 30-80ms (大地图 np.where 开销大)
     suggested = max(BASE_ITERS, int(num_candidates * BASE_ITERS / BASE_CANDIDATE_PX))
     max_by_time = max(BASE_ITERS, time_budget_ms // MS_PER_ITER)
     return min(suggested, user_max_iterations, max_by_time)
@@ -90,7 +90,7 @@ def _get_candidates(map_image, min_distance, map_resolution, min_required=500):
 
 def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
                  map_resolution = 0.05, max_iterations = 250,
-                 max_time_budget_ms = 7000,
+                 max_time_budget_ms = 5000,
                  stop_search_threshold = 50, lidar_range = 8.0,
                  show_plot = False):
     orig_scan_img = cv2.flip(orig_scan_img, 1)
@@ -149,7 +149,7 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
     # Use the random coordinates for further processing
     for coord in random_coords:
         iters += 1
-        print("Iteration: ", iters,  "/" , len(random_coords))
+        print(f"Iteration: {iters}/{len(random_coords)}", flush=True)
         x, y = coord
         # Do something with the coordinates
         s = time.perf_counter()

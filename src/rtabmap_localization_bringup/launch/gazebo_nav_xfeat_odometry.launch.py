@@ -164,7 +164,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "target_frame": "map",
             }],
         ),
-        # 3. odom TF 桥接 (统一用 /localized_odom, 与 map→odom TF 校准源一致)
+        # 3. odom TF 桥接
         Node(
             package="gazebo_modele",
             executable="odom_tf_bridge",
@@ -172,10 +172,10 @@ def _build_timed_actions(context, *args, **kwargs):
             output="screen",
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
-                "odom_topic": "/localized_odom",
+                "odom_topic": "/odom",
             }],
         ),
-        # 3.5. odom→map 坐标转发 (统一用 /localized_odom)
+        # 3.5. odom→map 坐标转发
         Node(
             package="nav_slam",
             executable="odom_to_map_relay",
@@ -185,6 +185,19 @@ def _build_timed_actions(context, *args, **kwargs):
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
                 "odom_topic": "/localized_odom",
                 "output_topic": "/odom_in_map",
+            }],
+        ),
+        # 3.6. Gazebo 真实位姿 vs 计算位姿 对比记录
+        Node(
+            package="nav_slam",
+            executable="pose_logger",
+            name="pose_logger",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "output_path": os.path.join(
+                    os.path.expanduser("~"), "project", "位姿对比", "pose_comparison.csv"),
+                "log_hz": 5.0,
             }],
         ),
         # 4. XFeat 视觉里程计
