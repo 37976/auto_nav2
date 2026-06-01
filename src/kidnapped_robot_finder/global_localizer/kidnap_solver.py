@@ -4,6 +4,7 @@ from global_localizer import distance_transform as dt
 from global_localizer import pose_finder as pf
 import matplotlib.pyplot as plt
 from global_localizer import feature_matching as fm
+from global_localizer import scanner_simulator as s_sim
 import math
 import time
 
@@ -100,6 +101,9 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
 
     st_time = time.perf_counter()
 
+    # === 预计算距离变换 (加速模拟扫描) ===
+    dt_map = s_sim.compute_dt_map(map_image)
+
     # === 自适应候选区域 + 迭代次数 ===
     candidate_area, red_pixels, num_red_pixels, used_threshold = _get_candidates(
         map_image, distance, map_resolution, min_required=500)
@@ -153,7 +157,7 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
         x, y = coord
         # Do something with the coordinates
         s = time.perf_counter()
-        scan_image = pf.get_scan_image(map_image.copy(), [y, x], map_resolution = map_resolution, max_range = 8)
+        scan_image = pf.get_scan_image(map_image.copy(), [y, x], map_resolution = map_resolution, max_range = 8, dt_map=dt_map)
         e = time.perf_counter()
         time_taken = (e - s) * 1000
         sim_scan_time += time_taken

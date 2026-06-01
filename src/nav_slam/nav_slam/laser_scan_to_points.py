@@ -117,7 +117,7 @@ class LaserScanToPoints(Node):
         cloud = np.array(points, dtype=np.float32)
 
         header = msg.header
-        header.stamp = msg.header.stamp
+        header.stamp = self.get_clock().now().to_msg()
         header.frame_id = self._target_frame
         cloud_msg = pc2.create_cloud_xyz32(header, cloud)
         self._pub.publish(cloud_msg)

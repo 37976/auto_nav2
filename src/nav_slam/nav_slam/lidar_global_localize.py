@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-lidar_global_localize.py -- ORB 匹配一次性全局定位, 锁定 map→odom 静态 TF.
+lidar_global_localize.py -- ORB 匹配一次性全局定位, 锁定 map->odom 静态 TF.
 对齐 find_robot.py: cv2.imread 加载 PGM, 同款 scan 渲染, 同款 solve_kidnap.
 """
 
@@ -167,7 +167,7 @@ class LidarGlobalLocalize(Node):
         t.transform.translation.z = 0.0
         t.transform.rotation.w = 1.0
         self._tf_broadcaster.sendTransform(t)
-        self.get_logger().info("已发送默认 map→odom TF (0,0,0), 等待 ORB 定位...")
+        self.get_logger().info("已发送默认 map->odom TF (0,0,0), 等待 ORB 定位...")
 
     def _run_localization(self):
         self._localized = True
@@ -230,7 +230,7 @@ class LidarGlobalLocalize(Node):
 
         self._repub_count += 1
         self.get_logger().info(
-            f"已发布 map→odom 静态 TF: x={t.transform.translation.x:.3f} "
+            f"已发布 map->odom 静态 TF: x={t.transform.translation.x:.3f} "
             f"y={t.transform.translation.y:.3f} yaw={math.degrees(tf_yaw):.1f}° "
             f"({self._repub_count}/5)"
         )
