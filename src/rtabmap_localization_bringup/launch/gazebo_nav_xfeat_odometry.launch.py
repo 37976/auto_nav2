@@ -244,6 +244,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "output_odom_topic": LaunchConfiguration("fused_odom_topic"),
                 "correction_gain_xy": LaunchConfiguration("correction_gain_xy"),
                 "correction_gain_yaw": LaunchConfiguration("correction_gain_yaw"),
+                "use_imu_yaw": LaunchConfiguration("use_imu_yaw"),
                 "max_delta_translation_diff_m": LaunchConfiguration("max_delta_translation_diff_m"),
                 "max_delta_yaw_diff_deg": LaunchConfiguration("max_delta_yaw_diff_deg"),
             }],
@@ -338,6 +339,7 @@ def generate_launch_description():
     fused_odom_topic = LaunchConfiguration("fused_odom_topic")
     correction_gain_xy = LaunchConfiguration("correction_gain_xy")
     correction_gain_yaw = LaunchConfiguration("correction_gain_yaw")
+    use_imu_yaw = LaunchConfiguration("use_imu_yaw")
     max_delta_translation_diff_m = LaunchConfiguration("max_delta_translation_diff_m")
     max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
     # 随机 spawn 位姿（由 OpaqueFunction 填入）
@@ -384,6 +386,7 @@ def generate_launch_description():
         DeclareLaunchArgument("fused_odom_topic", default_value="/localized_odom"),
         DeclareLaunchArgument("correction_gain_xy", default_value="0.15"),
         DeclareLaunchArgument("correction_gain_yaw", default_value="0.10"),
+        DeclareLaunchArgument("use_imu_yaw", default_value="true"),
         DeclareLaunchArgument("max_delta_translation_diff_m", default_value="0.20"),
         DeclareLaunchArgument("max_delta_yaw_diff_deg", default_value="20.0"),
         DeclareLaunchArgument("use_amcl", default_value="true"),

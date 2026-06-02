@@ -11,6 +11,7 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import Path
 from rclpy.node import Node
+from sensor_msgs.msg import Imu
 from std_msgs.msg import String
 
 
@@ -44,6 +45,9 @@ class OdomFusionNode(Node):
         self.declare_parameter("correction_gain_xy", 0.15)
         self.declare_parameter("correction_gain_yaw", 0.10)
         self.declare_parameter("xfeat_timeout_sec", 1.0)
+        self.declare_parameter("imu_topic", "/imu")
+        self.declare_parameter("use_imu_yaw", True)
+        self.declare_parameter("imu_timeout_sec", 0.5)
         self.declare_parameter("log_period_sec", 0.5)
         self.declare_parameter("max_delta_translation_diff_m", 0.20)
         self.declare_parameter("max_delta_yaw_diff_deg", 20.0)
@@ -60,6 +64,9 @@ class OdomFusionNode(Node):
         self.gain_xy = float(self.get_parameter("correction_gain_xy").value)
         self.gain_yaw = float(self.get_parameter("correction_gain_yaw").value)
         self.xfeat_timeout_sec = float(self.get_parameter("xfeat_timeout_sec").value)
+        self.imu_topic = str(self.get_parameter("imu_topic").value)
+        self.use_imu_yaw = bool(self.get_parameter("use_imu_yaw").value)
+        self.imu_timeout_sec = float(self.get_parameter("imu_timeout_sec").value)
         self.log_period_sec = max(0.1, float(self.get_parameter("log_period_sec").value))
         self.max_delta_translation_diff_m = float(self.get_parameter("max_delta_translation_diff_m").value)
         self.max_delta_yaw_diff_rad = math.radians(float(self.get_parameter("max_delta_yaw_diff_deg").value))
@@ -71,6 +78,8 @@ class OdomFusionNode(Node):
 
         self.xfeat_delta: Optional[Odometry] = None
         self.last_xfeat_stamp_sec: Optional[float] = None
+        self.latest_imu: Optional[Imu] = None
+        self.last_imu_stamp_sec: Optional[float] = None
         self.last_log_sec: Optional[float] = None
         self.prev_base_odom: Optional[Odometry] = None
         self.fused_x: Optional[float] = None
@@ -86,6 +95,7 @@ class OdomFusionNode(Node):
 
         self.create_subscription(Odometry, self.base_odom_topic, self._base_odom_cb, 20)
         self.create_subscription(Odometry, self.xfeat_delta_topic, self._xfeat_delta_cb, 20)
+        self.create_subscription(Imu, self.imu_topic, self._imu_cb, 20)
         self.create_subscription(Path, self.path_topic, self._path_cb, 10)
         self.create_subscription(String, self.control_mode_topic, self._control_mode_cb, 10)
         self.create_subscription(Twist, self.cmd_vel_topic, self._cmd_vel_cb, 10)
@@ -99,6 +109,10 @@ class OdomFusionNode(Node):
     def _xfeat_delta_cb(self, msg: Odometry) -> None:
         self.xfeat_delta = msg
         self.last_xfeat_stamp_sec = float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
+
+    def _imu_cb(self, msg: Imu) -> None:
+        self.latest_imu = msg
+        self.last_imu_stamp_sec = float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
 
     def _base_odom_cb(self, msg: Odometry) -> None:
         if self.prev_base_odom is None or self.fused_x is None or self.fused_y is None or self.fused_yaw is None:
@@ -153,6 +167,7 @@ class OdomFusionNode(Node):
         corrected_dx = base_local_dx
         corrected_dy = base_local_dy
         corrected_dyaw = base_delta_yaw
+        imu_dyaw = 0.0
         xfeat_dx = 0.0
         xfeat_dy = 0.0
         xfeat_dyaw = 0.0
@@ -162,6 +177,21 @@ class OdomFusionNode(Node):
         self._last_status_details = (
             f"dx={base_local_dx:.3f} dy={base_local_dy:.3f} dyaw={math.degrees(base_delta_yaw):.1f}deg"
         )
+
+        if self.use_imu_yaw and self.latest_imu is not None and self.last_imu_stamp_sec is not None:
+            base_stamp_sec = float(base_msg.header.stamp.sec) + float(base_msg.header.stamp.nanosec) * 1e-9
+            if base_stamp_sec - self.last_imu_stamp_sec <= self.imu_timeout_sec:
+                prev_stamp_sec = float(self.prev_base_odom.header.stamp.sec) + float(self.prev_base_odom.header.stamp.nanosec) * 1e-9
+                dt = base_stamp_sec - prev_stamp_sec
+                if dt > 0:
+                    imu_dyaw = float(self.latest_imu.angular_velocity.z) * dt
+                    corrected_dyaw = imu_dyaw
+                    self._last_fusion_status = "imu"
+                    self._last_status_details = (
+                        f"imu_dyaw={math.degrees(imu_dyaw):.1f}deg "
+                        f"base_dyaw={math.degrees(base_delta_yaw):.1f}deg "
+                        f"dt={dt:.3f}s angz={self.latest_imu.angular_velocity.z:.3f}"
+                    )
 
         if self.xfeat_delta is not None and self.last_xfeat_stamp_sec is not None:
             base_stamp_sec = float(base_msg.header.stamp.sec) + float(base_msg.header.stamp.nanosec) * 1e-9
@@ -175,9 +205,10 @@ class OdomFusionNode(Node):
                     delta_diff <= self.max_delta_translation_diff_m
                     and yaw_diff <= self.max_delta_yaw_diff_rad
                 ):
+                    source_dyaw = corrected_dyaw
                     corrected_dx = base_local_dx + self.gain_xy * (xfeat_dx - base_local_dx)
                     corrected_dy = base_local_dy + self.gain_xy * (xfeat_dy - base_local_dy)
-                    corrected_dyaw = base_delta_yaw + self.gain_yaw * _wrap_angle(xfeat_dyaw - base_delta_yaw)
+                    corrected_dyaw = source_dyaw + self.gain_yaw * _wrap_angle(xfeat_dyaw - source_dyaw)
                     self._last_fusion_status = "fused"
                     self._last_status_details = (
                         f"base(dx={base_local_dx:.3f},dy={base_local_dy:.3f},dyaw={math.degrees(base_delta_yaw):.1f}deg) "
@@ -210,6 +241,7 @@ class OdomFusionNode(Node):
             "base_dx": base_local_dx,
             "base_dy": base_local_dy,
             "base_dyaw_deg": math.degrees(base_delta_yaw),
+            "imu_dyaw_deg": math.degrees(imu_dyaw),
             "xfeat_dx": xfeat_dx,
             "xfeat_dy": xfeat_dy,
             "xfeat_dyaw_deg": math.degrees(xfeat_dyaw),
@@ -249,6 +281,7 @@ class OdomFusionNode(Node):
                     "底盘增量_dx_米",
                     "底盘增量_dy_米",
                     "底盘增量_dyaw_度",
+                    "IMU增量_dyaw_度",
                     "XFeat增量_dx_米",
                     "XFeat增量_dy_米",
                     "XFeat增量_dyaw_度",
@@ -272,6 +305,7 @@ class OdomFusionNode(Node):
                     f"{self._last_csv_row['base_dx']:.6f}",
                     f"{self._last_csv_row['base_dy']:.6f}",
                     f"{self._last_csv_row['base_dyaw_deg']:.3f}",
+                    f"{self._last_csv_row['imu_dyaw_deg']:.3f}",
                     f"{self._last_csv_row['xfeat_dx']:.6f}",
                     f"{self._last_csv_row['xfeat_dy']:.6f}",
                     f"{self._last_csv_row['xfeat_dyaw_deg']:.3f}",
