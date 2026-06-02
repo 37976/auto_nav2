@@ -187,9 +187,9 @@
       </material>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.03" radius="0.055"/>
+        <sphere radius="0.055"/>
       </geometry>
     </collision>
     <inertial>
@@ -207,9 +207,9 @@
       <material name="wheel_black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="1.57079632679 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.03" radius="0.055"/>
+        <sphere radius="0.055"/>
       </geometry>
     </collision>
     <inertial>
