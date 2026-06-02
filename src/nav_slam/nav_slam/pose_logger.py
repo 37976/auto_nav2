@@ -61,7 +61,6 @@ class PoseLogger(Node):
         if self._latest_odom is None or self._latest_calc is None:
             return
 
-        # 查 map→odom TF, 把 Gazebo 地面真值从 odom 系转到 map 系
         try:
             tf = self._tf_buf.lookup_transform(
                 "map", "odom", rclpy.time.Time())
