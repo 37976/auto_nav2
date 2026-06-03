@@ -118,6 +118,8 @@ class PathFollowingNode(Node):
         self.linear_acc_limit = 0.03  # 每次回调线速度最大变化量
         self.angular_acc_limit = 0.08 # 每次回调角速度最大变化量
         self.rotate_in_place_angle = 1.2
+        self.rotate_in_place_exit = 0.4   # 退出原地转向的阈值，小于进入阈值，防止掉头画弧
+        self.in_rotate_in_place = False
         self.rotate_in_place_speed = 0.55
         self.stuck_timeout = 8.0
         self.progress_index_epsilon = 4
@@ -211,6 +213,7 @@ class PathFollowingNode(Node):
         self.last_progress_distance = None
         self.last_progress_heading_error = None
         self.recovery_state = None
+        self.in_rotate_in_place = False
         self.get_logger().info(
             f"Received new path: raw={len(self.path_points_list)}, "
             f"interpolated={len(self.path_points)}, anchor_idx={anchor_idx}"
@@ -371,31 +374,43 @@ class PathFollowingNode(Node):
             self.stop_robot()
             return
         else:
+            # 原地转向滞回逻辑：进入和退出用不同阈值。
+            # 进入阈值大(1.2rad~69°)，退出阈值小(0.4rad~23°)，
+            # 防止掉头时剩几十度就提前退出原地旋转，画出弧线。
+            crawl_target = None
+            crawl_steering = 0.0
             if not target_visible:
                 crawl_target, crawl_steering = self.find_relaxed_crawl_target(pose, closest_idx)
                 if crawl_target is not None:
-                    if abs(crawl_steering) >= self.rotate_in_place_angle:
-                        target_speed = 0.0
-                        target_angular = math.copysign(self.rotate_in_place_speed, crawl_steering)
-                    else:
-                        target_speed = self.blocked_crawl_speed
-                        crawl_dx = crawl_target[0] - pose[0]
-                        crawl_dy = crawl_target[1] - pose[1]
-                        crawl_dist = math.hypot(crawl_dx, crawl_dy)
-                        if crawl_dist > 0.02:
-                            target_angular = target_speed * 2.0 * math.sin(crawl_steering) / crawl_dist
-                        else:
-                            target_angular = 0.0
-                        target_angular = self.clamp(target_angular, -self.max_angular, self.max_angular)
+                    heading_error = abs(crawl_steering)
                 else:
-                    if abs(alpha) >= self.rotate_in_place_angle:
-                        target_angular = math.copysign(self.rotate_in_place_speed, alpha)
+                    heading_error = abs(alpha)
+            else:
+                heading_error = abs(alpha)
+
+            if heading_error >= self.rotate_in_place_angle:
+                self.in_rotate_in_place = True
+            elif heading_error < self.rotate_in_place_exit:
+                self.in_rotate_in_place = False
+
+            if self.in_rotate_in_place:
+                steer_ref = crawl_steering if (not target_visible and crawl_target is not None) else alpha
+                target_angular = math.copysign(self.rotate_in_place_speed, steer_ref)
+                target_speed = 0.0
+            elif not target_visible:
+                if crawl_target is not None:
+                    target_speed = self.blocked_crawl_speed
+                    crawl_dx = crawl_target[0] - pose[0]
+                    crawl_dy = crawl_target[1] - pose[1]
+                    crawl_dist = math.hypot(crawl_dx, crawl_dy)
+                    if crawl_dist > 0.02:
+                        target_angular = target_speed * 2.0 * math.sin(crawl_steering) / crawl_dist
                     else:
                         target_angular = 0.0
+                    target_angular = self.clamp(target_angular, -self.max_angular, self.max_angular)
+                else:
+                    target_angular = 0.0
                     target_speed = 0.0
-            elif abs(alpha) >= self.rotate_in_place_angle:
-                target_angular = math.copysign(self.rotate_in_place_speed, alpha)
-                target_speed = 0.0
             else:
                 # 速度基于路径曲率前馈（不用当前角速度指令反馈）
                 curve_abs = abs(curvature)
