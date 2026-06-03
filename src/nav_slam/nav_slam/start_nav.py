@@ -68,15 +68,20 @@ class PurePursuitController:
         target_point = path_points[target_idx]
         dx = target_point[0] - vehicle_pose[0]
         dy = target_point[1] - vehicle_pose[1]
-        target_angle = math.atan2(dy, dx)
+        actual_lookahead = math.hypot(dx, dy)
 
-        steering_angle = target_angle - vehicle_pose[2]
-        while steering_angle > math.pi:
-            steering_angle -= 2 * math.pi
-        while steering_angle < -math.pi:
-            steering_angle += 2 * math.pi
+        alpha = math.atan2(dy, dx) - vehicle_pose[2]
+        while alpha > math.pi:
+            alpha -= 2 * math.pi
+        while alpha < -math.pi:
+            alpha += 2 * math.pi
 
-        return steering_angle, target_point, self.last_closest_idx, target_idx, target_visible
+        if actual_lookahead < 0.02:
+            curvature = 0.0
+        else:
+            curvature = 2.0 * math.sin(alpha) / actual_lookahead
+
+        return curvature, alpha, actual_lookahead, target_point, self.last_closest_idx, target_idx, target_visible
 
 
 class PathFollowingNode(Node):
@@ -107,8 +112,9 @@ class PathFollowingNode(Node):
         # 控制参数，可继续调
         self.max_speed = 0.5          # 原来太快了，这里先降到 0.5
         self.min_speed = 0.08         # 小转弯时允许慢速爬行
-        self.max_angular = 0.8        # 限制最大角速度，避免猛甩
-        self.angular_gain = 1.2       # 角速度比例系数，不要直接等于 steering_angle
+        self.max_angular = 1.0        # 限制最大角速度，避免猛甩
+        self.k_cte = 0.5              # CTE 修正增益 (1/s)，控制横向回正强度
+        self.max_curve_for_slowdown = 2.5  # 路径曲率阈值 (1/m)，超过此值速度降至最低
         self.linear_acc_limit = 0.03  # 每次回调线速度最大变化量
         self.angular_acc_limit = 0.08 # 每次回调角速度最大变化量
         self.rotate_in_place_angle = 1.2
@@ -290,6 +296,19 @@ class PathFollowingNode(Node):
         steering_angle = self.compute_steering_to_point(vehicle_pose, target_point)
         return target_point, steering_angle
     
+    def compute_cte(self, vehicle_pose, path_points, closest_idx):
+        if closest_idx >= len(path_points) - 1:
+            return 0.0
+        p1 = path_points[closest_idx]
+        p2 = path_points[closest_idx + 1]
+        seg_x = p2[0] - p1[0]
+        seg_y = p2[1] - p1[1]
+        seg_len = math.hypot(seg_x, seg_y)
+        if seg_len < 1e-6:
+            return 0.0
+        # positive = robot is RIGHT of path direction (standard Stanley convention)
+        return -(seg_x * (vehicle_pose[1] - p1[1]) - seg_y * (vehicle_pose[0] - p1[0])) / seg_len
+
     def stop_robot(self):
         cmd_vel_msg = Twist()
         cmd_vel_msg.linear.x = 0.0
@@ -323,7 +342,9 @@ class PathFollowingNode(Node):
             return
 
         (
-            steering_angle,
+            curvature,
+            alpha,
+            actual_lookahead,
             target_point,
             closest_idx,
             target_idx,
@@ -335,8 +356,9 @@ class PathFollowingNode(Node):
         distance_to_end = np.linalg.norm(np.array(pose[:2]) - self.path_points[-1])
         odom_linear = float(msg.twist.twist.linear.x)
         odom_angular = float(msg.twist.twist.angular.z)
+        cte = self.compute_cte(pose, self.path_points, closest_idx)
         if self.update_progress_watchdog(
-            distance_to_end, closest_idx, steering_angle, odom_linear, odom_angular
+            distance_to_end, closest_idx, alpha, odom_linear, odom_angular
         ):
             return
 
@@ -352,41 +374,41 @@ class PathFollowingNode(Node):
             if not target_visible:
                 crawl_target, crawl_steering = self.find_relaxed_crawl_target(pose, closest_idx)
                 if crawl_target is not None:
-                    steering_angle = crawl_steering
-                    target_angular = self.clamp(
-                        self.angular_gain * steering_angle,
-                        -self.max_angular,
-                        self.max_angular,
-                    )
-                    if abs(steering_angle) >= self.rotate_in_place_angle:
+                    if abs(crawl_steering) >= self.rotate_in_place_angle:
                         target_speed = 0.0
+                        target_angular = math.copysign(self.rotate_in_place_speed, crawl_steering)
                     else:
                         target_speed = self.blocked_crawl_speed
+                        crawl_dx = crawl_target[0] - pose[0]
+                        crawl_dy = crawl_target[1] - pose[1]
+                        crawl_dist = math.hypot(crawl_dx, crawl_dy)
+                        if crawl_dist > 0.02:
+                            target_angular = target_speed * 2.0 * math.sin(crawl_steering) / crawl_dist
+                        else:
+                            target_angular = 0.0
+                        target_angular = self.clamp(target_angular, -self.max_angular, self.max_angular)
                 else:
-                    target_angular = self.clamp(
-                        self.angular_gain * steering_angle,
-                        -self.max_angular,
-                        self.max_angular,
-                    )
+                    if abs(alpha) >= self.rotate_in_place_angle:
+                        target_angular = math.copysign(self.rotate_in_place_speed, alpha)
+                    else:
+                        target_angular = 0.0
                     target_speed = 0.0
-            # 角速度：比例控制 + 限幅
-            elif abs(steering_angle) >= self.rotate_in_place_angle:
-                target_angular = math.copysign(self.rotate_in_place_speed, steering_angle)
+            elif abs(alpha) >= self.rotate_in_place_angle:
+                target_angular = math.copysign(self.rotate_in_place_speed, alpha)
                 target_speed = 0.0
             else:
-                target_angular = self.angular_gain * steering_angle
-                target_angular = self.clamp(target_angular, -self.max_angular, self.max_angular)
-
-                # 线速度：转弯越大，速度越小
-                angle_abs = abs(target_angular)
-                target_speed = self.max_speed * (1.0 - angle_abs / self.max_angular)
-
-                # 给一个最低速度，避免小角度时停在那里不动
+                # 速度基于路径曲率前馈（不用当前角速度指令反馈）
+                curve_abs = abs(curvature)
+                target_speed = self.max_speed * max(0.0, 1.0 - curve_abs / self.max_curve_for_slowdown)
                 target_speed = self.clamp(target_speed, self.min_speed, self.max_speed)
-
-                # 快到终点时进一步减速
                 if distance_to_end < 0.6:
                     target_speed *= 0.5
+
+                # Pure Pursuit 曲率 + Stanley 型 CTE 修正
+                alpha_adjusted = alpha + math.atan2(self.k_cte * cte, target_speed + 0.01)
+                kappa_corrected = 2.0 * math.sin(alpha_adjusted) / max(actual_lookahead, 0.02)
+                target_angular = target_speed * kappa_corrected
+                target_angular = self.clamp(target_angular, -self.max_angular, self.max_angular)
 
         # 速度平滑，避免突然加速/突然猛转
         self.last_linear_x = self.smooth_value(
@@ -407,7 +429,7 @@ class PathFollowingNode(Node):
                 f"tracking path: mode={self.control_mode}, v={self.last_linear_x:.2f}, "
                 f"w={self.last_angular_z:.2f}, odom_v={odom_linear:.2f}, "
                 f"odom_w={odom_angular:.2f}, dist={distance_to_end:.2f}, "
-                f"steer={steering_angle:.2f}, idx={closest_idx}/{len(self.path_points)}, "
+                f"alpha={alpha:.2f}, curv={curvature:.3f}, cte={cte:.3f}, idx={closest_idx}/{len(self.path_points)}, "
                 f"target_idx={target_idx}, visible={target_visible}, "
                 f"target=({target_point[0]:.2f}, {target_point[1]:.2f})"
             )
