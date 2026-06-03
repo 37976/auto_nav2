@@ -17,7 +17,6 @@
   <depend>tf2_ros</depend>
   <depend>gazebo_modele</depend>
   <depend>nav_slam</depend>
-  <depend>superpoint_rtabmap_bridge</depend>
   <exec_depend>rtabmap_launch</exec_depend>
 
   <test_depend>ament_copyright</test_depend>

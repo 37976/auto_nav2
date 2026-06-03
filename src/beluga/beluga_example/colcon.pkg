@@ -1,4 +1,0 @@
-{
-    "name": "beluga_example",
-    "dependencies": ["flatland_server", "flatland_plugins"]
-}
