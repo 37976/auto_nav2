@@ -317,7 +317,7 @@ class XFeatRgbdOdometry(Node):
     def _make_observation(self, color_image: np.ndarray, depth_image: np.ndarray, output: dict) -> dict:
         keypoints = output["keypoints"].detach().cpu().numpy().astype(np.float32, copy=False)
         scores = output["scores"].detach().cpu().numpy().astype(np.float32, copy=False)
-        descriptors = output["descriptors"]
+        descriptors = output["descriptors"].detach().cpu()
 
         if self._min_score > 0.0 and keypoints.shape[0] > 0:
             keep = scores >= self._min_score
@@ -600,7 +600,17 @@ def main(args=None) -> None:
     node = XFeatRgbdOdometry()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
+        # 显式释放 GPU 资源，避免重启时 CUDA 内存碎片化
+        try:
+            del node._xfeat
+            node._prev_obs = None
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
         node.destroy_node()
         rclpy.shutdown()
 

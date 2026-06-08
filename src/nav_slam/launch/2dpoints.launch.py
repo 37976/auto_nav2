@@ -105,7 +105,7 @@ def generate_launch_description():
             remappings=[('/odom', '/odom_in_map')],
             parameters=[{
                 'robot_radius': 0.14,
-                'clearance_margin': 0.01,
+                'clearance_margin': 0.03,
                 'occ_threshold': 15,
                 'trunk_safety_penalty_scale': 0.06,
                 'connector_candidate_count': 0,

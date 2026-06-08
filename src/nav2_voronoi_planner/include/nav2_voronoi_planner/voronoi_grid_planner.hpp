@@ -22,7 +22,7 @@ public:
   struct Config
   {
     double robot_radius {0.20};
-    double clearance_margin {0.01};
+    double clearance_margin {0.03};
     int occ_threshold {50};
     bool unknown_is_obstacle {true};
     double trunk_safety_penalty_scale {0.06};

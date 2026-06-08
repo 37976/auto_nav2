@@ -88,8 +88,8 @@ class PathFollowingNode(Node):
     def __init__(self):
         super().__init__('path_following_node')
 
-        # 前视距离调大一点，避免太敏感
-        self.pure_pursuit = PurePursuitController(lookahead_distance=0.8)
+        # 前视距离缩小，紧贴路径，避免脱离
+        self.pure_pursuit = PurePursuitController(lookahead_distance=0.4)
 
         self.path_points = None
         self.current_odom = None

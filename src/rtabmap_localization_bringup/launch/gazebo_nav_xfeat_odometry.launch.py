@@ -13,6 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    ExecuteProcess,
     IncludeLaunchDescription,
     LogInfo,
     OpaqueFunction,
@@ -298,7 +299,7 @@ def generate_launch_description():
     default_static_map_yaml = os.path.join(
         get_package_share_directory("nav_slam"),
         "map",
-        "gpt.yaml",
+        "localization_10m.yaml",
     )
 
     world_name = LaunchConfiguration("world_name")
@@ -348,7 +349,16 @@ def generate_launch_description():
     random_spawn_yaw = LaunchConfiguration("random_spawn_yaw", default="0.0")
 
     return LaunchDescription([
-        DeclareLaunchArgument("world_name", default_value="gpt.world"),
+        # ---- 0. 启动前清理：避免上次 Ctrl+C 残留导致第二次启动卡顿 ----
+        ExecuteProcess(
+            cmd=["bash", os.path.join(
+                get_package_share_directory("rtabmap_localization_bringup"),
+                "..", "..", "..", "..", "cleanup.sh",
+            )],
+            name="pre_launch_cleanup",
+            output="screen",
+        ),
+        DeclareLaunchArgument("world_name", default_value="localization_10m.world"),
         DeclareLaunchArgument("start_moving_obstacle", default_value="false"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("start_nav_rviz", default_value="true"),
