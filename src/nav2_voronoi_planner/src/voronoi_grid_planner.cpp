@@ -1247,6 +1247,66 @@ void VoronoiGridPlanner::populateVoronoiSkeleton(
   }
 }
 
+visualization_msgs::msg::Marker VoronoiGridPlanner::extractSkeletonMarker(
+  const nav_msgs::msg::OccupancyGrid & skeleton) const
+{
+  visualization_msgs::msg::Marker marker;
+  marker.header.frame_id = skeleton.header.frame_id;
+  marker.header.stamp = skeleton.header.stamp;
+  marker.ns = "voronoi_skeleton";
+  marker.id = 0;
+  marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+  marker.action = visualization_msgs::msg::Marker::ADD;
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x = 0.02;
+  marker.color.r = 0.0;
+  marker.color.g = 1.0;
+  marker.color.b = 0.0;
+  marker.color.a = 1.0;
+
+  const int w = static_cast<int>(skeleton.info.width);
+  const int h = static_cast<int>(skeleton.info.height);
+  const double resolution = skeleton.info.resolution;
+  const double origin_x = skeleton.info.origin.position.x;
+  const double origin_y = skeleton.info.origin.position.y;
+
+  auto toWorld = [&](int x, int y) -> geometry_msgs::msg::Point {
+    geometry_msgs::msg::Point p;
+    p.x = origin_x + (static_cast<double>(x) + 0.5) * resolution;
+    p.y = origin_y + (static_cast<double>(y) + 0.5) * resolution;
+    p.z = 0.0;
+    return p;
+  };
+
+  auto isSkeleton = [&](int x, int y) -> bool {
+    return skeleton.data[x + y * w] == 0;
+  };
+
+  for (int x = 0; x < w; ++x) {
+    for (int y = 0; y < h; ++y) {
+      if (!isSkeleton(x, y)) {
+        continue;
+      }
+
+      const geometry_msgs::msg::Point from = toWorld(x, y);
+
+      // 右邻居
+      if (x + 1 < w && isSkeleton(x + 1, y)) {
+        marker.points.push_back(from);
+        marker.points.push_back(toWorld(x + 1, y));
+      }
+
+      // 下邻居
+      if (y + 1 < h && isSkeleton(x, y + 1)) {
+        marker.points.push_back(from);
+        marker.points.push_back(toWorld(x, y + 1));
+      }
+    }
+  }
+
+  return marker;
+}
+
 void VoronoiGridPlanner::getStartAndEndConfigurations(
   const geometry_msgs::msg::PoseStamped & start,
   const geometry_msgs::msg::PoseStamped & goal,

@@ -71,6 +71,8 @@ VoronoiNode::VoronoiNode()
       local_map_downsample_factor_});
 
   skeleton_pub_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/voronoi_skeleton", 1);
+  skeleton_marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>(
+    "/voronoi_skeleton_marker", 1);
   path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path", 10);
   path2_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path2", 10);
 
@@ -111,7 +113,7 @@ VoronoiNode::VoronoiNode()
     enable_local_map_downsampling_ ? "true" : "false",
     local_map_downsample_factor_);
   RCLCPP_INFO(this->get_logger(), "Subscribed: /combined_grid /goal_pose /odom");
-  RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton");
+  RCLCPP_INFO(this->get_logger(), "Publishing: /path /path2 /voronoi_skeleton /voronoi_skeleton_marker");
   RCLCPP_INFO(this->get_logger(), "Plan period: %.1f ms", plan_period_ms_);
 }
 
@@ -520,6 +522,7 @@ void VoronoiNode::tryPlanWithSnapshot(
 
   skeleton.header.stamp = this->now();
   skeleton_pub_->publish(skeleton);
+  skeleton_marker_pub_->publish(planner_->extractSkeletonMarker(skeleton));
   path_pub_->publish(published_plan);
 
   if (publish_debug_path2_) {

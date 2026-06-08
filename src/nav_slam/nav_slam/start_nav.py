@@ -110,11 +110,11 @@ class PathFollowingNode(Node):
         self.last_debug_log_time = self.get_clock().now()
 
         # 控制参数，可继续调
-        self.max_speed = 0.5          # 原来太快了，这里先降到 0.5
-        self.min_speed = 0.08         # 小转弯时允许慢速爬行
+        self.max_speed = 0.8          # 直道最高速度
+        self.min_speed = 0.12         # 转弯时最低速度
         self.max_angular = 1.0        # 限制最大角速度，避免猛甩
         self.k_cte = 0.5              # CTE 修正增益 (1/s)，控制横向回正强度
-        self.max_curve_for_slowdown = 2.5  # 路径曲率阈值 (1/m)，超过此值速度降至最低
+        self.max_curve_for_slowdown = 6.0  # 路径曲率阈值 (1/m)，超过此值速度降至最低
         self.linear_acc_limit = 0.03  # 每次回调线速度最大变化量
         self.angular_acc_limit = 0.08 # 每次回调角速度最大变化量
         self.rotate_in_place_angle = 1.2

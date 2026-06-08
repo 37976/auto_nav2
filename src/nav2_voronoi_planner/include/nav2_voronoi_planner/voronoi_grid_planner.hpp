@@ -9,6 +9,7 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "rclcpp/logger.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 
 #include "nav2_voronoi_planner/voronoi_path_utils.hpp"
 #include "nav2_voronoi_planner/voronoi_types.hpp"
@@ -46,6 +47,9 @@ public:
     nav_msgs::msg::Path & plan,
     nav_msgs::msg::OccupancyGrid * skeleton,
     const rclcpp::Logger & logger) const;
+
+  visualization_msgs::msg::Marker extractSkeletonMarker(
+    const nav_msgs::msg::OccupancyGrid & skeleton) const;
 
 private:
   using ParentMap = std::unordered_map<int, int>;
