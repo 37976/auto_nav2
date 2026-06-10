@@ -1255,10 +1255,12 @@ visualization_msgs::msg::Marker VoronoiGridPlanner::extractSkeletonMarker(
   marker.header.stamp = skeleton.header.stamp;
   marker.ns = "voronoi_skeleton";
   marker.id = 0;
-  marker.type = visualization_msgs::msg::Marker::LINE_LIST;
+  marker.type = visualization_msgs::msg::Marker::TRIANGLE_LIST;
   marker.action = visualization_msgs::msg::Marker::ADD;
   marker.pose.orientation.w = 1.0;
-  marker.scale.x = 0.02;
+  marker.scale.x = 1.0;
+  marker.scale.y = 1.0;
+  marker.scale.z = 1.0;
   marker.color.r = 0.0;
   marker.color.g = 1.0;
   marker.color.b = 0.0;
@@ -1266,41 +1268,36 @@ visualization_msgs::msg::Marker VoronoiGridPlanner::extractSkeletonMarker(
 
   const int w = static_cast<int>(skeleton.info.width);
   const int h = static_cast<int>(skeleton.info.height);
-  const double resolution = skeleton.info.resolution;
-  const double origin_x = skeleton.info.origin.position.x;
-  const double origin_y = skeleton.info.origin.position.y;
-
-  auto toWorld = [&](int x, int y) -> geometry_msgs::msg::Point {
-    geometry_msgs::msg::Point p;
-    p.x = origin_x + (static_cast<double>(x) + 0.5) * resolution;
-    p.y = origin_y + (static_cast<double>(y) + 0.5) * resolution;
-    p.z = 0.0;
-    return p;
-  };
-
-  auto isSkeleton = [&](int x, int y) -> bool {
-    return skeleton.data[x + y * w] == 0;
-  };
+  const double res = skeleton.info.resolution;
+  const double ox = skeleton.info.origin.position.x;
+  const double oy = skeleton.info.origin.position.y;
 
   for (int x = 0; x < w; ++x) {
     for (int y = 0; y < h; ++y) {
-      if (!isSkeleton(x, y)) {
+      if (skeleton.data[x + y * w] != 0) {
         continue;
       }
 
-      const geometry_msgs::msg::Point from = toWorld(x, y);
+      const double x0 = ox + static_cast<double>(x) * res;
+      const double y0 = oy + static_cast<double>(y) * res;
+      const double x1 = x0 + res;
+      const double y1 = y0 + res;
 
-      // 右邻居
-      if (x + 1 < w && isSkeleton(x + 1, y)) {
-        marker.points.push_back(from);
-        marker.points.push_back(toWorld(x + 1, y));
-      }
+      geometry_msgs::msg::Point p1, p2, p3, p4;
+      p1.x = x0; p1.y = y0; p1.z = 0.0;
+      p2.x = x1; p2.y = y0; p2.z = 0.0;
+      p3.x = x1; p3.y = y1; p3.z = 0.0;
+      p4.x = x0; p4.y = y1; p4.z = 0.0;
 
-      // 下邻居
-      if (y + 1 < h && isSkeleton(x, y + 1)) {
-        marker.points.push_back(from);
-        marker.points.push_back(toWorld(x, y + 1));
-      }
+      // Triangle 1: bottom-left, bottom-right, top-right
+      marker.points.push_back(p1);
+      marker.points.push_back(p2);
+      marker.points.push_back(p3);
+
+      // Triangle 2: bottom-left, top-right, top-left
+      marker.points.push_back(p1);
+      marker.points.push_back(p3);
+      marker.points.push_back(p4);
     }
   }
 
