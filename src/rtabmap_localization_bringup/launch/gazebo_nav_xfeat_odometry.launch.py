@@ -212,7 +212,6 @@ def _build_timed_actions(context, *args, **kwargs):
                 "rgb_topic": "/camera/camera/image_raw",
                 "depth_topic": "/camera/camera/depth/image_raw",
                 "camera_info_topic": "/camera/camera/camera_info",
-                "xfeat_repo_dir": LaunchConfiguration("xfeat_repo_dir"),
                 "xfeat_weights_path": LaunchConfiguration("xfeat_weights_path"),
                 "top_k": LaunchConfiguration("top_k"),
                 "detection_threshold": LaunchConfiguration("detection_threshold"),
@@ -324,7 +323,6 @@ def generate_launch_description():
     min_score = LaunchConfiguration("min_score")
     depth_min_m = LaunchConfiguration("depth_min_m")
     depth_max_m = LaunchConfiguration("depth_max_m")
-    xfeat_repo_dir = LaunchConfiguration("xfeat_repo_dir")
     xfeat_weights_path = LaunchConfiguration("xfeat_weights_path")
     match_min_cossim = LaunchConfiguration("match_min_cossim")
     min_pnp_points = LaunchConfiguration("min_pnp_points")
@@ -380,7 +378,6 @@ def generate_launch_description():
         DeclareLaunchArgument("min_score", default_value="0.0"),
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="8.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("match_min_cossim", default_value="0.65"),
         DeclareLaunchArgument("min_pnp_points", default_value="6"),

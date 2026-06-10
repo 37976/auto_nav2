@@ -61,7 +61,6 @@ def generate_launch_description():
     detection_threshold = LaunchConfiguration("detection_threshold")
     min_score = LaunchConfiguration("min_score")
     depth_max_m = LaunchConfiguration("depth_max_m")
-    xfeat_repo_dir = LaunchConfiguration("xfeat_repo_dir")
     xfeat_weights_path = LaunchConfiguration("xfeat_weights_path")
     xfeat_log_level = LaunchConfiguration("xfeat_log_level")
     rtabmap_log_level = LaunchConfiguration("rtabmap_log_level")
@@ -101,7 +100,6 @@ def generate_launch_description():
         DeclareLaunchArgument("detection_threshold", default_value="0.05"),
         DeclareLaunchArgument("min_score", default_value="0.05"),
         DeclareLaunchArgument("depth_max_m", default_value="8.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("xfeat_log_level", default_value="error"),
         DeclareLaunchArgument("rtabmap_log_level", default_value="error"),
@@ -134,7 +132,6 @@ def generate_launch_description():
                         "depth_topic": "/camera/camera/depth/image_raw",
                         "camera_info_topic": "/camera/camera/camera_info",
                         "output_rgbd_topic": "/xfeat/rgbd_image",
-                        "xfeat_repo_dir": xfeat_repo_dir,
                         "xfeat_weights_path": xfeat_weights_path,
                         "top_k": top_k,
                         "detection_threshold": detection_threshold,

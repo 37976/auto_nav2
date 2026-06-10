@@ -54,7 +54,6 @@ def generate_launch_description():
     depth_scale = LaunchConfiguration("depth_scale")
     depth_min_m = LaunchConfiguration("depth_min_m")
     depth_max_m = LaunchConfiguration("depth_max_m")
-    xfeat_repo_dir = LaunchConfiguration("xfeat_repo_dir")
     xfeat_weights_path = LaunchConfiguration("xfeat_weights_path")
 
     return LaunchDescription([
@@ -88,7 +87,6 @@ def generate_launch_description():
         DeclareLaunchArgument("depth_scale", default_value="0.001"),
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="3.0"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(realsense_launch),
@@ -125,7 +123,6 @@ def generate_launch_description():
                         "depth_topic": depth_topic,
                         "camera_info_topic": camera_info_topic,
                         "output_rgbd_topic": "/xfeat/rgbd_image",
-                        "xfeat_repo_dir": xfeat_repo_dir,
                         "xfeat_weights_path": xfeat_weights_path,
                         "top_k": top_k,
                         "detection_threshold": detection_threshold,

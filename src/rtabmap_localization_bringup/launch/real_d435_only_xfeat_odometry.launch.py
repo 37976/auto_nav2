@@ -39,7 +39,6 @@ def generate_launch_description():
     depth_scale = LaunchConfiguration("depth_scale")
     depth_min_m = LaunchConfiguration("depth_min_m")
     depth_max_m = LaunchConfiguration("depth_max_m")
-    xfeat_repo_dir = LaunchConfiguration("xfeat_repo_dir")
     xfeat_weights_path = LaunchConfiguration("xfeat_weights_path")
     sync_queue_size = LaunchConfiguration("sync_queue_size")
     odom_topic = LaunchConfiguration("odom_topic")
@@ -70,7 +69,6 @@ def generate_launch_description():
         DeclareLaunchArgument("depth_min_m", default_value="0.2"),
         DeclareLaunchArgument("depth_max_m", default_value="3.0"),
         DeclareLaunchArgument("sync_queue_size", default_value="10"),
-        DeclareLaunchArgument("xfeat_repo_dir", default_value=os.path.expanduser("~/project/XFeat")),
         DeclareLaunchArgument("xfeat_weights_path", default_value=""),
         DeclareLaunchArgument("odom_topic", default_value="/xfeat/odom"),
         DeclareLaunchArgument("odom_frame", default_value="xfeat_odom"),
@@ -113,7 +111,6 @@ def generate_launch_description():
                 "rgb_topic": rgb_topic,
                 "depth_topic": depth_topic,
                 "camera_info_topic": camera_info_topic,
-                "xfeat_repo_dir": xfeat_repo_dir,
                 "xfeat_weights_path": xfeat_weights_path,
                 "top_k": top_k,
                 "detection_threshold": detection_threshold,

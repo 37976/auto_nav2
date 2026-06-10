@@ -291,7 +291,7 @@ class ObstacleGridNode(Node):
             self._pc_msg_count = 0
         self._pc_msg_count += 1
         if self._pc_msg_count % 50 == 1:
-            self.get_logger().info(
+            self.get_logger().debug(
                 f"收到点云障碍物数据: {len(points)} 个点 (第 {self._pc_msg_count} 条消息)"
             )
 

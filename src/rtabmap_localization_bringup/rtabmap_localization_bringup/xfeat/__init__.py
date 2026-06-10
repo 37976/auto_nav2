@@ -1,0 +1,1 @@
+from rtabmap_localization_bringup.xfeat._xfeat import XFeat

@@ -3,7 +3,6 @@
 import csv
 import math
 import os
-import sys
 from typing import Optional
 
 import cv2
@@ -21,26 +20,7 @@ from sensor_msgs.msg import CameraInfo, Image
 from std_msgs.msg import String
 from tf2_ros import Buffer, TransformBroadcaster, TransformException, TransformListener
 
-
-def _resolve_xfeat_repo_dir(configured_dir: str) -> str:
-    candidates = []
-    if configured_dir:
-        candidates.append(configured_dir)
-
-    workspace_candidate = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "XFeat")
-    )
-    candidates.append(workspace_candidate)
-    candidates.append(os.path.expanduser("~/project/XFeat"))
-
-    for candidate in candidates:
-        if os.path.isfile(os.path.join(candidate, "modules", "xfeat.py")):
-            return candidate
-
-    raise FileNotFoundError(
-        "Cannot locate XFeat repo. Set parameter 'xfeat_repo_dir' to the directory containing "
-        "'modules/xfeat.py'."
-    )
+from rtabmap_localization_bringup.xfeat import XFeat
 
 
 def _frame_to_tensor(frame_bgr: np.ndarray) -> torch.Tensor:
@@ -130,7 +110,6 @@ class XFeatRgbdOdometry(Node):
         self.declare_parameter("rgb_topic", "/camera/camera/color/image_raw")
         self.declare_parameter("depth_topic", "/camera/camera/aligned_depth_to_color/image_raw")
         self.declare_parameter("camera_info_topic", "/camera/camera/color/camera_info")
-        self.declare_parameter("xfeat_repo_dir", "")
         self.declare_parameter("xfeat_weights_path", "")
         self.declare_parameter("top_k", 256)
         self.declare_parameter("detection_threshold", 0.05)
@@ -199,20 +178,12 @@ class XFeatRgbdOdometry(Node):
             "dyaw_deg": 0.0,
         }
 
-        configured_repo_dir = str(self.get_parameter("xfeat_repo_dir").value)
-        self._xfeat_repo_dir = _resolve_xfeat_repo_dir(configured_repo_dir)
-        if self._xfeat_repo_dir not in sys.path:
-            sys.path.insert(0, self._xfeat_repo_dir)
-
-        from modules.xfeat import XFeat  # pylint: disable=import-outside-toplevel
-
         configured_weights_path = str(self.get_parameter("xfeat_weights_path").value)
-        weights_path = configured_weights_path or os.path.join(self._xfeat_repo_dir, "weights", "xfeat.pt")
-        self._xfeat = XFeat(
-            weights=weights_path,
-            top_k=self._top_k,
-            detection_threshold=self._detection_threshold,
-        )
+        kwargs = {"top_k": self._top_k, "detection_threshold": self._detection_threshold}
+        if configured_weights_path:
+            kwargs["weights"] = configured_weights_path
+        self._xfeat = XFeat(**kwargs)
+        self.get_logger().info("XFeat model loaded successfully")
 
         self._odom_pub = self.create_publisher(Odometry, self._odom_topic, 10)
         self._delta_odom_pub = self.create_publisher(Odometry, self._delta_odom_topic, 10)
@@ -236,8 +207,7 @@ class XFeatRgbdOdometry(Node):
         )
         self._sync.registerCallback(self._rgbd_callback)
 
-        self.get_logger().info(f"XFeat repo: {self._xfeat_repo_dir}")
-        self.get_logger().info(f"XFeat weights: {weights_path}")
+        self.get_logger().info("XFeat model loaded from package xfeat submodule")
         self.get_logger().info("Running original XFeat RGB-D odometry logic: feature extraction, matching, depth back-projection and PnP.")
         self.get_logger().info(
             f"Publishing odom as {self._odom_frame}->{self._base_frame}, estimated from {self._camera_frame}"
