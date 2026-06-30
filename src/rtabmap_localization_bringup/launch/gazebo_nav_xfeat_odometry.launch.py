@@ -201,7 +201,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "log_hz": 5.0,
             }],
         ),
-        # 4. XFeat 视觉里程计
+        # 4. XFeat 视觉里程计（修正增益已置零，保留节点供后续可选使用）
         Node(
             package="rtabmap_localization_bringup",
             executable="xfeat_rgbd_odometry",
@@ -232,7 +232,29 @@ def _build_timed_actions(context, *args, **kwargs):
                 "pnp_iterations": LaunchConfiguration("pnp_iterations"),
             }],
         ),
-        # 5. 里程计融合
+        # 4.5. 激光扫描 -> ORB 地图匹配 持续定位修正
+        Node(
+            package="nav_slam",
+            executable="orb_map_matcher",
+            name="orb_map_matcher",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "map_yaml_path": LaunchConfiguration("static_map_yaml"),
+                "scan_topic": "/scan",
+                "odom_topic": "/localized_odom",
+                "delta_odom_topic": LaunchConfiguration("orb_delta_topic"),
+                "base_frame": LaunchConfiguration("base_frame"),
+                "match_period_sec": LaunchConfiguration("orb_match_period_sec"),
+                "lidar_max_range": 8.0,
+                "map_resolution": 0.05,
+                "max_iterations": LaunchConfiguration("orb_max_iterations"),
+                "min_f1_score": LaunchConfiguration("orb_min_f1_score"),
+                "correction_gain_xy": LaunchConfiguration("orb_gain_xy"),
+                "correction_gain_yaw": LaunchConfiguration("orb_gain_yaw"),
+            }],
+        ),
+        # 5. 里程计融合（使用 ORB 修正源）
         Node(
             package="rtabmap_localization_bringup",
             executable="odom_fusion_node",
@@ -240,13 +262,14 @@ def _build_timed_actions(context, *args, **kwargs):
             output="screen",
             parameters=[{
                 "base_odom_topic": "/odom",
-                "xfeat_delta_topic": LaunchConfiguration("delta_odom_topic"),
+                "xfeat_delta_topic": LaunchConfiguration("orb_delta_topic"),
                 "output_odom_topic": LaunchConfiguration("fused_odom_topic"),
-                "correction_gain_xy": LaunchConfiguration("correction_gain_xy"),
-                "correction_gain_yaw": LaunchConfiguration("correction_gain_yaw"),
+                "correction_gain_xy": 1.0,
+                "correction_gain_yaw": 1.0,
                 "use_imu_yaw": LaunchConfiguration("use_imu_yaw"),
-                "max_delta_translation_diff_m": LaunchConfiguration("max_delta_translation_diff_m"),
-                "max_delta_yaw_diff_deg": LaunchConfiguration("max_delta_yaw_diff_deg"),
+                "max_delta_translation_diff_m": 0.50,
+                "max_delta_yaw_diff_deg": 45.0,
+                "xfeat_timeout_sec": 5.0,
             }],
         ),
     ]
@@ -341,6 +364,13 @@ def generate_launch_description():
     use_imu_yaw = LaunchConfiguration("use_imu_yaw")
     max_delta_translation_diff_m = LaunchConfiguration("max_delta_translation_diff_m")
     max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
+    # ORB 地图匹配参数
+    orb_delta_topic = LaunchConfiguration("orb_delta_topic")
+    orb_match_period_sec = LaunchConfiguration("orb_match_period_sec")
+    orb_max_iterations = LaunchConfiguration("orb_max_iterations")
+    orb_min_f1_score = LaunchConfiguration("orb_min_f1_score")
+    orb_gain_xy = LaunchConfiguration("orb_gain_xy")
+    orb_gain_yaw = LaunchConfiguration("orb_gain_yaw")
     # 随机 spawn 位姿（由 OpaqueFunction 填入）
     random_spawn_x = LaunchConfiguration("random_spawn_x", default="0.0")
     random_spawn_y = LaunchConfiguration("random_spawn_y", default="0.0")
@@ -396,6 +426,13 @@ def generate_launch_description():
         DeclareLaunchArgument("use_imu_yaw", default_value="true"),
         DeclareLaunchArgument("max_delta_translation_diff_m", default_value="0.20"),
         DeclareLaunchArgument("max_delta_yaw_diff_deg", default_value="20.0"),
+        # ORB 地图匹配参数
+        DeclareLaunchArgument("orb_delta_topic", default_value="/orb/delta_odom"),
+        DeclareLaunchArgument("orb_match_period_sec", default_value="2.0"),
+        DeclareLaunchArgument("orb_max_iterations", default_value="50"),
+        DeclareLaunchArgument("orb_min_f1_score", default_value="30.0"),
+        DeclareLaunchArgument("orb_gain_xy", default_value="0.3"),
+        DeclareLaunchArgument("orb_gain_yaw", default_value="0.3"),
         DeclareLaunchArgument("use_amcl", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
         OpaqueFunction(function=_set_random_spawn),

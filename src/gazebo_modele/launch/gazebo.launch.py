@@ -89,6 +89,9 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_z', default_value='0.03'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
+        SetEnvironmentVariable('GAZEBO_MODEL_PATH',
+            os.path.join(pkg_share_dir, 'models') + ':' +
+            '/usr/share/gazebo-11/models'),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,
         spawn_entity_cmd,
