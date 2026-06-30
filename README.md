@@ -253,6 +253,31 @@ ros2 launch gazebo_modele gazebo_nav_web.launch.py \
 
 ---
 
+## 定位精度测试
+
+`test_orb_localization.py` 反复随机 spawn 机器人到地图空闲区域，对比 ORB 定位结果与真实 spawn 位姿，统计定位误差。
+
+```bash
+# 100 次测试，每次 ORB 成功后采集 15 秒跟踪数据
+python3 test_orb_localization.py -n 100 -d 15
+
+# 快速验证（5 次）
+python3 test_orb_localization.py -n 5 -d 5
+
+# 查看测试计划但不执行
+python3 test_orb_localization.py --dry-run
+```
+
+| 参数 | 说明 | 默认值 |
+|------|------|--------|
+| `-n, --runs` | 测试次数 | 100 |
+| `-d, --duration` | 每次 ORB 完成后采集跟踪数据时长（秒） | 15 |
+| `-t, --timeout` | 等待 ORB 超时（秒） | 180 |
+| `-v, --verbose` | 打印所有 launch stdout | off |
+| `--fast-cleanup` | 加速清理，跳过端口等待 | off |
+
+输出：`test_results/orb_results_<时间戳>.csv`（逐次详细） + `orb_summary_<时间戳>.csv`（统计汇总）
+
 ## 自动评估
 
 ```bash
