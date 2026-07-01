@@ -17,6 +17,7 @@ from launch.actions import (
     IncludeLaunchDescription,
     LogInfo,
     OpaqueFunction,
+    SetEnvironmentVariable,
     TimerAction,
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -377,7 +378,9 @@ def generate_launch_description():
     random_spawn_yaw = LaunchConfiguration("random_spawn_yaw", default="0.0")
 
     return LaunchDescription([
-        # ---- 0. 启动前清理：避免上次 Ctrl+C 残留导致第二次启动卡顿 ----
+        # ---- 0. 强制 ROS 2 仅用回环接口，避免插网线后 DDS 多播扰乱 TF 通信 ----
+        SetEnvironmentVariable('ROS_LOCALHOST_ONLY', '1'),
+        # ---- 0.5. 启动前清理：避免上次 Ctrl+C 残留导致第二次启动卡顿 ----
         ExecuteProcess(
             cmd=["bash", os.path.join(
                 get_package_share_directory("rtabmap_localization_bringup"),
