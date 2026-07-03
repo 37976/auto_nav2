@@ -225,6 +225,8 @@ class OdomFusionNode(Node):
                 age = base_stamp_sec - self.last_xfeat_stamp_sec
                 self._last_fusion_status = "base_only"
                 self._last_status_details = f"xfeat_timeout={age:.2f}s"
+            # 每条 ORB 修正消息只用一次，用完清除，避免同一修正量被重复叠加
+            self.xfeat_delta = None
         elif self.xfeat_delta is None:
             self._last_fusion_status = "base_only"
             self._last_status_details = "xfeat_missing"

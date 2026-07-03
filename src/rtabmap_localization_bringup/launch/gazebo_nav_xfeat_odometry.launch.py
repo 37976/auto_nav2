@@ -434,8 +434,8 @@ def generate_launch_description():
         DeclareLaunchArgument("orb_match_period_sec", default_value="2.0"),
         DeclareLaunchArgument("orb_max_iterations", default_value="50"),
         DeclareLaunchArgument("orb_min_f1_score", default_value="30.0"),
-        DeclareLaunchArgument("orb_gain_xy", default_value="0.3"),
-        DeclareLaunchArgument("orb_gain_yaw", default_value="0.3"),
+        DeclareLaunchArgument("orb_gain_xy", default_value="0.6"),
+        DeclareLaunchArgument("orb_gain_yaw", default_value="0.5"),
         DeclareLaunchArgument("use_amcl", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
         OpaqueFunction(function=_set_random_spawn),
