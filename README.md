@@ -39,6 +39,10 @@ ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
 ```bash
 ros2 launch rtabmap_localization_bringup gazebo_sensors_only.launch.py
 ```
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_sensors_only.launch.py \
+  start_orb_matcher:=false
+```
 
 ### 网页控制
 
