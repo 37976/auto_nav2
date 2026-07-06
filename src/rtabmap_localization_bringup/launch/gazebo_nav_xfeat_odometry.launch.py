@@ -20,6 +20,7 @@ from launch.actions import (
     SetEnvironmentVariable,
     TimerAction,
 )
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -233,26 +234,45 @@ def _build_timed_actions(context, *args, **kwargs):
                 "pnp_iterations": LaunchConfiguration("pnp_iterations"),
             }],
         ),
-        # 4.5. 激光扫描 -> ORB 地图匹配 持续定位修正
+        # 4.5. 激光扫描 -> ORB 地图匹配 持续定位修正（可通过参数关闭）
+    ]
+    if LaunchConfiguration("start_orb_matcher").perform(context) == "true":
+        actions.append(
+            Node(
+                package="nav_slam",
+                executable="orb_map_matcher",
+                name="orb_map_matcher",
+                output="screen",
+                parameters=[{
+                    "use_sim_time": LaunchConfiguration("use_sim_time"),
+                    "map_yaml_path": LaunchConfiguration("static_map_yaml"),
+                    "scan_topic": "/scan",
+                    "odom_topic": "/localized_odom",
+                    "delta_odom_topic": LaunchConfiguration("orb_delta_topic"),
+                    "base_frame": LaunchConfiguration("base_frame"),
+                    "match_period_sec": LaunchConfiguration("orb_match_period_sec"),
+                    "lidar_max_range": 8.0,
+                    "map_resolution": 0.05,
+                    "max_iterations": LaunchConfiguration("orb_max_iterations"),
+                    "min_f1_score": LaunchConfiguration("orb_min_f1_score"),
+                    "correction_gain_xy": LaunchConfiguration("orb_gain_xy"),
+                    "correction_gain_yaw": LaunchConfiguration("orb_gain_yaw"),
+                }],
+            )
+        )
+    actions.extend([
+        # 4.6. 导航目标到达后全局重定位编排器
         Node(
             package="nav_slam",
-            executable="orb_map_matcher",
-            name="orb_map_matcher",
+            executable="nav_goal_relocalizer",
+            name="nav_goal_relocalizer",
             output="screen",
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
-                "map_yaml_path": LaunchConfiguration("static_map_yaml"),
-                "scan_topic": "/scan",
-                "odom_topic": "/localized_odom",
-                "delta_odom_topic": LaunchConfiguration("orb_delta_topic"),
-                "base_frame": LaunchConfiguration("base_frame"),
-                "match_period_sec": LaunchConfiguration("orb_match_period_sec"),
-                "lidar_max_range": 8.0,
-                "map_resolution": 0.05,
-                "max_iterations": LaunchConfiguration("orb_max_iterations"),
-                "min_f1_score": LaunchConfiguration("orb_min_f1_score"),
-                "correction_gain_xy": LaunchConfiguration("orb_gain_xy"),
-                "correction_gain_yaw": LaunchConfiguration("orb_gain_yaw"),
+                "min_relocalize_interval_sec": LaunchConfiguration(
+                    "relocalize_interval_sec"),
+                "orb_disable_duration_sec": LaunchConfiguration(
+                    "orb_disable_duration_sec"),
             }],
         ),
         # 5. 里程计融合（使用 ORB 修正源）
@@ -273,7 +293,7 @@ def _build_timed_actions(context, *args, **kwargs):
                 "xfeat_timeout_sec": 5.0,
             }],
         ),
-    ]
+    ])
 
     # 9. 导航核心
     nav_launch_file = os.path.join(
@@ -372,6 +392,10 @@ def generate_launch_description():
     orb_min_f1_score = LaunchConfiguration("orb_min_f1_score")
     orb_gain_xy = LaunchConfiguration("orb_gain_xy")
     orb_gain_yaw = LaunchConfiguration("orb_gain_yaw")
+    # 导航到达目标点后重定位间隔
+    relocalize_interval_sec = LaunchConfiguration("relocalize_interval_sec")
+    orb_disable_duration_sec = LaunchConfiguration("orb_disable_duration_sec")
+    start_orb_matcher = LaunchConfiguration("start_orb_matcher")
     # 随机 spawn 位姿（由 OpaqueFunction 填入）
     random_spawn_x = LaunchConfiguration("random_spawn_x", default="0.0")
     random_spawn_y = LaunchConfiguration("random_spawn_y", default="0.0")
@@ -437,6 +461,9 @@ def generate_launch_description():
         DeclareLaunchArgument("orb_gain_xy", default_value="0.6"),
         DeclareLaunchArgument("orb_gain_yaw", default_value="0.5"),
         DeclareLaunchArgument("use_amcl", default_value="true"),
+        DeclareLaunchArgument("relocalize_interval_sec", default_value="10.0"),
+        DeclareLaunchArgument("orb_disable_duration_sec", default_value="10.0"),
+        DeclareLaunchArgument("start_orb_matcher", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
         OpaqueFunction(function=_set_random_spawn),
         # 1. 启动 Gazebo（用随机位姿 spawn 机器人）

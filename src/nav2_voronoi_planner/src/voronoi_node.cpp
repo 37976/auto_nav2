@@ -75,6 +75,7 @@ VoronoiNode::VoronoiNode()
     "/voronoi_skeleton_marker", 1);
   path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path", 10);
   path2_pub_ = this->create_publisher<nav_msgs::msg::Path>("/path2", 10);
+  goal_reached_pub_ = this->create_publisher<std_msgs::msg::Empty>("/goal_reached", 10);
 
   map_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
     "/combined_grid", rclcpp::SensorDataQoS(),
@@ -371,7 +372,9 @@ void VoronoiNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
 
-    RCLCPP_INFO(this->get_logger(), "Goal reached from odom. Stop replanning.");
+    goal_reached_pub_->publish(std_msgs::msg::Empty());
+
+    RCLCPP_INFO(this->get_logger(), "Goal reached from odom. Published /goal_reached.");
   }
 }
 
@@ -430,6 +433,8 @@ void VoronoiNode::tryPlanWithSnapshot(
     empty_path.header.stamp = this->now();
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
+
+    goal_reached_pub_->publish(std_msgs::msg::Empty());
 
     RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
     return;
@@ -627,6 +632,8 @@ void VoronoiNode::planTimerCallback()
     empty_path.header.stamp = this->now();
     path_pub_->publish(empty_path);
     path2_pub_->publish(empty_path);
+
+    goal_reached_pub_->publish(std_msgs::msg::Empty());
 
     RCLCPP_INFO(this->get_logger(), "Goal reached. Stop replanning.");
     return;

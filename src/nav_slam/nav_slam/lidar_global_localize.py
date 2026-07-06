@@ -15,6 +15,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
+from std_srvs.srv import Empty
 from tf2_ros import StaticTransformBroadcaster
 
 import sys
@@ -85,11 +86,16 @@ class LidarGlobalLocalize(Node):
         self._repub_count = 0
         self._repub_timer = self.create_timer(0.5, self._publish_map_odom_tf)
 
+        # 重定位服务：允许外部节点在导航到达目标点后触发全局重定位
+        self._relocalize_srv = self.create_service(
+            Empty, "/trigger_relocalize", self._relocalize_callback)
+
         # 立即发布默认 TF, 建立 map 帧, 避免 ORB 计算期间系统瘫痪
         self._publish_default_tf()
 
         self.get_logger().info(
-            f"ORB 全局定位已就绪, 地图: {self._map_file_path}")
+            f"ORB 全局定位已就绪, 地图: {self._map_file_path}"
+            ", 服务 /trigger_relocalize 可用")
 
     # ============== 地图 ==============
 
@@ -169,6 +175,26 @@ class LidarGlobalLocalize(Node):
         self._tf_broadcaster.sendTransform(t)
         self.get_logger().info("已发送默认 map->odom TF (0,0,0), 等待 ORB 定位...")
 
+    def _relocalize_callback(self, request, response):
+        """外部触发重定位：重置状态，重新收集激光扫描并执行全局定位。"""
+        if not self._map_ready:
+            self.get_logger().warn("重定位请求被拒绝: 地图未就绪")
+            return response
+
+        self.get_logger().info("收到重定位请求, 重置定位状态...")
+        self._localized = False
+        self._scan_count = 0
+        self._scan_image = None
+        self._pending_pose = None
+        self._repub_count = 0
+
+        # 如果之前的定时器已被取消，重新创建
+        if self._repub_timer.is_canceled():
+            self._repub_timer = self.create_timer(0.5, self._publish_map_odom_tf)
+
+        self.get_logger().info("重定位状态已重置, 等待激光扫描触发定位...")
+        return response
+
     def _run_localization(self):
         self._localized = True
         self.get_logger().info(f"ORB 匹配中... min_dist={self._min_distance:.2f}m")
@@ -183,12 +209,14 @@ class LidarGlobalLocalize(Node):
                 lidar_range=self._max_range,
             )
             if result is None:
-                self.get_logger().error("定位失败: 未找到候选位姿")
+                self.get_logger().error("定位失败: 未找到候选位姿, 将重试")
+                self._localized = False
                 return
             x, y, yaw, f1 = result
             yaw = math.atan2(math.sin(yaw + math.pi), math.cos(yaw + math.pi))
         except Exception as e:
-            self.get_logger().error(f"定位失败: {e}")
+            self.get_logger().error(f"定位失败: {e}, 将重试")
+            self._localized = False
             return
 
         self.get_logger().info(
@@ -214,15 +242,25 @@ class LidarGlobalLocalize(Node):
         odom_yaw = math.atan2(2.0 * (q.w * q.z + q.x * q.y),
                               1.0 - 2.0 * (q.y * q.y + q.z * q.z))
 
+        # tf_yaw = map_yaw - odom_yaw
         tf_yaw = math.atan2(math.sin(map_yaw - odom_yaw),
                             math.cos(map_yaw - odom_yaw))
+
+        # StaticTransform 语义: map = R(tf_yaw) * odom + tf_translation
+        # 因此 tf_translation = map - R(tf_yaw) * odom
+        odom_x = odom.pose.pose.position.x
+        odom_y = odom.pose.pose.position.y
+        c = math.cos(tf_yaw)
+        s = math.sin(tf_yaw)
+        rotated_odom_x = c * odom_x - s * odom_y
+        rotated_odom_y = s * odom_x + c * odom_y
 
         t = TransformStamped()
         t.header.stamp = rclpy.time.Time(seconds=0, nanoseconds=0).to_msg()
         t.header.frame_id = "map"
         t.child_frame_id = "odom"
-        t.transform.translation.x = map_x - odom.pose.pose.position.x
-        t.transform.translation.y = map_y - odom.pose.pose.position.y
+        t.transform.translation.x = map_x - rotated_odom_x
+        t.transform.translation.y = map_y - rotated_odom_y
         t.transform.translation.z = 0.0
         t.transform.rotation.z = math.sin(tf_yaw * 0.5)
         t.transform.rotation.w = math.cos(tf_yaw * 0.5)

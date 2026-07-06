@@ -20,6 +20,7 @@ from geometry_msgs.msg import Quaternion
 from nav_msgs.msg import Odometry
 from rclpy.node import Node, Timer
 from sensor_msgs.msg import LaserScan
+from std_srvs.srv import SetBool
 
 # ---- 复用 kidnapped_robot_finder ----
 _base = os.path.dirname(os.path.abspath(__file__))
@@ -96,6 +97,7 @@ class OrbMapMatcher(Node):
         self._latest_odom: Optional[Odometry] = None
         self._match_count = 0
         self._success_count = 0
+        self._enabled = True
 
         # ---- 订阅 ----
         self._scan_sub = self.create_subscription(
@@ -108,6 +110,10 @@ class OrbMapMatcher(Node):
 
         # ---- 定时匹配 ----
         self._timer = self.create_timer(self._period, self._match_timer_cb)
+
+        # ---- 暂停/恢复服务 (重定位期间暂停，避免新旧TF冲突) ----
+        self._enable_srv = self.create_service(
+            SetBool, "/enable_orb_matcher", self._enable_cb)
 
         self.get_logger().info(
             f"ORB 持续匹配就绪: 每 {self._period}s, "
@@ -150,9 +156,21 @@ class OrbMapMatcher(Node):
     def _odom_cb(self, msg: Odometry) -> None:
         self._latest_odom = msg
 
+    # ==================== 暂停/恢复 ====================
+
+    def _enable_cb(self, request, response):
+        self._enabled = request.data
+        response.success = True
+        response.message = (
+            f"ORB matcher {'已恢复' if self._enabled else '已暂停'}")
+        self.get_logger().info(response.message)
+        return response
+
     # ==================== 定时匹配 ====================
 
     def _match_timer_cb(self) -> None:
+        if not self._enabled:
+            return
         if self._latest_scan is None or self._latest_odom is None:
             return
 

@@ -8,6 +8,7 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "std_msgs/msg/empty.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "rclcpp/rclcpp.hpp"
 
@@ -102,6 +103,7 @@ private:
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path2_pub_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr skeleton_pub_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr skeleton_marker_pub_;
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr goal_reached_pub_;
 
   std::unique_ptr<VoronoiGridPlanner> planner_;
 };
