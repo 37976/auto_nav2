@@ -24,7 +24,10 @@ source install/setup.bash
 ```bash
 ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
 ```
-
+```bash
+ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
+  start_orb_matcher:=false
+```
 每次启动会：
 
 1. 读取地图随机选安全空闲位姿
@@ -38,10 +41,6 @@ ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py
 
 ```bash
 ros2 launch rtabmap_localization_bringup gazebo_sensors_only.launch.py
-```
-```bash
-ros2 launch rtabmap_localization_bringup gazebo_sensors_only.launch.py \
-  start_orb_matcher:=false
 ```
 
 ### 网页控制
