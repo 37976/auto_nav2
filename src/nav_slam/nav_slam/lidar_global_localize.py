@@ -69,6 +69,7 @@ class LidarGlobalLocalize(Node):
         self._min_distance = None
         self._scan_count = 0
         self._localized = False
+        self._cancel_requested = False
         self._latest_odom = None
 
         self._load_map_file()
@@ -90,12 +91,16 @@ class LidarGlobalLocalize(Node):
         self._relocalize_srv = self.create_service(
             Empty, "/trigger_relocalize", self._relocalize_callback)
 
+        # 取消重定位服务：允许外部节点在重定位期间收到新目标时截断定位
+        self._cancel_relocalize_srv = self.create_service(
+            Empty, "/cancel_relocalize", self._cancel_relocalize_callback)
+
         # 立即发布默认 TF, 建立 map 帧, 避免 ORB 计算期间系统瘫痪
         self._publish_default_tf()
 
         self.get_logger().info(
             f"ORB 全局定位已就绪, 地图: {self._map_file_path}"
-            ", 服务 /trigger_relocalize 可用")
+            ", 服务 /trigger_relocalize, /cancel_relocalize 可用")
 
     # ============== 地图 ==============
 
@@ -141,7 +146,7 @@ class LidarGlobalLocalize(Node):
     # ============== 激光 ==============
 
     def _scan_callback(self, msg: LaserScan):
-        if self._localized:
+        if self._localized or self._cancel_requested:
             return
         image = np.zeros((self._image_size, self._image_size), dtype=np.uint8)
         min_distance = math.inf
@@ -182,6 +187,7 @@ class LidarGlobalLocalize(Node):
             return response
 
         self.get_logger().info("收到重定位请求, 重置定位状态...")
+        self._cancel_requested = False
         self._localized = False
         self._scan_count = 0
         self._scan_image = None
@@ -195,7 +201,31 @@ class LidarGlobalLocalize(Node):
         self.get_logger().info("重定位状态已重置, 等待激光扫描触发定位...")
         return response
 
+    def _cancel_relocalize_callback(self, request, response):
+        """取消正在进行的重定位：停止扫描收集，丢弃定位结果，保持当前 map->odom TF 不变。
+
+        只影响当前正在执行的定位流程（扫描收集 / ORB 求解），不阻止未来的重定位请求。
+        """
+        self.get_logger().info("收到取消重定位请求")
+        if self._localized:
+            # 当前未在重定位（可能 trigger 还在异步传输中，尚未处理）
+            # 设置取消标志，trigger 到达后会立即清除，但扫描收集和求解会被跳过
+            self.get_logger().info("当前未在重定位中, 设置取消标志以防 trigger 即将到达")
+        self._cancel_requested = True
+        self._localized = True  # 停止扫描收集
+        self._scan_count = 0
+        self._scan_image = None
+        self._pending_pose = None
+        self._repub_count = 0
+        if not self._repub_timer.is_canceled():
+            self._repub_timer.cancel()
+        self.get_logger().info("重定位已取消, 保持当前 map->odom TF")
+        return response
+
     def _run_localization(self):
+        if self._cancel_requested:
+            self.get_logger().info("重定位已被取消, 丢弃当前定位结果")
+            return
         self._localized = True
         self.get_logger().info(f"ORB 匹配中... min_dist={self._min_distance:.2f}m")
 
@@ -217,6 +247,11 @@ class LidarGlobalLocalize(Node):
         except Exception as e:
             self.get_logger().error(f"定位失败: {e}, 将重试")
             self._localized = False
+            return
+
+        # 求解器可能耗时较长，再次检查是否已被取消
+        if self._cancel_requested:
+            self.get_logger().info("重定位已被取消, 丢弃求解结果")
             return
 
         self.get_logger().info(
