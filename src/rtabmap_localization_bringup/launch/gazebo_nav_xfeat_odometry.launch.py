@@ -28,7 +28,7 @@ from launch_ros.actions import Node
 
 # ---- 随机出生安全参数 ----
 ROBOT_SAFE_RADIUS_M = 0.35
-MIN_CLEARANCE_PREFERRED_M = 0.60
+MIN_CLEARANCE_PREFERRED_M = 2.0
 
 
 def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE_RADIUS_M):
@@ -80,17 +80,18 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
     padded = np.pad(valid_free_mask.astype(np.uint8), border, mode='constant', constant_values=0)
     distance_cells_full = cv2.distanceTransform(padded, cv2.DIST_L2, 5)
     distance_cells = distance_cells_full[border:-border, border:-border]
-    safe_cells = float(safe_radius_m / resolution)
     preferred_cells = float(MIN_CLEARANCE_PREFERRED_M / resolution)
 
-    eligible_mask = distance_cells >= safe_cells
+    # 只允许生在大空旷区域（>= MIN_CLEARANCE_PREFERRED_M），不 fallback 到小区域
     preferred_mask = distance_cells >= preferred_cells
-    candidate_mask = preferred_mask if np.any(preferred_mask) else eligible_mask
+    candidate_mask = preferred_mask
 
     # 收集所有候选空闲栅格坐标
     free_rows, free_cols = np.where(candidate_mask)
     if len(free_rows) == 0:
-        raise RuntimeError("地图中没有足够的安全空闲区域！请检查 safe_radius_m 或地图。")
+        raise RuntimeError(
+            f"地图中没有足够的大空旷区域（需要 ≥{MIN_CLEARANCE_PREFERRED_M:.2f}m 净空），"
+            f"当前最小安全半径 {safe_radius_m:.2f}m。请检查地图或降低 MIN_CLEARANCE_PREFERRED_M。")
 
     # 随机选一个
     idx = random.randint(0, len(free_rows) - 1)
