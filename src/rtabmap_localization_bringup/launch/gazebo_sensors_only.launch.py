@@ -56,7 +56,12 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
         occupied_mask = occ_prob >= occupied_thresh
 
     valid_free_mask = free_mask & ~occupied_mask
-    distance_cells = cv2.distanceTransform(valid_free_mask.astype(np.uint8), cv2.DIST_L2, 5)
+    # 在图像四周填充 0（障碍物），防止 distanceTransform 的默认边界反射
+    # 把地图边缘像素错误地当作"安全空旷区域"导致生成点跑到地图外面
+    border = int(max(safe_radius_m, MIN_CLEARANCE_PREFERRED_M) / resolution) + 1
+    padded = np.pad(valid_free_mask.astype(np.uint8), border, mode='constant', constant_values=0)
+    distance_cells_full = cv2.distanceTransform(padded, cv2.DIST_L2, 5)
+    distance_cells = distance_cells_full[border:-border, border:-border]
     safe_cells = float(safe_radius_m / resolution)
     preferred_cells = float(MIN_CLEARANCE_PREFERRED_M / resolution)
 
