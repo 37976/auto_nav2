@@ -13,5 +13,3 @@ Launch files:
 - `gazebo_nav_superpoint_rtabmap_localization.launch.py`
 - `gazebo_nav_xfeat_rtabmap_localization.launch.py`
 - `gazebo_nav_xfeat_odometry.launch.py`
-- `real_d435_only_xfeat_rtabmap.launch.py`
-- `real_d435_only_xfeat_odometry.launch.py`

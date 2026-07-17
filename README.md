@@ -43,6 +43,33 @@ ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
 ros2 launch rtabmap_localization_bringup gazebo_sensors_only.launch.py
 ```
 
+### Slam Toolbox 2D 建图
+
+纯雷达 2D SLAM 建图，保存后供导航使用：
+
+```bash
+# 1. 启动建图（带 RViz 可视化）
+ros2 launch nav_slam slam_mapping.launch.py
+
+# 可选：指定世界和起点
+ros2 launch nav_slam slam_mapping.launch.py \
+  world_name:=small_house.world \
+  spawn_x:=5.0 spawn_y:=-5.0 spawn_yaw:=0.0
+
+# 2. 键盘遥控扫图
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+
+# 3. 建图完成后保存地图
+ros2 run nav2_map_server map_saver_cli -f ~/my_map
+```
+
+生成 `~/my_map.pgm` 和 `~/my_map.yaml`。将地图文件放入 `src/nav_slam/map/` 即可用于导航。
+
+> **注意**：建图需要先安装 `ros-humble-slam-toolbox`。
+> ```bash
+> sudo apt-get install ros-humble-slam-toolbox
+> ```
+
 ### 网页控制
 
 ```text
@@ -313,6 +340,7 @@ ros2 launch nav_eval auto_challenge_eval.launch.py \
 |------|------|
 | `src/rtabmap_localization_bringup/launch/gazebo_nav_xfeat_odometry.launch.py` | 主启动文件 |
 | `src/rtabmap_localization_bringup/launch/gazebo_sensors_only.launch.py` | 仅 Gazebo + 传感器 |
+| `src/nav_slam/launch/slam_mapping.launch.py` | Slam Toolbox 2D 建图 |
 | `src/gazebo_modele/launch/gazebo.launch.py` | Gazebo 启动 |
 | `src/nav_slam/launch/2dpoints.launch.py` | 导航核心启动 |
 | `src/nav_slam/nav_slam/lidar_global_localize.py` | ORB 全局定位 → `map→odom` TF |

@@ -1,0 +1,9 @@
+free_thresh: 0.196
+image: dashgo_slam_map.pgm
+negate: 0
+occupied_thresh: 0.65
+origin:
+- -14.470632138458553
+- -0.5348482262567344
+- 0.0
+resolution: 0.05000000074505806

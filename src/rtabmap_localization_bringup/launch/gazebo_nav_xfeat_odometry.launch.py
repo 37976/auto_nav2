@@ -342,7 +342,7 @@ def generate_launch_description():
     default_static_map_yaml = os.path.join(
         get_package_share_directory("nav_slam"),
         "map",
-        "small_house.yaml",
+        "dashgo_slam_map.yaml",
     )
 
     world_name = LaunchConfiguration("world_name")
