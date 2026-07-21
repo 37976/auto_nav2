@@ -44,3 +44,4 @@ docs/
 .aiexclude
 CLAUDE.md
 test_results/
+AGENTS.md
