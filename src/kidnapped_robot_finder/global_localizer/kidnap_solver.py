@@ -89,10 +89,23 @@ def _get_candidates(map_image, min_distance, map_resolution, min_required=500):
     return candidate_area, red_pixels, num, -1
 
 
+def _map_pixel_to_world(pixel_uv, map_height_px, map_resolution, map_origin,
+                        map_pose_offset=(0.0, 0.0)):
+    """Convert an image pixel-center coordinate into the map world frame."""
+    u, v = np.asarray(pixel_uv, dtype=float)
+    origin_x, origin_y = np.asarray(map_origin, dtype=float)
+    offset_x, offset_y = np.asarray(map_pose_offset, dtype=float)
+    return np.array([
+        origin_x + (u + 0.5) * map_resolution + offset_x,
+        origin_y + (map_height_px - v - 0.5) * map_resolution + offset_y,
+    ])
+
+
 def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
                  map_resolution = 0.05, max_iterations = 250,
                  max_time_budget_ms = 5000,
                  stop_search_threshold = 50, lidar_range = 8.0,
+                 map_pose_offset = (0.0, 0.0),
                  show_plot = False):
     orig_scan_img = cv2.flip(orig_scan_img, 1)
 
@@ -240,9 +253,9 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
     else:
         map_origin = np.array(map_origin, dtype=float)
 
-    robot_in_map_pixels = robot_on_map.copy()
-    robot_in_map_pixels[1] = map_image.shape[0] - robot_in_map_pixels[1]
-    robot_in_map_meters = robot_in_map_pixels * map_resolution + map_origin
+    robot_in_map_meters = _map_pixel_to_world(
+        robot_on_map, map_image.shape[0], map_resolution, map_origin,
+        map_pose_offset)
     robot_angle_in_map = math.radians(-best_theta_degrees)
 
     print("----------------------------")

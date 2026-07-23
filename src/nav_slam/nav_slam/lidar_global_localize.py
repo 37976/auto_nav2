@@ -62,6 +62,7 @@ class LidarGlobalLocalize(Node):
         self._max_range = float(self.get_parameter("lidar_max_range").value)
         self._map_resolution = float(self.get_parameter("map_resolution").value)
         self._map_origin = (0.0, 0.0)
+        self._map_pose_offset = (0.0, 0.0)
 
         self._map_image = None
         self._map_ready = False
@@ -134,10 +135,13 @@ class LidarGlobalLocalize(Node):
             with open(yaml_path, "r", encoding="utf-8") as f:
                 meta = yaml.safe_load(f)
             origin = meta.get("origin", [0.0, 0.0, 0.0])
+            pose_offset = meta.get("localization_pose_offset", [0.0, 0.0])
             self._map_origin = (float(origin[0]), float(origin[1]))
+            self._map_pose_offset = (float(pose_offset[0]), float(pose_offset[1]))
             self._map_resolution = float(meta.get("resolution", self._map_resolution))
             self.get_logger().info(
-                f"从 YAML 读取: origin={self._map_origin}, resolution={self._map_resolution}")
+                f"从 YAML 读取: origin={self._map_origin}, resolution={self._map_resolution}, "
+                f"pose_offset={self._map_pose_offset}")
 
         self._map_ready = True
         self.get_logger().info(
@@ -234,6 +238,7 @@ class LidarGlobalLocalize(Node):
                 self._scan_image, self._map_image, self._min_distance,
                 map_resolution=self._map_resolution,
                 map_origin=self._map_origin,
+                map_pose_offset=self._map_pose_offset,
                 max_iterations=self._max_iter,
                 stop_search_threshold=self._stop_thresh,
                 lidar_range=self._max_range,

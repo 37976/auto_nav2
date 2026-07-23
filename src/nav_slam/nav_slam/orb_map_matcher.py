@@ -88,7 +88,7 @@ class OrbMapMatcher(Node):
         self._gain_yaw = float(self.get_parameter("correction_gain_yaw").value)
 
         # ---- 加载地图 ----
-        self._map_image, self._map_origin = self._load_map(map_yaml)
+        self._map_image, self._map_origin, self._map_pose_offset = self._load_map(map_yaml)
         self._image_size = int(2.0 * self._max_range / self._map_resolution)
         self._origin_offset = int(self._max_range / self._map_resolution)
 
@@ -131,7 +131,9 @@ class OrbMapMatcher(Node):
         pgm_rel = meta.get("image", "")
         return os.path.join(yaml_dir, pgm_rel) if pgm_rel else ""
 
-    def _load_map(self, map_yaml: str) -> tuple[np.ndarray, tuple[float, float]]:
+    def _load_map(
+        self, map_yaml: str
+    ) -> tuple[np.ndarray, tuple[float, float], tuple[float, float]]:
         pgm_path = self._pgm_from_yaml(map_yaml)
         if not os.path.exists(pgm_path):
             raise FileNotFoundError(f"地图不存在: {pgm_path}")
@@ -142,11 +144,14 @@ class OrbMapMatcher(Node):
         with open(map_yaml, "r", encoding="utf-8") as f:
             meta = yaml.safe_load(f)
         origin = (float(meta["origin"][0]), float(meta["origin"][1]))
+        pose_offset = tuple(float(value) for value in meta.get(
+            "localization_pose_offset", [0.0, 0.0]))
         self.get_logger().info(
             f"地图加载: {map_img.shape[1]}×{map_img.shape[0]}, "
-            f"origin={origin}, resolution={self._map_resolution}"
+            f"origin={origin}, resolution={self._map_resolution}, "
+            f"pose_offset={pose_offset}"
         )
-        return map_img, origin
+        return map_img, origin, pose_offset
 
     # ==================== 回调 ====================
 
@@ -188,6 +193,7 @@ class OrbMapMatcher(Node):
                 scan_img, map_crop, min_dist,
                 map_resolution=self._map_resolution,
                 map_origin=crop_origin_m,
+                map_pose_offset=self._map_pose_offset,
                 max_iterations=self._max_iter,
                 stop_search_threshold=self._min_f1,
                 lidar_range=self._max_range,
