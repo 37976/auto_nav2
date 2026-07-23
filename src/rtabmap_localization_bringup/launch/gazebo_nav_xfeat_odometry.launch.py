@@ -34,7 +34,7 @@ MIN_CLEARANCE_PREFERRED_M = 2.0
 def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE_RADIUS_M):
     """
     读取 PGM+YAML 地图，随机选取空闲区域的一个位姿。
-    返回 (x_m, y_m, yaw_rad)，均为世界坐标系（与地图 origin 对齐）。
+    返回 (x_m, y_m, yaw_rad)，均为与 Gazebo world 对齐的地图坐标系。
     确保机器人安全半径内无障碍物。
     """
     yaml_dir = os.path.dirname(os.path.abspath(map_yaml_path))
@@ -113,7 +113,7 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
 
 
 def _set_random_spawn(context, *args, **kwargs):
-    """OpaqueFunction: 读取地图，随机选空闲位姿，写入 launch_configurations。"""
+    """读取地图，随机选空闲位姿，写入 Gazebo spawn 配置。"""
     map_yaml_path = LaunchConfiguration("static_map_yaml").perform(context)
     print(f"[random_spawn] 读取地图: {map_yaml_path}")
     x, y, yaw = _pick_random_free_pose(map_yaml_path)
@@ -201,6 +201,7 @@ def _build_timed_actions(context, *args, **kwargs):
             package="nav_slam",
             executable="pose_logger",
             name="pose_logger",
+            condition=IfCondition(LaunchConfiguration("start_pose_logger")),
             output="screen",
             parameters=[{
                 "use_sim_time": LaunchConfiguration("use_sim_time"),
@@ -470,6 +471,7 @@ def generate_launch_description():
         DeclareLaunchArgument("relocalize_interval_sec", default_value="10.0"),
         DeclareLaunchArgument("orb_disable_duration_sec", default_value="10.0"),
         DeclareLaunchArgument("start_orb_matcher", default_value="true"),
+        DeclareLaunchArgument("start_pose_logger", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
         OpaqueFunction(function=_set_random_spawn),
         # 1. 启动 Gazebo（用随机位姿 spawn 机器人）

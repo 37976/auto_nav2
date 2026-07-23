@@ -4,11 +4,11 @@
 test_orb_localization.py — ORB 全局定位精度反复测试工具。
 
 每次随机 spawn 机器人到地图空闲区域，ORB 通过激光雷达匹配估计位姿，
-与真实 spawn 位置对比得出定位误差，导出汇总表格。
+与真实 spawn 位置比较，得出定位误差并导出汇总表格。
 
 用法:
-    python test_orb_localization.py --runs 100 --duration 15
-    python test_orb_localization.py --runs 5 --duration 5 --verbose
+    python test_orb_localization.py --runs 100
+    python test_orb_localization.py --runs 5 --verbose
     python test_orb_localization.py --dry-run
 """
 
@@ -31,8 +31,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent
 CLEANUP_SCRIPT = PROJECT_ROOT / "cleanup.sh"
-POSE_CSV_PATH = Path.home() / "project" / "位姿对比" / "pose_comparison.csv"
 RESULTS_DIR = PROJECT_ROOT / "test_results"
+DEFAULT_MAP_YAML = PROJECT_ROOT / "src" / "nav_slam" / "map" / "dashgo_slam_map.yaml"
+DEFAULT_WORLD_NAME = "small_house.world"
 
 ROS2_SETUP = "/opt/ros/humble/setup.bash"
 PROJECT_SETUP = str(PROJECT_ROOT / "install" / "setup.bash")
@@ -150,14 +151,16 @@ class StdoutMonitor(threading.Thread):
 # RunManager — 单次测试运行的生命周期管理
 # ---------------------------------------------------------------------------
 class RunManager:
-    """编排一次测试运行：清理 → 启动 → 等待 → 采集 → 停止 → 读结果。"""
+    """编排一次测试运行：清理 → 启动 → 等待 ORB → 统计 → 停止。"""
 
-    def __init__(self, run_id: int, duration: float, timeout: float,
+    def __init__(self, run_id: int, timeout: float, map_yaml: str,
+                 world_name: str,
                  verbose: bool = False, fast_cleanup: bool = False,
                  debug_dir: str | None = None):
         self._run_id = run_id
-        self._duration = duration
         self._timeout = timeout
+        self._map_yaml = map_yaml
+        self._world_name = world_name
         self._verbose = verbose
         self._fast_cleanup = fast_cleanup
         self._debug_dir = debug_dir
@@ -187,6 +190,9 @@ class RunManager:
             "ros2", "launch", LAUNCH_PACKAGE, LAUNCH_FILE,
             "start_nav_rviz:=false",
             "start_web_ui:=false",
+            "start_pose_logger:=false",
+            f"static_map_yaml:={self._map_yaml}",
+            f"world_name:={self._world_name}",
         ]
 
         # 构造环境：source ROS2 + 项目
@@ -234,58 +240,6 @@ class RunManager:
                 if self._verbose:
                     print(f"  [{name}] 等待 {wait_s}s 超时，升级...")
 
-    # ---- tracking CSV ------------------------------------------------------
-    def _read_tracking_csv(self) -> dict:
-        """读取 pose_logger 输出的 CSV，返回跟踪误差统计。"""
-        path = POSE_CSV_PATH
-        if not path.exists():
-            return {
-                "tracking_mean_xy_m": None,
-                "tracking_max_xy_m": None,
-                "tracking_mean_yaw_deg": None,
-                "tracking_max_yaw_deg": None,
-                "tracking_samples": 0,
-            }
-
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                errors_xy = []
-                errors_yaw = []
-                for row in reader:
-                    try:
-                        errors_xy.append(float(row["error_xy_m"]))
-                        errors_yaw.append(float(row["error_yaw_deg"]))
-                    except (KeyError, ValueError):
-                        continue
-
-            if not errors_xy:
-                return {
-                    "tracking_mean_xy_m": None,
-                    "tracking_max_xy_m": None,
-                    "tracking_mean_yaw_deg": None,
-                    "tracking_max_yaw_deg": None,
-                    "tracking_samples": 0,
-                }
-
-            n = len(errors_xy)
-            return {
-                "tracking_mean_xy_m": sum(errors_xy) / n,
-                "tracking_max_xy_m": max(errors_xy),
-                "tracking_mean_yaw_deg": sum(errors_yaw) / n,
-                "tracking_max_yaw_deg": max(errors_yaw),
-                "tracking_samples": n,
-            }
-        except Exception as e:
-            return {
-                "tracking_mean_xy_m": None,
-                "tracking_max_xy_m": None,
-                "tracking_mean_yaw_deg": None,
-                "tracking_max_yaw_deg": None,
-                "tracking_samples": 0,
-                "tracking_error": str(e),
-            }
-
     # ---- debug -------------------------------------------------------------
     def _dump_debug(self, monitor: StdoutMonitor, status: str):
         """保存失败运行的 stdout 到调试文件。"""
@@ -317,11 +271,6 @@ class RunManager:
             "orb_f1": None,
             "init_error_xy_m": None,
             "init_error_yaw_deg": None,
-            "tracking_mean_xy_m": None,
-            "tracking_max_xy_m": None,
-            "tracking_mean_yaw_deg": None,
-            "tracking_max_yaw_deg": None,
-            "tracking_samples": 0,
             "orb_success": False,
             "status": "UNKNOWN",
         }
@@ -329,15 +278,11 @@ class RunManager:
         # ---- Step 1: 清理 ----
         self._run_cleanup(kill=True)
 
-        # ---- Step 2: 删除上次的 CSV，避免读到旧数据 ----
-        if POSE_CSV_PATH.exists():
-            POSE_CSV_PATH.unlink()
-
-        # ---- Step 3: 启动 ----
+        # ---- Step 2: 启动 ----
         proc, monitor = self._launch()
         self._last_monitor = monitor
 
-        # ---- Step 4: 等待 spawn ----
+        # ---- Step 3: 等待 spawn ----
         if not monitor.spawn_event.wait(timeout=90.0):
             result["status"] = "SPAWN_TIMEOUT"
             self._shutdown(proc)
@@ -349,7 +294,7 @@ class RunManager:
         result["spawn_y"] = monitor.spawn_y
         result["spawn_yaw_deg"] = monitor.spawn_yaw_deg
 
-        # ---- Step 5: 等待 ORB ----
+        # ---- Step 4: 等待 ORB ----
         if not monitor.orb_event.wait(timeout=self._timeout):
             result["status"] = "ORB_TIMEOUT"
             self._shutdown(proc)
@@ -373,7 +318,7 @@ class RunManager:
         result["orb_yaw_deg"] = monitor.orb_yaw_deg
         result["orb_f1"] = monitor.orb_f1
 
-        # 计算初始定位误差
+        # 地图 map 坐标系已与 Gazebo world 对齐，可直接计算一次性定位误差。
         if all(v is not None for v in [monitor.spawn_x, monitor.spawn_y,
                                         monitor.orb_x, monitor.orb_y]):
             dx = monitor.orb_x - monitor.spawn_x
@@ -386,17 +331,10 @@ class RunManager:
 
         result["status"] = "OK"
 
-        # ---- Step 6: 等待采集时长 ----
-        time.sleep(self._duration)
-
-        # ---- Step 7: 停止 ----
+        # ---- Step 5: 停止 ----
         self._shutdown(proc)
 
-        # ---- Step 8: 读取追踪 CSV ----
-        tracking = self._read_tracking_csv()
-        result.update(tracking)
-
-        # ---- Step 9: 再次清理 ----
+        # ---- Step 6: 再次清理 ----
         self._run_cleanup(kill=True)
 
         return result
@@ -433,11 +371,6 @@ def print_run_result(result: dict, cumulative_stats: dict):
         print(f"  [spawn]   ({_fmt(result['spawn_x'])}, {_fmt(result['spawn_y'])})"
               f" @ {_fmt(result['spawn_yaw_deg'], '.1f')}°")
         print(f"  [FAIL]    {result['status']}")
-
-    if result.get("tracking_samples", 0) > 0:
-        print(f"  [TRACK]   {result['tracking_samples']} samples  "
-              f"mean_xy={_fmt(result['tracking_mean_xy_m'])}m  "
-              f"max_xy={_fmt(result['tracking_max_xy_m'])}m")
 
     # 累计统计
     s = cumulative_stats
@@ -511,9 +444,6 @@ RESULTS_HEADER = [
     "spawn_x", "spawn_y", "spawn_yaw_deg",
     "orb_x", "orb_y", "orb_yaw_deg", "orb_f1",
     "init_error_xy_m", "init_error_yaw_deg",
-    "tracking_mean_xy_m", "tracking_max_xy_m",
-    "tracking_mean_yaw_deg", "tracking_max_yaw_deg",
-    "tracking_samples",
 ]
 
 
@@ -554,8 +484,6 @@ def write_summary_csv(results: list[dict], output_dir: str, ts: str):
         "init_error_xy_m": [r["init_error_xy_m"] for r in ok if r["init_error_xy_m"] is not None],
         "init_error_yaw_deg": [r["init_error_yaw_deg"] for r in ok if r["init_error_yaw_deg"] is not None],
         "orb_f1": [r["orb_f1"] for r in ok if r["orb_f1"] is not None],
-        "tracking_mean_xy_m": [r["tracking_mean_xy_m"] for r in ok if r["tracking_mean_xy_m"] is not None],
-        "tracking_max_xy_m": [r["tracking_max_xy_m"] for r in ok if r["tracking_max_xy_m"] is not None],
     }
 
     rows = []
@@ -565,16 +493,12 @@ def write_summary_csv(results: list[dict], output_dir: str, ts: str):
         "init_error_xy_m": n_total,
         "init_error_yaw_deg": n_total,
         "orb_f1": n_total,
-        "tracking_mean_xy_m": n_total,
-        "tracking_max_xy_m": n_total,
     })
     rows.append({
         "stat": "count_success",
         "init_error_xy_m": n_ok,
         "init_error_yaw_deg": n_ok,
         "orb_f1": n_ok,
-        "tracking_mean_xy_m": n_ok,
-        "tracking_max_xy_m": n_ok,
     })
     rate = 100.0 * n_ok / n_total if n_total > 0 else 0.0
     rows.append({
@@ -582,8 +506,6 @@ def write_summary_csv(results: list[dict], output_dir: str, ts: str):
         "init_error_xy_m": f"{rate:.1f}",
         "init_error_yaw_deg": f"{rate:.1f}",
         "orb_f1": f"{rate:.1f}",
-        "tracking_mean_xy_m": f"{rate:.1f}",
-        "tracking_max_xy_m": f"{rate:.1f}",
     })
 
     for stat_name in ["mean", "std", "min", "max", "p50", "p95"]:
@@ -655,17 +577,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python test_orb_localization.py --runs 100 --duration 15
-  python test_orb_localization.py --runs 5 --duration 5 --verbose
+  python test_orb_localization.py --runs 100
+  python test_orb_localization.py --runs 5 --verbose
   python test_orb_localization.py --dry-run
         """,
     )
     parser.add_argument("--runs", "-n", type=int, default=100,
                         help="测试次数 (default: 100)")
-    parser.add_argument("--duration", "-d", type=float, default=15.0,
-                        help="ORB 完成后采集数据时长，秒 (default: 15)")
     parser.add_argument("--timeout", "-t", type=float, default=180.0,
                         help="等待 ORB 最长超时，秒 (default: 180)")
+    parser.add_argument("--map-yaml", type=str, default=str(DEFAULT_MAP_YAML),
+                        help=f"静态地图 YAML (default: {DEFAULT_MAP_YAML})")
+    parser.add_argument("--world-name", type=str, default=DEFAULT_WORLD_NAME,
+                        help=f"Gazebo world 文件名 (default: {DEFAULT_WORLD_NAME})")
     parser.add_argument("--output-dir", "-o", type=str, default=str(RESULTS_DIR),
                         help=f"输出目录 (default: {RESULTS_DIR})")
     parser.add_argument("--verbose", "-v", action="store_true",
@@ -675,20 +599,23 @@ def main():
     parser.add_argument("--dry-run", "--plan", action="store_true",
                         help="打印测试计划并退出")
     args = parser.parse_args()
+    map_yaml = os.path.abspath(args.map_yaml)
+    if not os.path.isfile(map_yaml):
+        parser.error(f"地图 YAML 不存在: {map_yaml}")
 
     # Dry-run
     if args.dry_run:
         print("=== ORB Localization Test Plan ===")
         print(f"  Runs:           {args.runs}")
-        print(f"  Duration/run:   {args.duration}s")
         print(f"  ORB timeout:    {args.timeout}s")
+        print(f"  Map YAML:       {map_yaml}")
+        print(f"  Gazebo world:   {args.world_name}")
         print(f"  Output dir:     {args.output_dir}")
         print(f"  Fast cleanup:   {args.fast_cleanup}")
         print(f"  Verbose:        {args.verbose}")
-        est = args.runs * (20 + args.duration + 10)  # rough estimate per run
+        est = args.runs * 30  # rough estimate per run
         print(f"  Est. total:     ~{est:.0f}s ({est/60:.0f} min)")
         print(f"  Launch:         {LAUNCH_PACKAGE} {LAUNCH_FILE}")
-        print(f"  Pose CSV:       {POSE_CSV_PATH}")
         return
 
     # 创建输出目录
@@ -704,7 +631,8 @@ def main():
         sys.exit(1)
 
     print(f"=== ORB Localization Test ===")
-    print(f"  Runs: {args.runs}  |  Duration: {args.duration}s  |  Timeout: {args.timeout}s")
+    print(f"  Runs: {args.runs}  |  Timeout: {args.timeout}s")
+    print(f"  Map: {map_yaml}  |  World: {args.world_name}")
     print(f"  Output: {args.output_dir}/orb_*_{ts}.csv")
     print()
 
@@ -725,8 +653,9 @@ def main():
 
             manager = RunManager(
                 run_id=run_id,
-                duration=args.duration,
                 timeout=args.timeout,
+                map_yaml=map_yaml,
+                world_name=args.world_name,
                 verbose=args.verbose,
                 fast_cleanup=args.fast_cleanup,
                 debug_dir=args.output_dir,
