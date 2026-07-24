@@ -39,6 +39,7 @@ setup(
             'lidar_global_localize = nav_slam.lidar_global_localize:main',
             'odom_to_map_relay = nav_slam.odom_to_map_relay:main',
             'pose_logger = nav_slam.pose_logger:main',
+            'nav_experiment_logger = nav_slam.nav_experiment_logger:main',
             'orb_map_matcher = nav_slam.orb_map_matcher:main',
             'nav_goal_relocalizer = nav_slam.nav_goal_relocalizer:main',
             'slam_controller = nav_slam.slam_controller:main',

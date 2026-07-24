@@ -126,6 +126,8 @@ def _set_random_spawn(context, *args, **kwargs):
 def _build_timed_actions(context, *args, **kwargs):
     """构建 TimerAction 内部的节点列表。"""
     start_odom_map_tf = "false"
+    max_delta_translation_diff_m = LaunchConfiguration("max_delta_translation_diff_m")
+    max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
 
     actions = [
         # 1.5. 激光 ORB 全局定位 → 锁定 map→odom 静态 TF
@@ -295,8 +297,8 @@ def _build_timed_actions(context, *args, **kwargs):
                 "correction_gain_xy": 1.0,
                 "correction_gain_yaw": 1.0,
                 "use_imu_yaw": LaunchConfiguration("use_imu_yaw"),
-                "max_delta_translation_diff_m": 0.50,
-                "max_delta_yaw_diff_deg": 45.0,
+                "max_delta_translation_diff_m": max_delta_translation_diff_m,
+                "max_delta_yaw_diff_deg": max_delta_yaw_diff_deg,
                 "xfeat_timeout_sec": 5.0,
             }],
         ),

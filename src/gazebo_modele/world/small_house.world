@@ -2,6 +2,13 @@
 
 <sdf version='1.6'>
   <world name='default'>
+    <!-- 发布模型真值，供导航实验记录器读取 fishbot 位姿。 -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>20.0</update_rate>
+    </plugin>
     <!-- override the default position of the camera !-->
     <gui>
       <camera name='gzclient_camera'>

@@ -10,6 +10,8 @@ orb_map_matcher.py -- 持续 ORB 扫描-地图匹配, 周期性纠正里程计�
 import math
 import os
 import sys
+import json
+import time
 from typing import Optional
 
 import cv2
@@ -20,6 +22,7 @@ from geometry_msgs.msg import Quaternion
 from nav_msgs.msg import Odometry
 from rclpy.node import Node, Timer
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import String
 from std_srvs.srv import SetBool
 
 # ---- 复用 kidnapped_robot_finder ----
@@ -69,6 +72,8 @@ class OrbMapMatcher(Node):
         self.declare_parameter("min_f1_score", 30.0)
         self.declare_parameter("correction_gain_xy", 0.3)
         self.declare_parameter("correction_gain_yaw", 0.3)
+        self.declare_parameter("match_timeout_sec", 5.0)
+        self.declare_parameter("match_event_topic", "/orb/match_event")
 
         map_yaml = str(self.get_parameter("map_yaml_path").value)
         if not map_yaml:
@@ -86,6 +91,8 @@ class OrbMapMatcher(Node):
         self._min_f1 = float(self.get_parameter("min_f1_score").value)
         self._gain_xy = float(self.get_parameter("correction_gain_xy").value)
         self._gain_yaw = float(self.get_parameter("correction_gain_yaw").value)
+        self._match_timeout_sec = float(self.get_parameter("match_timeout_sec").value)
+        self._match_event_topic = str(self.get_parameter("match_event_topic").value)
 
         # ---- 加载地图 ----
         self._map_image, self._map_origin, self._map_pose_offset = self._load_map(map_yaml)
@@ -107,6 +114,7 @@ class OrbMapMatcher(Node):
 
         # ---- 发布 ----
         self._delta_pub = self.create_publisher(Odometry, self._delta_topic, 10)
+        self._event_pub = self.create_publisher(String, self._match_event_topic, 10)
 
         # ---- 定时匹配 ----
         self._timer = self.create_timer(self._period, self._match_timer_cb)
@@ -188,6 +196,7 @@ class OrbMapMatcher(Node):
         map_crop, crop_origin_m = self._crop_map_around_pose(self._latest_odom)
 
         # 3. ORB 匹配
+        start_time = time.perf_counter()
         try:
             result = kidnap_solver.solve_kidnap(
                 scan_img, map_crop, min_dist,
@@ -199,10 +208,13 @@ class OrbMapMatcher(Node):
                 lidar_range=self._max_range,
             )
         except Exception as exc:
+            self._publish_match_event("error", (time.perf_counter() - start_time) * 1000.0)
             self.get_logger().warn(f"ORB 匹配异常: {exc}")
             return
+        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
         if result is None:
+            self._publish_match_event("no_candidate", elapsed_ms)
             self.get_logger().info(
                 f"[{self._match_count}] 匹配失败 (无候选)",
                 throttle_duration_sec=2.0,
@@ -215,10 +227,12 @@ class OrbMapMatcher(Node):
         # 4. 计算修正增量
         delta = self._compute_delta(map_x, map_y, map_yaw, self._latest_odom)
         if delta is None:
+            self._publish_match_event("invalid_delta", elapsed_ms)
             return
 
         # 5. 发布
         self._publish_delta(self._latest_scan.header, delta)
+        self._publish_match_event("matched", elapsed_ms)
 
         self.get_logger().info(
             f"[{self._match_count}] 匹配成功: F1={f1:.1f}% "
@@ -318,6 +332,20 @@ class OrbMapMatcher(Node):
         odom.pose.pose.position.z = 0.0
         odom.pose.pose.orientation = _quaternion_from_yaw(delta["dyaw"])
         self._delta_pub.publish(odom)
+
+    def _publish_match_event(self, status: str, elapsed_ms: float) -> None:
+        """Publish a structured ORB-attempt event for the experiment logger."""
+        stamp_sec = self.get_clock().now().nanoseconds * 1e-9
+        event = {
+            "stamp_sec": stamp_sec,
+            "attempt": self._match_count,
+            "status": status,
+            "elapsed_ms": elapsed_ms,
+            "timed_out": elapsed_ms > self._match_timeout_sec * 1000.0,
+        }
+        message = String()
+        message.data = json.dumps(event, ensure_ascii=False)
+        self._event_pub.publish(message)
 
 
 def main(args=None) -> None:

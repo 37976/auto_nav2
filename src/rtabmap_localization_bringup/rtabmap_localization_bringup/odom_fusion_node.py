@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import csv
+import json
 import math
 import os
 from typing import Optional
@@ -57,6 +58,7 @@ class OdomFusionNode(Node):
         self.declare_parameter("control_mode_topic", "/control_mode")
         self.declare_parameter("cmd_vel_topic", "/cmd_vel")
         self.declare_parameter("nav_idle_timeout_sec", 2.0)
+        self.declare_parameter("fusion_event_topic", "/localization/fusion_event")
 
         self.base_odom_topic = str(self.get_parameter("base_odom_topic").value)
         self.xfeat_delta_topic = str(self.get_parameter("xfeat_delta_topic").value)
@@ -75,6 +77,7 @@ class OdomFusionNode(Node):
         self.control_mode_topic = str(self.get_parameter("control_mode_topic").value)
         self.cmd_vel_topic = str(self.get_parameter("cmd_vel_topic").value)
         self.nav_idle_timeout_sec = max(0.5, float(self.get_parameter("nav_idle_timeout_sec").value))
+        self.fusion_event_topic = str(self.get_parameter("fusion_event_topic").value)
 
         self.xfeat_delta: Optional[Odometry] = None
         self.last_xfeat_stamp_sec: Optional[float] = None
@@ -100,6 +103,7 @@ class OdomFusionNode(Node):
         self.create_subscription(String, self.control_mode_topic, self._control_mode_cb, 10)
         self.create_subscription(Twist, self.cmd_vel_topic, self._cmd_vel_cb, 10)
         self.odom_pub = self.create_publisher(Odometry, self.output_odom_topic, 20)
+        self.fusion_event_pub = self.create_publisher(String, self.fusion_event_topic, 20)
 
         self.get_logger().info(
             f"Fusing {self.base_odom_topic} with local delta {self.xfeat_delta_topic} -> {self.output_odom_topic}"
@@ -124,6 +128,7 @@ class OdomFusionNode(Node):
             return
         fused = self._fuse(msg)
         self.odom_pub.publish(fused)
+        self._publish_fusion_event()
         self._log_fused_pose(msg, fused)
         self.prev_base_odom = msg
 
@@ -319,6 +324,19 @@ class OdomFusionNode(Node):
                 ]
             )
 
+    def _publish_fusion_event(self) -> None:
+        """Publish each fusion decision for the independent experiment logger."""
+        if self._last_csv_row is None:
+            return
+        message = String()
+        message.data = json.dumps({
+            "stamp_sec": self._last_csv_row["stamp_sec"],
+            "status": self._last_csv_row["status"],
+            "delta_diff_m": self._last_csv_row["delta_diff_m"],
+            "yaw_diff_deg": self._last_csv_row["yaw_diff_deg"],
+        })
+        self.fusion_event_pub.publish(message)
+
     def _should_log_pose(self) -> bool:
         if self.control_mode != "nav":
             return False
@@ -340,9 +358,12 @@ def main(args=None) -> None:
     node = OdomFusionNode()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
