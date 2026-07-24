@@ -28,6 +28,10 @@ if os.path.isdir(_krf_path) and _krf_path not in sys.path:
 from global_localizer import kidnap_solver  # type: ignore[import-unresolved]
 
 
+def _wrap_angle(angle):
+    return math.atan2(math.sin(angle), math.cos(angle))
+
+
 class LidarGlobalLocalize(Node):
     def __init__(self):
         super().__init__("lidar_global_localize")
@@ -86,6 +90,7 @@ class LidarGlobalLocalize(Node):
 
         self._pending_pose = None
         self._repub_count = 0
+        self._last_map_odom_yaw = 0.0
         self._repub_timer = self.create_timer(0.5, self._publish_map_odom_tf)
 
         # 重定位服务：允许外部节点在导航到达目标点后触发全局重定位
@@ -262,6 +267,21 @@ class LidarGlobalLocalize(Node):
         self.get_logger().info(
             f"定位完成: x={x:.3f} y={y:.3f} yaw={math.degrees(yaw):.1f}° F1={f1:.1f}"
         )
+        if self._latest_odom is not None:
+            q = self._latest_odom.pose.pose.orientation
+            odom_yaw = math.atan2(
+                2.0 * (q.w * q.z + q.x * q.y),
+                1.0 - 2.0 * (q.y * q.y + q.z * q.z),
+            )
+            current_map_yaw = _wrap_angle(self._last_map_odom_yaw + odom_yaw)
+            yaw_innovation = _wrap_angle(yaw - current_map_yaw)
+            self.get_logger().info(
+                f"航向创新量: ORB={math.degrees(yaw):.1f}° "
+                f"当前map={math.degrees(current_map_yaw):.1f}° "
+                f"创新={math.degrees(yaw_innovation):.1f}°"
+            )
+        else:
+            self.get_logger().warn("未收到 /localized_odom，无法计算航向创新量")
         self._pending_pose = (x, y, yaw)
         self._repub_count = 0
 
@@ -273,7 +293,7 @@ class LidarGlobalLocalize(Node):
     def _publish_map_odom_tf(self):
         if self._pending_pose is None or self._latest_odom is None:
             return
-        if self._repub_count >= 5:
+        if self._repub_count >= 1:
             self._repub_timer.cancel()
             return
         map_x, map_y, map_yaw = self._pending_pose
@@ -305,12 +325,13 @@ class LidarGlobalLocalize(Node):
         t.transform.rotation.z = math.sin(tf_yaw * 0.5)
         t.transform.rotation.w = math.cos(tf_yaw * 0.5)
         self._tf_broadcaster.sendTransform(t)
+        self._last_map_odom_yaw = tf_yaw
 
         self._repub_count += 1
         self.get_logger().info(
             f"已发布 map->odom 静态 TF: x={t.transform.translation.x:.3f} "
             f"y={t.transform.translation.y:.3f} yaw={math.degrees(tf_yaw):.1f}° "
-            f"({self._repub_count}/5)"
+            f"({self._repub_count}/1)"
         )
 
 

@@ -25,7 +25,10 @@ def do_matching(orig_scan_img, sim_scan_img, robot_pose = None):
         dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
 
         #print("Matches found:", len(matches))
-        M, inliers = cv.estimateAffine2D(src_pts, dst_pts, method=cv.RANSAC, ransacReprojThreshold=5.0)
+        # 激光扫描与地图候选之间只允许旋转、平移和等比缩放；
+        # 禁止完整仿射模型的剪切，避免位置接近但航向失真的匹配结果。
+        M, inliers = cv.estimateAffinePartial2D(
+            src_pts, dst_pts, method=cv.RANSAC, ransacReprojThreshold=5.0)
         matchesMask = inliers.ravel().tolist()
 
         # Calculate rotation in degrees

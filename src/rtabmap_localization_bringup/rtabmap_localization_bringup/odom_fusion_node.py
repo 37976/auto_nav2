@@ -4,7 +4,8 @@ import csv
 import json
 import math
 import os
-from typing import Optional
+from collections import deque
+from typing import Deque, Optional
 
 import rclpy
 from geometry_msgs.msg import Quaternion
@@ -37,6 +38,10 @@ def _wrap_angle(angle: float) -> float:
     return angle
 
 
+def _stamp_sec(msg: Odometry) -> float:
+    return float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
+
+
 class OdomFusionNode(Node):
     def __init__(self) -> None:
         super().__init__("odom_fusion_node")
@@ -52,6 +57,8 @@ class OdomFusionNode(Node):
         self.declare_parameter("log_period_sec", 0.5)
         self.declare_parameter("max_delta_translation_diff_m", 0.20)
         self.declare_parameter("max_delta_yaw_diff_deg", 20.0)
+        self.declare_parameter("state_history_sec", 10.0)
+        self.declare_parameter("max_observation_sync_sec", 0.15)
         self.declare_parameter("csv_log_path", os.path.abspath(os.path.join(
             os.path.dirname(__file__), "..", "..", "..", "..", "XFeat_pose", "sim_odom_fusion_debug.csv")))
         self.declare_parameter("path_topic", "/path")
@@ -72,6 +79,9 @@ class OdomFusionNode(Node):
         self.log_period_sec = max(0.1, float(self.get_parameter("log_period_sec").value))
         self.max_delta_translation_diff_m = float(self.get_parameter("max_delta_translation_diff_m").value)
         self.max_delta_yaw_diff_rad = math.radians(float(self.get_parameter("max_delta_yaw_diff_deg").value))
+        self.state_history_sec = float(self.get_parameter("state_history_sec").value)
+        self.max_observation_sync_sec = float(
+            self.get_parameter("max_observation_sync_sec").value)
         self.csv_log_path = str(self.get_parameter("csv_log_path").value)
         self.path_topic = str(self.get_parameter("path_topic").value)
         self.control_mode_topic = str(self.get_parameter("control_mode_topic").value)
@@ -88,6 +98,10 @@ class OdomFusionNode(Node):
         self.fused_x: Optional[float] = None
         self.fused_y: Optional[float] = None
         self.fused_yaw: Optional[float] = None
+        self._state_history: Deque[dict] = deque()
+        self._last_motion_dx = 0.0
+        self._last_motion_dy = 0.0
+        self._last_motion_dyaw = 0.0
         self._last_fusion_status = "base_only"
         self._last_status_details = ""
         self._last_csv_row = None
@@ -124,13 +138,153 @@ class OdomFusionNode(Node):
             self.fused_x = float(msg.pose.pose.position.x)
             self.fused_y = float(msg.pose.pose.position.y)
             self.fused_yaw = _yaw_from_quaternion(msg.pose.pose.orientation)
+            self._append_state(_stamp_sec(msg))
             self.odom_pub.publish(msg)
             return
+
+        # ORB 的 header 是扫描采集时刻。先只按里程计/IMU 推进到当前，
+        # 再将延迟到达的局部校正回写到观测时刻并重放至当前时刻。
+        pending_delta = self.xfeat_delta
+        pending_stamp_sec = self.last_xfeat_stamp_sec
+        self.xfeat_delta = None
+        self.last_xfeat_stamp_sec = None
         fused = self._fuse(msg)
+        self._append_state(_stamp_sec(msg))
+
+        if pending_delta is not None and pending_stamp_sec is not None:
+            self._apply_delayed_correction(
+                pending_delta, pending_stamp_sec, _stamp_sec(msg))
+        self.xfeat_delta = None
+        self.last_xfeat_stamp_sec = None
+        self._set_fused_pose(fused)
         self.odom_pub.publish(fused)
         self._publish_fusion_event()
         self._log_fused_pose(msg, fused)
         self.prev_base_odom = msg
+
+    def _append_state(self, stamp_sec: float) -> None:
+        assert self.fused_x is not None and self.fused_y is not None and self.fused_yaw is not None
+        self._state_history.append({
+            "stamp_sec": stamp_sec,
+            "x": self.fused_x,
+            "y": self.fused_y,
+            "yaw": self.fused_yaw,
+            "motion_dx": self._last_motion_dx,
+            "motion_dy": self._last_motion_dy,
+            "motion_dyaw": self._last_motion_dyaw,
+        })
+        oldest_stamp = stamp_sec - self.state_history_sec
+        while self._state_history and self._state_history[0]["stamp_sec"] < oldest_stamp:
+            self._state_history.popleft()
+
+    def _set_fused_pose(self, msg: Odometry) -> None:
+        assert self.fused_x is not None and self.fused_y is not None and self.fused_yaw is not None
+        msg.pose.pose.position.x = self.fused_x
+        msg.pose.pose.position.y = self.fused_y
+        msg.pose.pose.orientation = _quaternion_from_yaw(self.fused_yaw)
+        if self._last_csv_row is not None:
+            self._last_csv_row["fused_x"] = self.fused_x
+            self._last_csv_row["fused_y"] = self.fused_y
+            self._last_csv_row["fused_yaw_deg"] = math.degrees(self.fused_yaw)
+
+    def _apply_delayed_correction(
+        self, delta: Odometry, observation_stamp_sec: float, now_sec: float
+    ) -> None:
+        if not self._state_history:
+            return
+
+        age_sec = now_sec - observation_stamp_sec
+        if age_sec < 0.0 or age_sec > self.xfeat_timeout_sec:
+            self._last_fusion_status = "stale_correction"
+            self._last_status_details = f"observation_age={age_sec:.2f}s"
+            self._sync_fusion_status_to_csv()
+            return
+
+        state_index, state = min(
+            enumerate(self._state_history),
+            key=lambda item: abs(item[1]["stamp_sec"] - observation_stamp_sec),
+        )
+        time_offset_sec = abs(state["stamp_sec"] - observation_stamp_sec)
+        if time_offset_sec > self.max_observation_sync_sec:
+            self._last_fusion_status = "missing_history"
+            self._last_status_details = (
+                f"observation_time_offset={time_offset_sec:.3f}s")
+            self._sync_fusion_status_to_csv()
+            return
+
+        correction_dx = float(delta.pose.pose.position.x)
+        correction_dy = float(delta.pose.pose.position.y)
+        correction_dyaw = _yaw_from_quaternion(delta.pose.pose.orientation)
+        raw_correction_dx = correction_dx
+        raw_correction_dy = correction_dy
+        raw_correction_dyaw = correction_dyaw
+        correction_m = math.hypot(correction_dx, correction_dy)
+        correction_yaw = abs(_wrap_angle(correction_dyaw))
+        if (
+            correction_m > self.max_delta_translation_diff_m
+            or correction_yaw > self.max_delta_yaw_diff_rad
+        ):
+            self._last_fusion_status = "rejected"
+            self._last_status_details = (
+                f"correction={correction_m:.3f}m/{math.degrees(correction_yaw):.1f}deg "
+                f"age={age_sec:.2f}s")
+            self._update_correction_metrics(
+                raw_correction_dx, raw_correction_dy, raw_correction_dyaw)
+            self._sync_fusion_status_to_csv()
+            return
+
+        correction_dx *= self.gain_xy
+        correction_dy *= self.gain_xy
+        correction_dyaw *= self.gain_yaw
+        observation_yaw = state["yaw"]
+        state["x"] += (
+            math.cos(observation_yaw) * correction_dx
+            - math.sin(observation_yaw) * correction_dy)
+        state["y"] += (
+            math.sin(observation_yaw) * correction_dx
+            + math.cos(observation_yaw) * correction_dy)
+        state["yaw"] = _wrap_angle(state["yaw"] + correction_dyaw)
+
+        states = list(self._state_history)
+        for index in range(state_index + 1, len(states)):
+            previous = states[index - 1]
+            current = states[index]
+            previous_yaw = previous["yaw"]
+            current["x"] = previous["x"] + (
+                math.cos(previous_yaw) * current["motion_dx"]
+                - math.sin(previous_yaw) * current["motion_dy"])
+            current["y"] = previous["y"] + (
+                math.sin(previous_yaw) * current["motion_dx"]
+                + math.cos(previous_yaw) * current["motion_dy"])
+            current["yaw"] = _wrap_angle(
+                previous_yaw + current["motion_dyaw"])
+        self._state_history = deque(states)
+        latest = self._state_history[-1]
+        self.fused_x = latest["x"]
+        self.fused_y = latest["y"]
+        self.fused_yaw = latest["yaw"]
+        self._last_fusion_status = "fused"
+        self._last_status_details = (
+            f"delayed_correction={correction_m:.3f}m/"
+            f"{math.degrees(correction_yaw):.1f}deg age={age_sec:.2f}s")
+        self._update_correction_metrics(
+            raw_correction_dx, raw_correction_dy, raw_correction_dyaw)
+        self._sync_fusion_status_to_csv()
+
+    def _sync_fusion_status_to_csv(self) -> None:
+        if self._last_csv_row is not None:
+            self._last_csv_row["status"] = self._last_fusion_status
+
+    def _update_correction_metrics(
+        self, correction_dx: float, correction_dy: float, correction_dyaw: float
+    ) -> None:
+        if self._last_csv_row is None:
+            return
+        self._last_csv_row["xfeat_dx"] = correction_dx
+        self._last_csv_row["xfeat_dy"] = correction_dy
+        self._last_csv_row["xfeat_dyaw_deg"] = math.degrees(correction_dyaw)
+        self._last_csv_row["delta_diff_m"] = math.hypot(correction_dx, correction_dy)
+        self._last_csv_row["yaw_diff_deg"] = math.degrees(abs(_wrap_angle(correction_dyaw)))
 
     def _path_cb(self, msg: Path) -> None:
         self.path_active = len(msg.poses) >= 2
@@ -236,6 +390,9 @@ class OdomFusionNode(Node):
             self._last_fusion_status = "base_only"
             self._last_status_details = "xfeat_missing"
 
+        self._last_motion_dx = corrected_dx
+        self._last_motion_dy = corrected_dy
+        self._last_motion_dyaw = corrected_dyaw
         world_dx = math.cos(self.fused_yaw) * corrected_dx - math.sin(self.fused_yaw) * corrected_dy
         world_dy = math.sin(self.fused_yaw) * corrected_dx + math.cos(self.fused_yaw) * corrected_dy
         self.fused_x += world_dx

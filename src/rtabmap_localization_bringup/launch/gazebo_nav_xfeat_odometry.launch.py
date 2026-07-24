@@ -466,7 +466,7 @@ def generate_launch_description():
         DeclareLaunchArgument("orb_delta_topic", default_value="/orb/delta_odom"),
         DeclareLaunchArgument("orb_match_period_sec", default_value="2.0"),
         DeclareLaunchArgument("orb_max_iterations", default_value="50"),
-        DeclareLaunchArgument("orb_min_f1_score", default_value="30.0"),
+        DeclareLaunchArgument("orb_min_f1_score", default_value="101.0"),
         DeclareLaunchArgument("orb_gain_xy", default_value="0.6"),
         DeclareLaunchArgument("orb_gain_yaw", default_value="0.5"),
         DeclareLaunchArgument("use_amcl", default_value="true"),

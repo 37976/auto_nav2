@@ -12,7 +12,8 @@ import os
 import sys
 import json
 import time
-from typing import Optional
+from collections import deque
+from typing import Deque, Optional
 
 import cv2
 import numpy as np
@@ -48,6 +49,10 @@ def _quaternion_from_yaw(yaw: float) -> Quaternion:
     return q
 
 
+def _stamp_sec(header) -> float:
+    return float(header.stamp.sec) + float(header.stamp.nanosec) * 1e-9
+
+
 def _wrap_angle(a: float) -> float:
     while a > math.pi:
         a -= 2.0 * math.pi
@@ -74,6 +79,8 @@ class OrbMapMatcher(Node):
         self.declare_parameter("correction_gain_yaw", 0.3)
         self.declare_parameter("match_timeout_sec", 5.0)
         self.declare_parameter("match_event_topic", "/orb/match_event")
+        self.declare_parameter("odom_history_sec", 10.0)
+        self.declare_parameter("max_scan_odom_sync_sec", 0.15)
 
         map_yaml = str(self.get_parameter("map_yaml_path").value)
         if not map_yaml:
@@ -93,6 +100,9 @@ class OrbMapMatcher(Node):
         self._gain_yaw = float(self.get_parameter("correction_gain_yaw").value)
         self._match_timeout_sec = float(self.get_parameter("match_timeout_sec").value)
         self._match_event_topic = str(self.get_parameter("match_event_topic").value)
+        self._odom_history_sec = float(self.get_parameter("odom_history_sec").value)
+        self._max_scan_odom_sync_sec = float(
+            self.get_parameter("max_scan_odom_sync_sec").value)
 
         # ---- 加载地图 ----
         self._map_image, self._map_origin, self._map_pose_offset = self._load_map(map_yaml)
@@ -102,6 +112,7 @@ class OrbMapMatcher(Node):
         # ---- 状态 ----
         self._latest_scan: Optional[LaserScan] = None
         self._latest_odom: Optional[Odometry] = None
+        self._odom_history: Deque[tuple[float, Odometry]] = deque()
         self._match_count = 0
         self._success_count = 0
         self._enabled = True
@@ -168,6 +179,20 @@ class OrbMapMatcher(Node):
 
     def _odom_cb(self, msg: Odometry) -> None:
         self._latest_odom = msg
+        stamp_sec = _stamp_sec(msg.header)
+        self._odom_history.append((stamp_sec, msg))
+        oldest_stamp = stamp_sec - self._odom_history_sec
+        while self._odom_history and self._odom_history[0][0] < oldest_stamp:
+            self._odom_history.popleft()
+
+    def _odom_at_stamp(self, stamp_sec: float) -> Optional[Odometry]:
+        if not self._odom_history:
+            return None
+        odom_stamp, odom = min(
+            self._odom_history, key=lambda item: abs(item[0] - stamp_sec))
+        if abs(odom_stamp - stamp_sec) > self._max_scan_odom_sync_sec:
+            return None
+        return odom
 
     # ==================== 暂停/恢复 ====================
 
@@ -188,12 +213,22 @@ class OrbMapMatcher(Node):
             return
 
         self._match_count += 1
+        scan = self._latest_scan
+        scan_stamp_sec = _stamp_sec(scan.header)
+        scan_odom = self._odom_at_stamp(scan_stamp_sec)
+        if scan_odom is None:
+            self._publish_match_event("unsynchronized_odom", 0.0)
+            self.get_logger().warn(
+                "未找到与激光扫描时间对齐的里程计，跳过本次 ORB 匹配",
+                throttle_duration_sec=2.0,
+            )
+            return
 
         # 1. 渲染扫描图像
-        scan_img, min_dist = self._render_scan(self._latest_scan)
+        scan_img, min_dist = self._render_scan(scan)
 
         # 2. 裁剪地图局部区域
-        map_crop, crop_origin_m = self._crop_map_around_pose(self._latest_odom)
+        map_crop, crop_origin_m = self._crop_map_around_pose(scan_odom)
 
         # 3. ORB 匹配
         start_time = time.perf_counter()
@@ -225,13 +260,13 @@ class OrbMapMatcher(Node):
         self._success_count += 1
 
         # 4. 计算修正增量
-        delta = self._compute_delta(map_x, map_y, map_yaw, self._latest_odom)
+        delta = self._compute_delta(map_x, map_y, map_yaw, scan_odom)
         if delta is None:
             self._publish_match_event("invalid_delta", elapsed_ms)
             return
 
         # 5. 发布
-        self._publish_delta(self._latest_scan.header, delta)
+        self._publish_delta(scan.header, delta)
         self._publish_match_event("matched", elapsed_ms)
 
         self.get_logger().info(
