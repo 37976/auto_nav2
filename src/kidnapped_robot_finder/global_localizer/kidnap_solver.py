@@ -124,12 +124,9 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
     with open("/tmp/kidnap_debug.txt", "a") as f:
         f.write(f"min_dist={distance:.2f}m({distance/map_resolution:.1f}px) "
                 f"red={num_red_pixels} threshold_px={used_threshold}\n")
-    print(f"[DEBUG] min_distance={distance:.2f}m ({distance/map_resolution:.1f}px), "
-          f"candidates={num_red_pixels}, threshold_px={used_threshold}", flush=True)
-
     n_iterations = _compute_adaptive_iterations(num_red_pixels, max_iterations, max_time_budget_ms)
-    print(f"[DEBUG] 自适应迭代: {n_iterations} (候选={num_red_pixels}, "
-          f"上限={max_iterations}, 时间预算={max_time_budget_ms}ms)", flush=True)
+    print(f"[DEBUG] ORB 搜索: min_distance={distance:.2f}m, candidates={num_red_pixels}, "
+          f"iterations={n_iterations}/{max_iterations}, budget={max_time_budget_ms}ms", flush=True)
 
     candidate_area_to_show = candidate_area.copy()
 
@@ -170,7 +167,6 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
             print(f"[DEBUG] 达到时间预算 {max_time_budget_ms}ms，停止搜索", flush=True)
             break
         iters += 1
-        print(f"Iteration: {iters}/{len(random_coords)}", flush=True)
         x, y = coord
         # Do something with the coordinates
         s = time.perf_counter()
@@ -191,7 +187,6 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
         est_robot_px = np.array([y, x]) + (np.array(tf_robot_pose) - np.array(robot_coord))
         if (est_robot_px[0] < 0 or est_robot_px[0] >= map_image.shape[1] or
             est_robot_px[1] < 0 or est_robot_px[1] >= map_image.shape[0]):
-            print(f"Iteration {iters}: 定位结果超出地图范围 ({est_robot_px[0]:.0f},{est_robot_px[1]:.0f}), 丢弃")
             continue
 
         s = time.perf_counter()
@@ -201,7 +196,6 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
         scoring_time += time_taken
 
         all_candidates.append([percentage, y, x])
-        print("F1 Score: ", percentage)
         if percentage > max_accuracy:
             max_accuracy = percentage
             best_coord = coord
@@ -216,13 +210,10 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
 
 
     end_time = time.perf_counter()
-    print("\n\n\n-------------------------\n\n\n")
     if best_coord is None:
         print("ERROR: 未找到任何有效候选位姿")
         return None
     x, y = best_coord
-    print("Highest F1 score (x100): ", max_accuracy)
-    print("Time taken: ms", (end_time - st_time) * 1000)
     total_time = (end_time - st_time) * 1000
 
     # print("Sim scan time: ", sim_scan_time, " Percentage: ", (sim_scan_time / total_time) * 100)
@@ -246,11 +237,6 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
     vector_length = 20 #px
 
 
-    #print("BEst scan center: ", best_scan_center)
-    print("Robot on map: ", robot_on_map)
-    print("Theta in degrees: ", best_theta_degrees)
-
-
     # 转世界坐标 (m)
     if map_origin is None:
         map_origin = np.array([0.0, 0.0])
@@ -262,9 +248,9 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
         map_pose_offset)
     robot_angle_in_map = math.radians(-best_theta_degrees)
 
-    print("----------------------------")
-    print("Robot in map meters: ", robot_in_map_meters)
-    print("Robot theta (on map) in degrees: ", math.degrees(robot_angle_in_map))
+    print(f"[DEBUG] ORB 完成: f1={max_accuracy:.1f}, tested={iters}/{len(random_coords)}, "
+          f"elapsed={total_time:.0f}ms, map=({robot_in_map_meters[0]:.2f},"
+          f"{robot_in_map_meters[1]:.2f},{math.degrees(robot_angle_in_map):.1f}°)")
 
     if show_plot:
         fig, axs = plt.subplots(1, 6, figsize=(12, 4))
