@@ -165,6 +165,10 @@ def solve_kidnap(orig_scan_img, map_image, min_distance, map_origin = None,
     sim_scan_time, matching_time, scoring_time = 0, 0, 0
     # Use the random coordinates for further processing
     for coord in random_coords:
+        elapsed_ms = (time.perf_counter() - st_time) * 1000.0
+        if elapsed_ms >= max_time_budget_ms:
+            print(f"[DEBUG] 达到时间预算 {max_time_budget_ms}ms，停止搜索", flush=True)
+            break
         iters += 1
         print(f"Iteration: {iters}/{len(random_coords)}", flush=True)
         x, y = coord

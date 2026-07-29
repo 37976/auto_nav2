@@ -37,6 +37,7 @@ setup(
             'amcl_global_localize = nav_slam.amcl_global_localize:main',
             'amcl_init_bridge = nav_slam.amcl_init_bridge:main',
             'lidar_global_localize = nav_slam.lidar_global_localize:main',
+            'map_odom_corrector = nav_slam.map_odom_corrector:main',
             'odom_to_map_relay = nav_slam.odom_to_map_relay:main',
             'pose_logger = nav_slam.pose_logger:main',
             'nav_experiment_logger = nav_slam.nav_experiment_logger:main',

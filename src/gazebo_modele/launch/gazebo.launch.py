@@ -25,6 +25,7 @@ def generate_launch_description():
     spawn_y = LaunchConfiguration('spawn_y')
     spawn_z = LaunchConfiguration('spawn_z')
     spawn_yaw = LaunchConfiguration('spawn_yaw')
+    start_gazebo_gui = LaunchConfiguration('start_gazebo_gui')
     urdf_model_path = PathJoinSubstitution([pkg_share, 'urdf', 'model.urdf'])
     gazebo_world_path = PathJoinSubstitution([pkg_share, 'world', world_name])
     robot_model_file = os.path.join(pkg_share_dir, 'urdf', 'model.urdf')
@@ -32,12 +33,17 @@ def generate_launch_description():
         robot_description = robot_model_stream.read()
     start_gazebo_cmd = ExecuteProcess(
         cmd=[
-            'gazebo',
+            'gzserver',
             '--verbose',
             '-s', 'libgazebo_ros_init.so',
             '-s', 'libgazebo_ros_factory.so',
             gazebo_world_path,
         ],
+        output='screen')
+
+    start_gazebo_gui_cmd = ExecuteProcess(
+        cmd=['gzclient'],
+        condition=IfCondition(start_gazebo_gui),
         output='screen')
 
     spawn_entity_cmd = Node(
@@ -88,12 +94,14 @@ def generate_launch_description():
         DeclareLaunchArgument('spawn_y', default_value='0.0'),
         DeclareLaunchArgument('spawn_z', default_value='0.03'),
         DeclareLaunchArgument('spawn_yaw', default_value='0.0'),
+        DeclareLaunchArgument('start_gazebo_gui', default_value='false'),
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('GAZEBO_MODEL_PATH',
             os.path.join(pkg_share_dir, 'models') + ':' +
             '/usr/share/gazebo-11/models'),
         SetEnvironmentVariable('IGN_IP', '127.0.0.1'),
         start_gazebo_cmd,
+        start_gazebo_gui_cmd,
         spawn_entity_cmd,
         start_robot_state_publisher_cmd,
         moving_obstacle_cmd,

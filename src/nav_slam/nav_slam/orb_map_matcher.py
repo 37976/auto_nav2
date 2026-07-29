@@ -4,7 +4,7 @@
 orb_map_matcher.py -- 持续 ORB 扫描-地图匹配, 周期性纠正里程计漂移。
 
 将当前激光扫描渲染为图像, 与地图的局部区域进行 ORB 特征匹配,
-获得机器人在 map 帧下的绝对位姿, 转换为局部修正增量发布给 odom_fusion_node。
+获得机器人在 map 帧下的绝对位姿，并按激光扫描时间戳发布。
 """
 
 import math
@@ -21,7 +21,7 @@ import rclpy
 import yaml
 from geometry_msgs.msg import Quaternion
 from nav_msgs.msg import Odometry
-from rclpy.node import Node, Timer
+from rclpy.node import Node
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String
 from std_srvs.srv import SetBool
@@ -49,16 +49,12 @@ def _quaternion_from_yaw(yaw: float) -> Quaternion:
     return q
 
 
+def _wrap_angle(angle: float) -> float:
+    return math.atan2(math.sin(angle), math.cos(angle))
+
+
 def _stamp_sec(header) -> float:
     return float(header.stamp.sec) + float(header.stamp.nanosec) * 1e-9
-
-
-def _wrap_angle(a: float) -> float:
-    while a > math.pi:
-        a -= 2.0 * math.pi
-    while a < -math.pi:
-        a += 2.0 * math.pi
-    return a
 
 
 class OrbMapMatcher(Node):
@@ -67,16 +63,14 @@ class OrbMapMatcher(Node):
 
         self.declare_parameter("map_yaml_path", "")
         self.declare_parameter("scan_topic", "/scan")
-        self.declare_parameter("odom_topic", "/localized_odom")
-        self.declare_parameter("delta_odom_topic", "/orb/delta_odom")
+        self.declare_parameter("odom_topic", "/odom_in_map")
+        self.declare_parameter("match_pose_topic", "/orb/match_pose")
         self.declare_parameter("base_frame", "base_footprint")
         self.declare_parameter("match_period_sec", 2.0)
         self.declare_parameter("lidar_max_range", 8.0)
         self.declare_parameter("map_resolution", 0.05)
         self.declare_parameter("max_iterations", 50)
-        self.declare_parameter("min_f1_score", 30.0)
-        self.declare_parameter("correction_gain_xy", 0.3)
-        self.declare_parameter("correction_gain_yaw", 0.3)
+        self.declare_parameter("min_f1_score", 50.0)
         self.declare_parameter("match_timeout_sec", 5.0)
         self.declare_parameter("match_event_topic", "/orb/match_event")
         self.declare_parameter("odom_history_sec", 10.0)
@@ -89,15 +83,13 @@ class OrbMapMatcher(Node):
 
         self._scan_topic = str(self.get_parameter("scan_topic").value)
         self._odom_topic = str(self.get_parameter("odom_topic").value)
-        self._delta_topic = str(self.get_parameter("delta_odom_topic").value)
+        self._match_pose_topic = str(self.get_parameter("match_pose_topic").value)
         self._base_frame = str(self.get_parameter("base_frame").value)
         self._period = float(self.get_parameter("match_period_sec").value)
         self._max_range = float(self.get_parameter("lidar_max_range").value)
         self._map_resolution = float(self.get_parameter("map_resolution").value)
         self._max_iter = int(self.get_parameter("max_iterations").value)
         self._min_f1 = float(self.get_parameter("min_f1_score").value)
-        self._gain_xy = float(self.get_parameter("correction_gain_xy").value)
-        self._gain_yaw = float(self.get_parameter("correction_gain_yaw").value)
         self._match_timeout_sec = float(self.get_parameter("match_timeout_sec").value)
         self._match_event_topic = str(self.get_parameter("match_event_topic").value)
         self._odom_history_sec = float(self.get_parameter("odom_history_sec").value)
@@ -124,7 +116,8 @@ class OrbMapMatcher(Node):
             Odometry, self._odom_topic, self._odom_cb, 10)
 
         # ---- 发布 ----
-        self._delta_pub = self.create_publisher(Odometry, self._delta_topic, 10)
+        self._match_pose_pub = self.create_publisher(
+            Odometry, self._match_pose_topic, 10)
         self._event_pub = self.create_publisher(String, self._match_event_topic, 10)
 
         # ---- 定时匹配 ----
@@ -137,7 +130,7 @@ class OrbMapMatcher(Node):
         self.get_logger().info(
             f"ORB 持续匹配就绪: 每 {self._period}s, "
             f"max_iter={self._max_iter}, min_f1={self._min_f1}, "
-            f"gain_xy={self._gain_xy}, gain_yaw={self._gain_yaw}"
+            f"min_f1={self._min_f1}, output={self._match_pose_topic}"
         )
 
     # ==================== 地图 ====================
@@ -239,6 +232,9 @@ class OrbMapMatcher(Node):
                 map_origin=crop_origin_m,
                 map_pose_offset=self._map_pose_offset,
                 max_iterations=self._max_iter,
+                # Leave one iteration of margin for returning and publishing the result.
+                max_time_budget_ms=max(
+                    100, int(self._match_timeout_sec * 1000.0) - 500),
                 stop_search_threshold=self._min_f1,
                 lidar_range=self._max_range,
             )
@@ -247,6 +243,12 @@ class OrbMapMatcher(Node):
             self.get_logger().warn(f"ORB 匹配异常: {exc}")
             return
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+
+        if elapsed_ms > self._match_timeout_sec * 1000.0:
+            self._publish_match_event("timeout", elapsed_ms)
+            self.get_logger().warn(
+                f"[{self._match_count}] 匹配超时 {elapsed_ms:.0f}ms，丢弃迟到观测")
+            return
 
         if result is None:
             self._publish_match_event("no_candidate", elapsed_ms)
@@ -257,22 +259,22 @@ class OrbMapMatcher(Node):
             return
 
         map_x, map_y, map_yaw, f1 = result
-        self._success_count += 1
-
-        # 4. 计算修正增量
-        delta = self._compute_delta(map_x, map_y, map_yaw, scan_odom)
-        if delta is None:
-            self._publish_match_event("invalid_delta", elapsed_ms)
+        # solve_kidnap 的航向以扫描图像坐标定义。一次性全局定位已使用
+        # 同一转换；持续定位必须保持一致，否则 map->odom 会相差 180°。
+        map_yaw = _wrap_angle(map_yaw + math.pi)
+        if f1 < self._min_f1:
+            self._publish_match_event("low_f1", elapsed_ms, f1)
+            self.get_logger().info(
+                f"[{self._match_count}] 匹配置信度不足: F1={f1:.1f} < {self._min_f1:.1f}")
             return
 
-        # 5. 发布
-        self._publish_delta(scan.header, delta)
-        self._publish_match_event("matched", elapsed_ms)
+        self._success_count += 1
+        self._publish_match_pose(scan.header, map_x, map_y, map_yaw)
+        self._publish_match_event("matched", elapsed_ms, f1)
 
         self.get_logger().info(
             f"[{self._match_count}] 匹配成功: F1={f1:.1f}% "
             f"map=({map_x:.2f},{map_y:.2f},{math.degrees(map_yaw):.1f}°) "
-            f"corr=({delta['dx']:.3f},{delta['dy']:.3f},{math.degrees(delta['dyaw']):.1f}°) "
             f"成功率={self._success_count}/{self._match_count}"
         )
 
@@ -329,46 +331,20 @@ class OrbMapMatcher(Node):
 
         return map_crop, crop_origin_m
 
-    # ==================== 修正量计算 ====================
-
-    def _compute_delta(
-        self,
-        map_x: float, map_y: float, map_yaw: float,
-        odom: Odometry,
-    ) -> Optional[dict]:
-        """根据 ORB 匹配结果和当前估计位姿计算局部修正增量."""
-        est_x = odom.pose.pose.position.x
-        est_y = odom.pose.pose.position.y
-        est_yaw = _yaw_from_quaternion(odom.pose.pose.orientation)
-
-        # map 帧下的位姿误差
-        err_x = map_x - est_x
-        err_y = map_y - est_y
-        err_yaw = _wrap_angle(map_yaw - est_yaw)
-
-        # 转为 base_footprint 帧的局部增量 (P 控制器)
-        c = math.cos(est_yaw)
-        s = math.sin(est_yaw)
-        local_dx = self._gain_xy * (c * err_x + s * err_y)
-        local_dy = self._gain_xy * (-s * err_x + c * err_y)
-        local_dyaw = self._gain_yaw * err_yaw
-
-        return {"dx": local_dx, "dy": local_dy, "dyaw": local_dyaw}
-
     # ==================== 发布 ====================
 
-    def _publish_delta(self, header, delta: dict) -> None:
+    def _publish_match_pose(self, header, x: float, y: float, yaw: float) -> None:
         odom = Odometry()
         odom.header = header
-        odom.header.frame_id = self._base_frame
-        odom.child_frame_id = f"{self._base_frame}_delta"
-        odom.pose.pose.position.x = delta["dx"]
-        odom.pose.pose.position.y = delta["dy"]
+        odom.header.frame_id = "map"
+        odom.child_frame_id = self._base_frame
+        odom.pose.pose.position.x = x
+        odom.pose.pose.position.y = y
         odom.pose.pose.position.z = 0.0
-        odom.pose.pose.orientation = _quaternion_from_yaw(delta["dyaw"])
-        self._delta_pub.publish(odom)
+        odom.pose.pose.orientation = _quaternion_from_yaw(yaw)
+        self._match_pose_pub.publish(odom)
 
-    def _publish_match_event(self, status: str, elapsed_ms: float) -> None:
+    def _publish_match_event(self, status: str, elapsed_ms: float, f1: float = 0.0) -> None:
         """Publish a structured ORB-attempt event for the experiment logger."""
         stamp_sec = self.get_clock().now().nanoseconds * 1e-9
         event = {
@@ -376,6 +352,7 @@ class OrbMapMatcher(Node):
             "attempt": self._match_count,
             "status": status,
             "elapsed_ms": elapsed_ms,
+            "f1": f1,
             "timed_out": elapsed_ms > self._match_timeout_sec * 1000.0,
         }
         message = String()

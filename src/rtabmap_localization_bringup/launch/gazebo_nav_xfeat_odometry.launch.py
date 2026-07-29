@@ -27,7 +27,7 @@ from launch_ros.actions import Node
 
 
 # ---- 随机出生安全参数 ----
-ROBOT_SAFE_RADIUS_M = 0.35
+ROBOT_SAFE_RADIUS_M = 1.0
 MIN_CLEARANCE_PREFERRED_M = 2.0
 
 
@@ -80,11 +80,8 @@ def _pick_random_free_pose(map_yaml_path: str, safe_radius_m: float = ROBOT_SAFE
     padded = np.pad(valid_free_mask.astype(np.uint8), border, mode='constant', constant_values=0)
     distance_cells_full = cv2.distanceTransform(padded, cv2.DIST_L2, 5)
     distance_cells = distance_cells_full[border:-border, border:-border]
-    preferred_cells = float(MIN_CLEARANCE_PREFERRED_M / resolution)
-
-    # 只允许生在大空旷区域（>= MIN_CLEARANCE_PREFERRED_M），不 fallback 到小区域
-    preferred_mask = distance_cells >= preferred_cells
-    candidate_mask = preferred_mask
+    # 绑架测试需覆盖整张地图；只要求机器人安全半径内无障碍物。
+    candidate_mask = distance_cells >= (safe_radius_m / resolution)
 
     # 收集所有候选空闲栅格坐标
     free_rows, free_cols = np.where(candidate_mask)
@@ -130,7 +127,30 @@ def _build_timed_actions(context, *args, **kwargs):
     max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
 
     actions = [
-        # 1.5. 激光 ORB 全局定位 → 锁定 map→odom 静态 TF
+        # 1. map->odom 的唯一发布者：初始定位和持续 ORB 观测都在此处校正。
+        Node(
+            package="nav_slam",
+            executable="map_odom_corrector",
+            name="map_odom_corrector",
+            output="screen",
+            parameters=[{
+                "use_sim_time": LaunchConfiguration("use_sim_time"),
+                "odom_topic": "/localized_odom",
+                "match_pose_topic": "/orb/match_pose",
+                "initial_pose_topic": "/lidar_global/match_pose",
+                "state_history_sec": 30.0,
+                "required_consistent_matches": LaunchConfiguration(
+                    "orb_required_consistent_matches"),
+                "consistent_translation_m": LaunchConfiguration(
+                    "orb_consistent_translation_m"),
+                "consistent_yaw_deg": LaunchConfiguration("orb_consistent_yaw_deg"),
+                "max_correction_linear_mps": LaunchConfiguration(
+                    "orb_max_correction_linear_mps"),
+                "max_correction_angular_degps": LaunchConfiguration(
+                    "orb_max_correction_angular_degps"),
+            }],
+        ),
+        # 1.5. 激光 ORB 初始全局定位 → 发布 map 系观测给校正器
         Node(
             package="nav_slam",
             executable="lidar_global_localize",
@@ -256,16 +276,14 @@ def _build_timed_actions(context, *args, **kwargs):
                     "use_sim_time": LaunchConfiguration("use_sim_time"),
                     "map_yaml_path": LaunchConfiguration("static_map_yaml"),
                     "scan_topic": "/scan",
-                    "odom_topic": "/localized_odom",
-                    "delta_odom_topic": LaunchConfiguration("orb_delta_topic"),
+                    "odom_topic": "/odom_in_map",
+                    "match_pose_topic": "/orb/match_pose",
                     "base_frame": LaunchConfiguration("base_frame"),
                     "match_period_sec": LaunchConfiguration("orb_match_period_sec"),
                     "lidar_max_range": 8.0,
                     "map_resolution": 0.05,
                     "max_iterations": LaunchConfiguration("orb_max_iterations"),
                     "min_f1_score": LaunchConfiguration("orb_min_f1_score"),
-                    "correction_gain_xy": LaunchConfiguration("orb_gain_xy"),
-                    "correction_gain_yaw": LaunchConfiguration("orb_gain_yaw"),
                 }],
             )
         )
@@ -284,7 +302,7 @@ def _build_timed_actions(context, *args, **kwargs):
                     "orb_disable_duration_sec"),
             }],
         ),
-        # 5. 里程计融合（使用 ORB 修正源）
+        # 5. 局部里程计/IMU 连续传播；ORB 全局校正由 map_odom_corrector 处理。
         Node(
             package="rtabmap_localization_bringup",
             executable="odom_fusion_node",
@@ -292,7 +310,7 @@ def _build_timed_actions(context, *args, **kwargs):
             output="screen",
             parameters=[{
                 "base_odom_topic": "/odom",
-                "xfeat_delta_topic": LaunchConfiguration("orb_delta_topic"),
+                "xfeat_delta_topic": "/unused_orb_delta_odom",
                 "output_odom_topic": LaunchConfiguration("fused_odom_topic"),
                 "correction_gain_xy": 1.0,
                 "correction_gain_yaw": 1.0,
@@ -358,6 +376,7 @@ def generate_launch_description():
     start_moving_obstacle = LaunchConfiguration("start_moving_obstacle")
     use_sim_time = LaunchConfiguration("use_sim_time")
     start_nav_rviz = LaunchConfiguration("start_nav_rviz")
+    start_gazebo_gui = LaunchConfiguration("start_gazebo_gui")
     start_web_ui = LaunchConfiguration("start_web_ui")
     use_static_map = LaunchConfiguration("use_static_map")
     static_map_yaml = LaunchConfiguration("static_map_yaml")
@@ -395,12 +414,9 @@ def generate_launch_description():
     max_delta_translation_diff_m = LaunchConfiguration("max_delta_translation_diff_m")
     max_delta_yaw_diff_deg = LaunchConfiguration("max_delta_yaw_diff_deg")
     # ORB 地图匹配参数
-    orb_delta_topic = LaunchConfiguration("orb_delta_topic")
     orb_match_period_sec = LaunchConfiguration("orb_match_period_sec")
     orb_max_iterations = LaunchConfiguration("orb_max_iterations")
     orb_min_f1_score = LaunchConfiguration("orb_min_f1_score")
-    orb_gain_xy = LaunchConfiguration("orb_gain_xy")
-    orb_gain_yaw = LaunchConfiguration("orb_gain_yaw")
     # 导航到达目标点后重定位间隔
     relocalize_interval_sec = LaunchConfiguration("relocalize_interval_sec")
     orb_disable_duration_sec = LaunchConfiguration("orb_disable_duration_sec")
@@ -426,6 +442,7 @@ def generate_launch_description():
         DeclareLaunchArgument("start_moving_obstacle", default_value="false"),
         DeclareLaunchArgument("use_sim_time", default_value="true"),
         DeclareLaunchArgument("start_nav_rviz", default_value="true"),
+        DeclareLaunchArgument("start_gazebo_gui", default_value="false"),
         DeclareLaunchArgument("start_web_ui", default_value="false"),
         DeclareLaunchArgument("use_static_map", default_value="true"),
         DeclareLaunchArgument("static_map_yaml", default_value=default_static_map_yaml),
@@ -463,15 +480,17 @@ def generate_launch_description():
         DeclareLaunchArgument("max_delta_translation_diff_m", default_value="0.20"),
         DeclareLaunchArgument("max_delta_yaw_diff_deg", default_value="20.0"),
         # ORB 地图匹配参数
-        DeclareLaunchArgument("orb_delta_topic", default_value="/orb/delta_odom"),
         DeclareLaunchArgument("orb_match_period_sec", default_value="2.0"),
         DeclareLaunchArgument("orb_max_iterations", default_value="50"),
-        DeclareLaunchArgument("orb_min_f1_score", default_value="101.0"),
-        DeclareLaunchArgument("orb_gain_xy", default_value="0.6"),
-        DeclareLaunchArgument("orb_gain_yaw", default_value="0.5"),
+        DeclareLaunchArgument("orb_min_f1_score", default_value="35.0"),
+        DeclareLaunchArgument("orb_required_consistent_matches", default_value="2"),
+        DeclareLaunchArgument("orb_consistent_translation_m", default_value="0.30"),
+        DeclareLaunchArgument("orb_consistent_yaw_deg", default_value="5.0"),
+        DeclareLaunchArgument("orb_max_correction_linear_mps", default_value="0.20"),
+        DeclareLaunchArgument("orb_max_correction_angular_degps", default_value="12.0"),
         DeclareLaunchArgument("use_amcl", default_value="true"),
         DeclareLaunchArgument("relocalize_interval_sec", default_value="10.0"),
-        DeclareLaunchArgument("orb_disable_duration_sec", default_value="10.0"),
+        DeclareLaunchArgument("orb_disable_duration_sec", default_value="30.0"),
         DeclareLaunchArgument("start_orb_matcher", default_value="true"),
         DeclareLaunchArgument("start_pose_logger", default_value="true"),
         # 0. 随机选空闲位姿（必须先于 gazebo 和 AMCL）
@@ -487,6 +506,7 @@ def generate_launch_description():
                 "spawn_y": random_spawn_y,
                 "spawn_z": "0.03",
                 "spawn_yaw": random_spawn_yaw,
+                "start_gazebo_gui": start_gazebo_gui,
             }.items(),
         ),
         OpaqueFunction(function=_build_timed_actions),

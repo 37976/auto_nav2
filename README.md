@@ -33,9 +33,9 @@ ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
 1. 读取地图随机选安全空闲位姿
 2. Gazebo 用随机位姿 spawn 机器人
 3. LiDAR 采集 3 帧后，ORB 匹配算出机器人在地图上的精确 (x, y, yaw)
-4. `lidar_global_localize` 锁定 `map→odom` 静态 TF
+4. `map_odom_corrector` 根据全局 ORB 观测建立 `map→odom` 变换
 5. Voronoi 规划 + Pure Pursuit 跟踪接管后续导航
-6. `orb_map_matcher` 持续用激光与地图做 ORB 匹配，周期性纠正里程计漂移
+6. `orb_map_matcher` 持续用激光与地图做 ORB 匹配；`map_odom_corrector` 以完整刚体变换平滑更新 `map→odom`
 
 ### 仅 Gazebo + 传感器（无导航）
 
@@ -88,12 +88,14 @@ http://<本机IP>:8080
                                               ↓
                                     算出 (x, y, yaw) 精确位姿
                                               ↓
-                                   锁定 map→odom 静态 TF
+                                  map_odom_corrector 建立 map→odom
                                               ↓
 持续导航 (周期性局部修正):
-  /odom (轮式) + /orb/delta_odom (ORB 局部修正) → odom_fusion_node
+  /odom (轮式) + IMU 航向 → odom_fusion_node
                                               ↓
                                       /localized_odom (融合里程计, odom 系)
+                                              ↓
+  ORB map 系绝对观测 + 同时刻 /localized_odom → map_odom_corrector → map→odom
                                               ↓
                             odom_to_map_relay (查 map→odom TF 变换到 map 系)
                                               ↓
@@ -109,20 +111,21 @@ http://<本机IP>:8080
 TF 树：
 
 ```
-map ──(lidar_global_localize 静态)──→ odom ──(odom_tf_bridge)──→ base_footprint ──(robot_state_publisher)──→ 各传感器
+map ──(map_odom_corrector 动态)──→ odom ──(odom_tf_bridge)──→ base_footprint ──(robot_state_publisher)──→ 各传感器
 ```
 
 ### 关键节点
 
 | 节点 | 包 | 职责 |
 |------|-----|------|
-| `lidar_global_localize` | `nav_slam` | ORB 全局定位 → 锁定 `map→odom` 静态 TF |
-| `orb_map_matcher` | `nav_slam` | 持续 ORB 扫描-局部地图匹配 → `/orb/delta_odom` |
+| `lidar_global_localize` | `nav_slam` | ORB 全局定位 → `/lidar_global/match_pose` map 系观测 |
+| `orb_map_matcher` | `nav_slam` | 持续 ORB 扫描-局部地图匹配 → `/orb/match_pose` map 系观测 |
+| `map_odom_corrector` | `nav_slam` | 在扫描时刻配对观测与 `/localized_odom`，质量门控后平滑发布唯一的 `map→odom` |
 | `static_map_server` | `nav_slam` | 发布 PGM 地图到 `/map` |
 | `map_once_relay` | `nav_slam` | `/map` 转发一次到 `/map_for_amcl`（transient_local） |
 | `odom_tf_bridge` | `gazebo_modele` | 监听 `/localized_odom`，发 `odom→base_footprint` TF |
 | `odom_to_map_relay` | `nav_slam` | 将 odom 系里程计变换到 map 系 → `/odom_in_map` |
-| `odom_fusion_node` | `rtabmap_localization_bringup` | 轮式 + ORB 增量融合 → `/localized_odom` |
+| `odom_fusion_node` | `rtabmap_localization_bringup` | 轮式 + IMU 航向连续传播 → `/localized_odom` |
 | `map_pub` | `nav_slam` | 静态地图 + 动态障碍 → `/combined_grid` |
 | `laser_scan_to_points` | `nav_slam` | 激光扫描转 map 系点云 |
 | `voronoi` | `nav2_voronoi_planner` | Voronoi 路径规划（订阅 `/odom_in_map`） |
@@ -133,9 +136,10 @@ map ──(lidar_global_localize 静态)──→ odom ──(odom_tf_bridge)─
 | 话题 | 坐标系 | 用途 |
 |------|--------|------|
 | `/odom` | odom | Gazebo 地面真值（底盘累积） |
-| `/orb/delta_odom` | base_footprint | ORB 扫描-地图匹配增量修正 |
-| `/localized_odom` | odom | 融合里程计（轮式 + ORB 修正） |
+| `/localized_odom` | odom | 轮式 + IMU 连续里程计，不被 ORB 直接覆盖 |
 | `/odom_in_map` | map | map 系里程计 → 给 voronoi 和 start_nav |
+| `/orb/match_pose` | map | 持续 ORB 的扫描时刻绝对位姿观测 |
+| `/lidar_global/match_pose` | map | 全局 ORB 的扫描时刻绝对位姿观测 |
 
 ### 地图话题分离
 
@@ -144,15 +148,13 @@ map ──(lidar_global_localize 静态)──→ odom ──(odom_tf_bridge)─
 | `/map` | `static_map_server` | 供 `map_once_relay` 和 `lidar_global_localize` 参考 |
 | `/combined_grid` | `map_pub` | Voronoi 规划 + RViz 显示（静态地图 + 动态障碍物） |
 
-### ORB 增量融合状态
+### `map_odom_corrector` 事件状态
 
 | 状态 | 含义 |
 |------|------|
-| `base_only` | 此步未使用 ORB 修正（超时/无匹配） |
-| `fused` | 此步使用了 ORB 增量修正 |
-| `rejected` | ORB 修正与底盘增量差异过大，丢弃 |
-
-调试 CSV：`/home/xu/xfeat_pose/sim_odom_fusion_debug.csv`
+| `global_applied` | 全局 ORB 观测已建立新的 `map→odom` |
+| `held` | 持续 ORB 观测正等待第二次一致匹配 |
+| `accepted` | 持续 ORB 观测已被接受，目标 `map→odom` 将按限速平滑靠近 |
 
 ---
 
@@ -171,7 +173,7 @@ map ──(lidar_global_localize 静态)──→ odom ──(odom_tf_bridge)─
 5. RANSAC 估计仿射变换 + F1 打分，选最高分结果
 6. 地图越大自动增加采样数（自适应 30 ~ 250 次, 上限 7s）
 
-ORB 定位结果直接锁定 `map→odom` 静态 TF（含 x, y, yaw），不再经过 AMCL 粒子滤波。
+ORB 定位结果与同一激光时刻的 `/localized_odom` 求解完整 `map→odom` 变换（含 x、y、yaw）；全局重定位立即应用，持续匹配经一致性确认后平滑应用。
 
 ### 2. 持续局部匹配 (`orb_map_matcher`)
 
@@ -180,8 +182,8 @@ ORB 定位结果直接锁定 `map→odom` 静态 TF（含 x, y, yaw），不再�
 1. 渲染当前激光扫描为 320×320 灰度图（与全局定位相同管线）
 2. 根据当前估计位姿，从静态地图中**裁取局部子图**（~18m × 18m）
 3. 在局部子图内运行 ORB 匹配（迭代上限 50 次，最低 F1 30%）
-4. 将匹配得到的绝对位姿与当前估计位姿做差，经 P 控制器（增益 0.3）转为局部修正增量
-5. 发布到 `/orb/delta_odom`，由 `odom_fusion_node` 融合
+4. 发布匹配得到的扫描时刻绝对 map 位姿到 `/orb/match_pose`
+5. `map_odom_corrector` 与保存的同时刻 `/localized_odom` 计算 `map→odom`，连续两次一致后以限速方式更新
 
 | | 全局定位 | 持续匹配 |
 |---|---|---|
@@ -189,7 +191,7 @@ ORB 定位结果直接锁定 `map→odom` 静态 TF（含 x, y, yaw），不再�
 | 搜索范围 | 全图 | 当前位姿 ±9m |
 | 迭代次数 | 30~250（自适应） | 固定 50 |
 | 耗时 | ~0.9~7s | ~0.5~1s |
-| 输出 | 静态 map→odom TF | Odometry delta |
+| 输出 | `/lidar_global/match_pose` | `/orb/match_pose` |
 
 ---
 
@@ -209,9 +211,10 @@ ORB 持续定位参数：
 ros2 launch rtabmap_localization_bringup gazebo_nav_xfeat_odometry.launch.py \
   orb_match_period_sec:=2.0 \
   orb_max_iterations:=50 \
-  orb_min_f1_score:=30.0 \
-  orb_gain_xy:=0.3 \
-  orb_gain_yaw:=0.3
+  orb_min_f1_score:=35.0 \
+  orb_required_consistent_matches:=2 \
+  orb_consistent_translation_m:=0.30 \
+  orb_consistent_yaw_deg:=5.0
 ```
 
 ORB 全局定位参数（可选）：
@@ -344,7 +347,7 @@ ros2 launch nav_eval auto_challenge_eval.launch.py \
 | `src/gazebo_modele/launch/gazebo.launch.py` | Gazebo 启动 |
 | `src/nav_slam/launch/2dpoints.launch.py` | 导航核心启动 |
 | `src/nav_slam/nav_slam/lidar_global_localize.py` | ORB 全局定位 → `map→odom` TF |
-| `src/nav_slam/nav_slam/orb_map_matcher.py` | 持续 ORB 扫描-地图匹配 → `/orb/delta_odom` |
+| `src/nav_slam/nav_slam/orb_map_matcher.py` | 持续 ORB 扫描-地图匹配 → `/orb/match_pose` |
 | `src/nav_slam/nav_slam/odom_to_map_relay.py` | odom→map 坐标转发 |
 | `src/nav_slam/nav_slam/static_map_server.py` | 静态地图 → `/map` |
 | `src/nav_slam/nav_slam/start_nav.py` | Pure Pursuit 路径跟踪 |

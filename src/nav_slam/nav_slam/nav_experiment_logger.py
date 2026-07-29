@@ -14,6 +14,7 @@ from gazebo_msgs.msg import ModelStates
 from nav_msgs.msg import Odometry
 from rclpy.clock import Clock, ClockType
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile
 from std_msgs.msg import String
 
 
@@ -47,7 +48,7 @@ def _percentile(values: list[float], percentile: float) -> Optional[float]:
 
 
 class NavExperimentLogger(Node):
-    """Record truth, estimates, and ORB/fusion events without controlling navigation."""
+    """Record truth, estimates, and map-to-odom correction events without navigation control."""
 
     def __init__(self) -> None:
         super().__init__("nav_experiment_logger")
@@ -62,7 +63,8 @@ class NavExperimentLogger(Node):
         self.declare_parameter("estimate_topic", "auto")
         self.declare_parameter("auto_estimate_wait_sec", 2.0)
         self.declare_parameter("orb_event_topic", "/orb/match_event")
-        self.declare_parameter("fusion_event_topic", "/localization/fusion_event")
+        self.declare_parameter(
+            "correction_event_topic", "/localization/map_odom_correction_event")
         self.declare_parameter("align_initial_pose", True)
         self.declare_parameter("rpe_interval_sec", 1.0)
 
@@ -93,7 +95,7 @@ class NavExperimentLogger(Node):
         self._alignment: Optional[tuple[float, float, float]] = None
         self._samples: list[dict[str, float]] = []
         self._orb_events: list[dict[str, Any]] = []
-        self._fusion_events: list[dict[str, Any]] = []
+        self._correction_events: list[dict[str, Any]] = []
 
         self._trajectory_file = open(
             os.path.join(self.run_dir, "trajectory.csv"), "w", newline="", encoding="utf-8"
@@ -109,7 +111,7 @@ class NavExperimentLogger(Node):
         )
         self._trajectory_writer.writeheader()
         self._orb_file, self._orb_writer = self._open_event_csv("orb_events.csv")
-        self._fusion_file, self._fusion_writer = self._open_event_csv("fusion_events.csv")
+        self._correction_file, self._correction_writer = self._open_correction_csv()
 
         self.create_subscription(
             ModelStates,
@@ -140,11 +142,14 @@ class NavExperimentLogger(Node):
         self.create_subscription(
             String, str(self.get_parameter("orb_event_topic").value), self._orb_event_callback, 20
         )
+        correction_event_qos = QoSProfile(
+            depth=10, durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
         self.create_subscription(
             String,
-            str(self.get_parameter("fusion_event_topic").value),
-            self._fusion_event_callback,
-            50,
+            str(self.get_parameter("correction_event_topic").value),
+            self._correction_event_callback,
+            correction_event_qos,
         )
         steady_clock = Clock(clock_type=ClockType.STEADY_TIME)
         sample_hz = max(0.1, float(self.get_parameter("sample_hz").value))
@@ -160,6 +165,20 @@ class NavExperimentLogger(Node):
             file,
             fieldnames=[
                 "stamp_sec", "status", "elapsed_ms", "timed_out", "delta_diff_m", "yaw_diff_deg"
+            ],
+        )
+        writer.writeheader()
+        return file, writer
+
+    def _open_correction_csv(self):
+        file = open(
+            os.path.join(self.run_dir, "correction_events.csv"), "w", newline="", encoding="utf-8"
+        )
+        writer = csv.DictWriter(
+            file,
+            fieldnames=[
+                "stamp_sec", "source", "status", "target_x_m", "target_y_m",
+                "target_yaw_deg", "yaw_innovation_deg",
             ],
         )
         writer.writeheader()
@@ -254,12 +273,12 @@ class NavExperimentLogger(Node):
         self._orb_events.append(event)
         self._write_event(self._orb_writer, event)
 
-    def _fusion_event_callback(self, msg: String) -> None:
+    def _correction_event_callback(self, msg: String) -> None:
         event = self._parse_event(msg)
         if event is None:
             return
-        self._fusion_events.append(event)
-        self._write_event(self._fusion_writer, event)
+        self._correction_events.append(event)
+        self._write_event(self._correction_writer, event)
 
     @staticmethod
     def _write_event(writer: csv.DictWriter, event: dict[str, Any]) -> None:
@@ -341,8 +360,17 @@ class NavExperimentLogger(Node):
         orb_attempts = len(self._orb_events)
         matched = sum(event.get("status") == "matched" for event in self._orb_events)
         timed_out = sum(bool(event.get("timed_out")) for event in self._orb_events)
-        fused = sum(event.get("status") == "fused" for event in self._fusion_events)
-        rejected = sum(event.get("status") == "rejected" for event in self._fusion_events)
+        accepted = sum(
+            event.get("status") == "accepted" and event.get("source") == "orb"
+            for event in self._correction_events
+        )
+        held = sum(
+            event.get("status") == "held" and event.get("source") == "orb"
+            for event in self._correction_events
+        )
+        global_applied = sum(
+            event.get("status") == "global_applied" for event in self._correction_events
+        )
         elapsed_ms = [
             float(event["elapsed_ms"])
             for event in self._orb_events
@@ -365,9 +393,10 @@ class NavExperimentLogger(Node):
             "rpe_yaw_rmse_deg": _rms(rpe_yaw),
             "endpoint_error_m": endpoint_error,
             "orb_attempts": orb_attempts, "orb_matched": matched, "orb_timeout": timed_out,
-            "effective_correction": fused, "rejected_correction": rejected,
-            "effective_correction_rate_pct": _percent(fused, orb_attempts),
-            "rejection_rate_pct": _percent(rejected, orb_attempts),
+            "orb_correction_accepted": accepted,
+            "orb_observation_held": held,
+            "global_correction_applied": global_applied,
+            "orb_correction_acceptance_rate_pct": _percent(accepted, matched),
             "timeout_rate_pct": _percent(timed_out, orb_attempts),
             "orb_mean_compute_ms": (
                 None if not elapsed_ms else sum(elapsed_ms) / len(elapsed_ms)
@@ -381,7 +410,7 @@ class NavExperimentLogger(Node):
         self._write_aggregate_summary()
         self._trajectory_file.close()
         self._orb_file.close()
-        self._fusion_file.close()
+        self._correction_file.close()
         print(json.dumps(summary, ensure_ascii=False))
         return super().destroy_node()
 
@@ -396,13 +425,16 @@ class NavExperimentLogger(Node):
                 summaries.append(json.load(file))
         if not summaries:
             return
+        fieldnames = list(dict.fromkeys(
+            key for summary in summaries for key in summary.keys()
+        ))
         with open(
             os.path.join(output_dir, "all_runs_summary.csv"),
             "w",
             newline="",
             encoding="utf-8",
         ) as file:
-            writer = csv.DictWriter(file, fieldnames=list(summaries[0].keys()))
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(summaries)
         self._write_group_summary(output_dir, summaries)
@@ -411,8 +443,8 @@ class NavExperimentLogger(Node):
     def _write_group_summary(output_dir: str, summaries: list[dict[str, Any]]) -> None:
         metric_names = [
             "ate_rmse_m", "ate_mean_m", "ate_p95_m", "rpe_translation_rmse_m",
-            "rpe_yaw_rmse_deg", "endpoint_error_m", "effective_correction_rate_pct",
-            "rejection_rate_pct", "timeout_rate_pct", "orb_mean_compute_ms",
+            "rpe_yaw_rmse_deg", "endpoint_error_m", "orb_correction_acceptance_rate_pct",
+            "timeout_rate_pct", "orb_mean_compute_ms",
         ]
         grouped: dict[str, list[dict[str, Any]]] = {}
         for summary in summaries:
@@ -428,11 +460,11 @@ class NavExperimentLogger(Node):
                 "orb_attempts_total": sum(
                     summary.get("orb_attempts", 0) for summary in group_summaries
                 ),
-                "effective_correction_total": sum(
-                    summary.get("effective_correction", 0) for summary in group_summaries
+                "orb_correction_accepted_total": sum(
+                    summary.get("orb_correction_accepted", 0) for summary in group_summaries
                 ),
-                "rejected_correction_total": sum(
-                    summary.get("rejected_correction", 0) for summary in group_summaries
+                "orb_observation_held_total": sum(
+                    summary.get("orb_observation_held", 0) for summary in group_summaries
                 ),
                 "orb_timeout_total": sum(
                     summary.get("orb_timeout", 0) for summary in group_summaries

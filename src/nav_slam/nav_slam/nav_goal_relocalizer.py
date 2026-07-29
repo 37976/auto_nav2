@@ -17,7 +17,7 @@ nav_goal_relocalizer.py -- 导航目标点到达后触发全局重定位。
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Empty
+from std_msgs.msg import Empty, String
 from std_srvs.srv import Empty as EmptySrv
 from std_srvs.srv import SetBool
 
@@ -32,7 +32,7 @@ class NavGoalRelocalizer(Node):
             self.get_parameter("min_relocalize_interval_sec").value)
 
         # 重定位期间暂停 ORB 修正的时长 (秒)，应 > 定位耗时+TF发布耗时
-        self.declare_parameter("orb_disable_duration_sec", 10.0)
+        self.declare_parameter("orb_disable_duration_sec", 30.0)
         self._disable_duration = float(
             self.get_parameter("orb_disable_duration_sec").value)
 
@@ -81,6 +81,11 @@ class NavGoalRelocalizer(Node):
         self._goal_pose_sub = self.create_subscription(
             PoseStamped, "/goal_pose", self._goal_pose_callback, 10)
 
+        # 仅在 map_odom_corrector 已将全局观测写入 TF 后恢复持续 ORB。
+        self._global_applied_sub = self.create_subscription(
+            String, "/localization/global_correction_applied",
+            self._global_correction_applied_callback, 10)
+
         # 恢复 ORB 的定时器
         self._reenable_timer = self.create_timer(
             self._disable_duration, self._reenable_orb_cb)
@@ -112,7 +117,7 @@ class NavGoalRelocalizer(Node):
         # 2. 触发重定位
         self._call_relocalize()
 
-        # 3. 延迟后恢复 ORB
+        # 3. 仅作为全局 ORB 失败的兜底超时；成功时由观测回调立即恢复。
         self._reenable_timer.reset()
 
     # ==================== 新目标截断重定位 ====================
@@ -169,8 +174,19 @@ class NavGoalRelocalizer(Node):
         self._orb_enable_cli.call_async(req)
 
     def _reenable_orb_cb(self):
+        self.get_logger().warn(
+            "全局重定位在兜底超时内未产出观测，恢复持续 ORB")
         self._set_orb_enabled(True)
         self._reenable_timer.cancel()
+        self._relocalizing = False
+
+    def _global_correction_applied_callback(self, msg: String):
+        if not self._relocalizing:
+            return
+        self.get_logger().info(
+            "全局 map->odom 已应用，恢复持续 ORB 校正")
+        self._reenable_timer.cancel()
+        self._set_orb_enabled(True)
         self._relocalizing = False
 
     # ==================== 重定位 ====================
