@@ -108,19 +108,20 @@ class PathFollowingNode(Node):
         self.last_linear_x = 0.0
         self.last_angular_z = 0.0
         self.last_debug_log_time = self.get_clock().now()
+        self._last_control_time = None
 
-        # 控制参数，可继续调
-        self.max_speed = 0.8          # 直道最高速度
-        self.min_speed = 0.12         # 转弯时最低速度
-        self.max_angular = 1.0        # 限制最大角速度，避免猛甩
+        # 室内稳定导航参数
+        self.max_speed = 0.40         # 直道最高速度 (m/s)
+        self.min_speed = 0.08         # 转弯时最低速度 (m/s)
+        self.max_angular = 0.60       # 最大角速度 (rad/s)
         self.k_cte = 0.5              # CTE 修正增益 (1/s)，控制横向回正强度
         self.max_curve_for_slowdown = 6.0  # 路径曲率阈值 (1/m)，超过此值速度降至最低
-        self.linear_acc_limit = 0.03  # 每次回调线速度最大变化量
-        self.angular_acc_limit = 0.08 # 每次回调角速度最大变化量
+        self.max_linear_acceleration = 0.25   # 线加速度上限 (m/s²)
+        self.max_angular_acceleration = 0.80  # 角加速度上限 (rad/s²)
         self.rotate_in_place_angle = 1.2
         self.rotate_in_place_exit = 0.4   # 退出原地转向的阈值，小于进入阈值，防止掉头画弧
         self.in_rotate_in_place = False
-        self.rotate_in_place_speed = 0.55
+        self.rotate_in_place_speed = 0.35
         self.stuck_timeout = 8.0
         self.progress_index_epsilon = 4
         self.progress_distance_epsilon = 0.10
@@ -327,6 +328,14 @@ class PathFollowingNode(Node):
             self.cmd_vel_publisher.publish(cmd_vel_msg)
 
     def odometry_callback(self, msg):
+        now = self.get_clock().now()
+        control_dt = 0.0
+        if self._last_control_time is not None:
+            control_dt = max(
+                0.0, min(0.1, (now - self._last_control_time).nanoseconds * 1e-9)
+            )
+        self._last_control_time = now
+
         if self.control_mode in ("manual", "pause"):
             return
 
@@ -427,17 +436,16 @@ class PathFollowingNode(Node):
 
         # 速度平滑，避免突然加速/突然猛转
         self.last_linear_x = self.smooth_value(
-            target_speed, self.last_linear_x, self.linear_acc_limit
+            target_speed, self.last_linear_x, self.max_linear_acceleration * control_dt
         )
         self.last_angular_z = self.smooth_value(
-            target_angular, self.last_angular_z, self.angular_acc_limit
+            target_angular, self.last_angular_z, self.max_angular_acceleration * control_dt
         )
 
         cmd_vel_msg.linear.x = self.last_linear_x
         cmd_vel_msg.angular.z = self.last_angular_z
         self.cmd_vel_publisher.publish(cmd_vel_msg)
 
-        now = self.get_clock().now()
         if (now - self.last_debug_log_time).nanoseconds / 1e9 >= 2.0:
             self.last_debug_log_time = now
             self.get_logger().debug(
