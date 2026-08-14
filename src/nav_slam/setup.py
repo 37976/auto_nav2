@@ -36,6 +36,8 @@ setup(
             'static_map_server = nav_slam.static_map_server:main',
             'amcl_global_localize = nav_slam.amcl_global_localize:main',
             'amcl_init_bridge = nav_slam.amcl_init_bridge:main',
+            'amcl_initial_localizer = nav_slam.amcl_initial_localizer:main',
+            'icp_global_localizer = nav_slam.icp_global_localizer:main',
             'lidar_global_localize = nav_slam.lidar_global_localize:main',
             'map_odom_corrector = nav_slam.map_odom_corrector:main',
             'odom_to_map_relay = nav_slam.odom_to_map_relay:main',
