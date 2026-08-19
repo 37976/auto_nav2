@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Batch-test AMCL or global ICP initial localization in Gazebo."""
+"""Batch-test ORB, AMCL, or global ICP initial localization in Gazebo."""
 
 import argparse
 import csv
@@ -27,12 +27,18 @@ LAUNCH_PACKAGE = "rtabmap_localization_bringup"
 LAUNCH_FILES = {
     "amcl": "gazebo_amcl_initial_localization.launch.py",
     "icp": "gazebo_icp_initial_localization.launch.py",
+    "orb": "gazebo_orb_initial_localization.launch.py",
 }
 
 RE_SPAWN = re.compile(
     r"\[random_spawn\].*?world=\(([-\d.]+),\s*([-\d.]+),\s*([-\d.]+)°"
 )
 RE_RESULT = re.compile(r"\[INITIAL_LOCALIZATION_RESULT\]\s+(\{.*\})")
+RE_ORB_START = re.compile(r"ORB 匹配中")
+RE_ORB_RESULT = re.compile(
+    r"定位完成:\s*x=([-\d.]+)\s+y=([-\d.]+)\s+"
+    r"yaw=([-\d.]+)°\s+F1=([-\d.]+)"
+)
 
 
 def wrap_yaw_diff_deg(first: float, second: float) -> float:
@@ -48,6 +54,7 @@ class OutputMonitor(threading.Thread):
         self.lines: list[str] = []
         self.spawn: tuple[float, float, float] | None = None
         self.result: dict | None = None
+        self.orb_started_at: float | None = None
         self.spawn_event = threading.Event()
         self.result_event = threading.Event()
 
@@ -68,6 +75,25 @@ class OutputMonitor(threading.Thread):
                         self.result = json.loads(match.group(1))
                     except json.JSONDecodeError:
                         continue
+                    self.result_event.set()
+                    continue
+                if RE_ORB_START.search(line):
+                    self.orb_started_at = time.monotonic()
+                match = RE_ORB_RESULT.search(line)
+                if match:
+                    elapsed_ms = None
+                    if self.orb_started_at is not None:
+                        elapsed_ms = (
+                            time.monotonic() - self.orb_started_at
+                        ) * 1000.0
+                    self.result = {
+                        "status": "matched",
+                        "x": float(match.group(1)),
+                        "y": float(match.group(2)),
+                        "yaw_deg": float(match.group(3)),
+                        "f1_score": float(match.group(4)),
+                        "elapsed_ms": elapsed_ms,
+                    }
                     self.result_event.set()
 
 
@@ -184,29 +210,50 @@ class TrialRunner:
             estimate_x = result.get("x")
             estimate_y = result.get("y")
             estimate_yaw = result.get("yaw_deg")
+            ground_truth_x = result.get("gt_x")
+            ground_truth_y = result.get("gt_y")
+            ground_truth_yaw = result.get("gt_yaw_deg")
+            ground_truth_source = result.get("ground_truth_source")
+            if ground_truth_x is None or ground_truth_y is None:
+                if self.args.method in {"icp", "orb"}:
+                    ground_truth_x, ground_truth_y = spawn_x, spawn_y
+                    ground_truth_yaw = spawn_yaw
+                    ground_truth_source = "spawn_pose_static_robot"
             trial.update(
                 status=result.get("status", "UNKNOWN"),
                 reason=result.get("reason", ""),
                 estimate_x=estimate_x,
                 estimate_y=estimate_y,
                 estimate_yaw_deg=estimate_yaw,
+                ground_truth_x=ground_truth_x,
+                ground_truth_y=ground_truth_y,
+                ground_truth_yaw_deg=ground_truth_yaw,
+                ground_truth_age_ms=result.get("gt_age_ms"),
+                ground_truth_source=ground_truth_source,
                 elapsed_ms=result.get("elapsed_ms"),
                 cov_x=result.get("cov_x"),
                 cov_y=result.get("cov_y"),
                 cov_yaw=result.get("cov_yaw"),
+                orb_f1_score=result.get("f1_score"),
                 icp_rmse_m=result.get("rmse_m"),
                 icp_inlier_ratio=result.get("inlier_ratio"),
                 icp_coarse_score_m=result.get("coarse_score_m"),
                 icp_iterations=result.get("iterations"),
             )
             trial["method_success"] = result.get("status") in {"converged", "matched"}
-            if estimate_x is not None and estimate_y is not None:
+            if (
+                estimate_x is not None
+                and estimate_y is not None
+                and ground_truth_x is not None
+                and ground_truth_y is not None
+            ):
                 trial["error_xy_m"] = math.hypot(
-                    float(estimate_x) - spawn_x, float(estimate_y) - spawn_y
+                    float(estimate_x) - float(ground_truth_x),
+                    float(estimate_y) - float(ground_truth_y),
                 )
-            if estimate_yaw is not None:
+            if estimate_yaw is not None and ground_truth_yaw is not None:
                 trial["error_yaw_deg"] = wrap_yaw_diff_deg(
-                    float(estimate_yaw), spawn_yaw
+                    float(estimate_yaw), float(ground_truth_yaw)
                 )
             trial["accuracy_success"] = bool(
                 trial["method_success"]
@@ -225,9 +272,12 @@ CSV_FIELDS = [
     "run_id", "seed", "timestamp", "method", "status", "reason",
     "method_success", "accuracy_success",
     "spawn_x", "spawn_y", "spawn_yaw_deg",
+    "ground_truth_x", "ground_truth_y", "ground_truth_yaw_deg",
+    "ground_truth_age_ms", "ground_truth_source",
     "estimate_x", "estimate_y", "estimate_yaw_deg",
     "error_xy_m", "error_yaw_deg", "elapsed_ms",
     "cov_x", "cov_y", "cov_yaw",
+    "orb_f1_score",
     "icp_rmse_m", "icp_inlier_ratio", "icp_coarse_score_m", "icp_iterations",
 ]
 
@@ -241,6 +291,15 @@ def write_results(results: list[dict], args, timestamp: str) -> Path:
     return path
 
 
+def percentile(values: list[float], percent: float) -> float:
+    """Return a linearly interpolated percentile of a non-empty list."""
+    ordered = sorted(values)
+    position = (len(ordered) - 1) * percent / 100.0
+    lower = int(math.floor(position))
+    upper = int(math.ceil(position))
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
 def metric_stats(values: list[float]) -> dict[str, float | int]:
     if not values:
         return {"count": 0}
@@ -251,8 +310,9 @@ def metric_stats(values: list[float]) -> dict[str, float | int]:
         "mean": mean,
         "std": math.sqrt(sum((value - mean) ** 2 for value in values) / len(values)),
         "min": ordered[0],
-        "p50": ordered[len(ordered) // 2],
-        "p95": ordered[min(int(len(ordered) * 0.95), len(ordered) - 1)],
+        "p50": percentile(ordered, 50.0),
+        "p90": percentile(ordered, 90.0),
+        "p95": percentile(ordered, 95.0),
         "max": ordered[-1],
     }
 
@@ -263,6 +323,21 @@ def write_summary(results: list[dict], args, timestamp: str) -> Path:
         "runs": len(results),
         "method_success_count": sum(bool(item["method_success"]) for item in results),
         "accuracy_success_count": sum(bool(item["accuracy_success"]) for item in results),
+        "method_success_definition": {
+            "amcl": "amcl_converged",
+            "icp": "icp_quality_gate_accepted",
+            "orb": "orb_match_returned",
+        }[args.method],
+        "accuracy_success_definition": "method_success_and_xy_yaw_thresholds",
+        "ground_truth_source_counts": {
+            source: sum(
+                item.get("ground_truth_source") == source for item in results
+            )
+            for source in sorted({
+                str(item.get("ground_truth_source"))
+                for item in results if item.get("ground_truth_source")
+            })
+        },
         "success_xy_threshold_m": args.success_xy_m,
         "success_yaw_threshold_deg": args.success_yaw_deg,
         "error_xy_m": metric_stats([
@@ -276,6 +351,10 @@ def write_summary(results: list[dict], args, timestamp: str) -> Path:
         "elapsed_ms": metric_stats([
             float(item["elapsed_ms"]) for item in results
             if item.get("elapsed_ms") is not None
+        ]),
+        "orb_f1_score": metric_stats([
+            float(item["orb_f1_score"]) for item in results
+            if item.get("orb_f1_score") is not None
         ]),
     }
     summary["method_success_rate_pct"] = (
@@ -291,7 +370,7 @@ def write_summary(results: list[dict], args, timestamp: str) -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="AMCL / 全局 ICP 初始定位重复测试",
+        description="ORB / AMCL / 全局 ICP 初始定位重复测试",
     )
     parser.add_argument("--method", choices=sorted(LAUNCH_FILES), required=True)
     parser.add_argument("--runs", "-n", type=int, default=100)

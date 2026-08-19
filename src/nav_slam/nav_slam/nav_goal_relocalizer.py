@@ -14,6 +14,8 @@ nav_goal_relocalizer.py -- 导航目标点到达后触发全局重定位。
   - 调用 /cancel_relocalize 通知 LidarGlobalLocalize 放弃当前定位
 """
 
+import os
+
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
@@ -25,6 +27,18 @@ from std_srvs.srv import SetBool
 class NavGoalRelocalizer(Node):
     def __init__(self):
         super().__init__("nav_goal_relocalizer")
+
+        enabled_from_environment = os.environ.get(
+            "AUTO_NAV2_GOAL_RELOCALIZATION_ENABLED", "true"
+        ).strip().lower() not in {"0", "false", "no", "off"}
+        self.declare_parameter(
+            "goal_relocalization_enabled", enabled_from_environment)
+        self._enabled = bool(
+            self.get_parameter("goal_relocalization_enabled").value)
+        if not self._enabled:
+            self.get_logger().info(
+                "到点全局重定位已由实验配置关闭")
+            return
 
         # 防抖动：两次重定位之间的最小间隔 (秒)
         self.declare_parameter("min_relocalize_interval_sec", 10.0)

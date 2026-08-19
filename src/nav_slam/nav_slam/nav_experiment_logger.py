@@ -6,8 +6,9 @@ import json
 import math
 import os
 import time
+from collections import deque
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Deque, Optional
 
 import rclpy
 from gazebo_msgs.msg import ModelStates
@@ -15,7 +16,7 @@ from nav_msgs.msg import Odometry
 from rclpy.clock import Clock, ClockType
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile
-from std_msgs.msg import String
+from std_msgs.msg import Empty, String
 
 
 def _yaw_from_quaternion(quaternion) -> float:
@@ -47,6 +48,58 @@ def _percentile(values: list[float], percentile: float) -> Optional[float]:
     return values[lower] + (values[upper] - values[lower]) * (index - lower)
 
 
+def _interpolate_pose(
+    history: Deque[tuple[float, float, float, float]],
+    stamp_sec: float,
+    max_sync_sec: float,
+) -> Optional[tuple[float, float, float, float]]:
+    """Interpolate a pose at ``stamp_sec``; return x, y, yaw and bracket span."""
+    if not history:
+        return None
+    first = history[0]
+    last = history[-1]
+    if stamp_sec <= first[0]:
+        delta = first[0] - stamp_sec
+        return (*first[1:], delta) if delta <= max_sync_sec else None
+    if stamp_sec >= last[0]:
+        delta = stamp_sec - last[0]
+        return (*last[1:], delta) if delta <= max_sync_sec else None
+
+    previous = first
+    for current in list(history)[1:]:
+        if current[0] < stamp_sec:
+            previous = current
+            continue
+        span = current[0] - previous[0]
+        if span <= 0.0 or span > 2.0 * max_sync_sec:
+            return None
+        ratio = (stamp_sec - previous[0]) / span
+        yaw_delta = _wrap_angle(current[3] - previous[3])
+        return (
+            previous[1] + ratio * (current[1] - previous[1]),
+            previous[2] + ratio * (current[2] - previous[2]),
+            _wrap_angle(previous[3] + ratio * yaw_delta),
+            span,
+        )
+    return None
+
+
+def _relative_pose(
+    first: dict[str, float], second: dict[str, float], prefix: str
+) -> tuple[float, float, float]:
+    """Return the second SE(2) pose relative to the first pose."""
+    dx = second[f"{prefix}_x_m"] - first[f"{prefix}_x_m"]
+    dy = second[f"{prefix}_y_m"] - first[f"{prefix}_y_m"]
+    first_yaw = first[f"{prefix}_yaw"]
+    cos_yaw = math.cos(first_yaw)
+    sin_yaw = math.sin(first_yaw)
+    return (
+        cos_yaw * dx + sin_yaw * dy,
+        -sin_yaw * dx + cos_yaw * dy,
+        _wrap_angle(second[f"{prefix}_yaw"] - first_yaw),
+    )
+
+
 class NavExperimentLogger(Node):
     """Record truth, estimates, and map-to-odom correction events without navigation control."""
 
@@ -60,13 +113,17 @@ class NavExperimentLogger(Node):
         self.declare_parameter("sample_hz", 5.0)
         self.declare_parameter("robot_model_name", "fishbot")
         self.declare_parameter("ground_truth_topic", "/gazebo/model_states")
-        self.declare_parameter("estimate_topic", "auto")
+        self.declare_parameter("estimate_topic", "/odom_in_map")
         self.declare_parameter("auto_estimate_wait_sec", 2.0)
         self.declare_parameter("orb_event_topic", "/orb/match_event")
         self.declare_parameter(
             "correction_event_topic", "/localization/map_odom_correction_event")
         self.declare_parameter("align_initial_pose", True)
         self.declare_parameter("rpe_interval_sec", 1.0)
+        self.declare_parameter("ground_truth_history_sec", 10.0)
+        self.declare_parameter("max_ground_truth_sync_sec", 0.10)
+        self.declare_parameter("stop_on_goal_reached", True)
+        self.declare_parameter("goal_reached_topic", "/goal_reached")
 
         output_dir = str(self.get_parameter("output_dir").value)
         run_name = os.path.basename(str(self.get_parameter("run_name").value).strip())
@@ -85,7 +142,17 @@ class NavExperimentLogger(Node):
         self.auto_estimate_wait_sec = max(
             0.0, float(self.get_parameter("auto_estimate_wait_sec").value)
         )
+        self._ground_truth_history_sec = max(
+            1.0, float(self.get_parameter("ground_truth_history_sec").value)
+        )
+        self._max_ground_truth_sync_sec = max(
+            0.001, float(self.get_parameter("max_ground_truth_sync_sec").value)
+        )
+        self._stop_on_goal_reached = bool(
+            self.get_parameter("stop_on_goal_reached").value
+        )
         self._ground_truth: Optional[tuple[float, float, float]] = None
+        self._ground_truth_history: Deque[tuple[float, float, float, float]] = deque()
         self._estimate: Optional[tuple[float, float, float, float]] = None
         self._estimates: dict[str, tuple[float, float, float, float]] = {}
         self._active_estimate_topic: Optional[str] = None
@@ -96,6 +163,9 @@ class NavExperimentLogger(Node):
         self._samples: list[dict[str, float]] = []
         self._orb_events: list[dict[str, Any]] = []
         self._correction_events: list[dict[str, Any]] = []
+        self._last_sample_stamp: Optional[float] = None
+        self._finished_reason = "manual_stop"
+        self._recording_finished = False
 
         self._trajectory_file = open(
             os.path.join(self.run_dir, "trajectory.csv"), "w", newline="", encoding="utf-8"
@@ -103,7 +173,7 @@ class NavExperimentLogger(Node):
         self._trajectory_writer = csv.DictWriter(
             self._trajectory_file,
             fieldnames=[
-                "time_s", "gt_x_m", "gt_y_m", "gt_yaw_deg",
+                "time_s", "gt_sync_span_s", "gt_x_m", "gt_y_m", "gt_yaw_deg",
                 "estimate_x_m", "estimate_y_m", "estimate_yaw_deg",
                 "aligned_x_m", "aligned_y_m", "aligned_yaw_deg",
                 "position_error_m", "yaw_error_deg",
@@ -151,12 +221,20 @@ class NavExperimentLogger(Node):
             self._correction_event_callback,
             correction_event_qos,
         )
+        if self._stop_on_goal_reached:
+            self.create_subscription(
+                Empty,
+                str(self.get_parameter("goal_reached_topic").value),
+                self._goal_reached_callback,
+                10,
+            )
         steady_clock = Clock(clock_type=ClockType.STEADY_TIME)
         sample_hz = max(0.1, float(self.get_parameter("sample_hz").value))
         self.create_timer(1.0 / sample_hz, self._sample, clock=steady_clock)
         self.create_timer(2.0, self._print_status, clock=steady_clock)
         self.get_logger().info(
-            f"人工导航试验记录已启动：{self.run_dir}（Ctrl+C 停止并生成 summary.json）"
+            f"人工导航试验记录已启动：{self.run_dir}"
+            "（首次到点自动结束，也可 Ctrl+C 手动结束）"
         )
 
     def _open_event_csv(self, filename: str):
@@ -164,7 +242,8 @@ class NavExperimentLogger(Node):
         writer = csv.DictWriter(
             file,
             fieldnames=[
-                "stamp_sec", "status", "elapsed_ms", "timed_out", "delta_diff_m", "yaw_diff_deg"
+                "stamp_sec", "attempt", "status", "elapsed_ms", "f1", "timed_out",
+                "delta_diff_m", "yaw_diff_deg",
             ],
         )
         writer.writeheader()
@@ -197,6 +276,11 @@ class NavExperimentLogger(Node):
             pose.position.y,
             _yaw_from_quaternion(pose.orientation),
         )
+        stamp_sec = self.get_clock().now().nanoseconds * 1e-9
+        self._ground_truth_history.append((stamp_sec, *self._ground_truth))
+        cutoff = stamp_sec - self._ground_truth_history_sec
+        while self._ground_truth_history[0][0] < cutoff:
+            self._ground_truth_history.popleft()
 
     def _estimate_callback(self, msg: Odometry, topic: str) -> None:
         stamp_sec = float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
@@ -267,6 +351,8 @@ class NavExperimentLogger(Node):
         return event if isinstance(event, dict) else None
 
     def _orb_event_callback(self, msg: String) -> None:
+        if self._recording_finished:
+            return
         event = self._parse_event(msg)
         if event is None:
             return
@@ -274,6 +360,8 @@ class NavExperimentLogger(Node):
         self._write_event(self._orb_writer, event)
 
     def _correction_event_callback(self, msg: String) -> None:
+        if self._recording_finished:
+            return
         event = self._parse_event(msg)
         if event is None:
             return
@@ -285,19 +373,31 @@ class NavExperimentLogger(Node):
         writer.writerow({key: event.get(key, "") for key in writer.fieldnames})
 
     def _sample(self) -> None:
-        if self._ground_truth is None or self._estimate is None:
+        if self._recording_finished or self._estimate is None:
             return
-        gt_x, gt_y, gt_yaw = self._ground_truth
         estimate_x, estimate_y, estimate_yaw, stamp_sec = self._estimate
         if stamp_sec <= 0.0:
             stamp_sec = self.get_clock().now().nanoseconds * 1e-9
+        if self._last_sample_stamp is not None and stamp_sec <= self._last_sample_stamp:
+            return
+        synchronized_truth = _interpolate_pose(
+            self._ground_truth_history,
+            stamp_sec,
+            self._max_ground_truth_sync_sec,
+        )
+        if synchronized_truth is None:
+            return
+        gt_x, gt_y, gt_yaw, gt_sync_span = synchronized_truth
 
         if self._alignment is None:
-            yaw_offset = _wrap_angle(gt_yaw - estimate_yaw) if self.align_initial_pose else 0.0
-            cos_yaw = math.cos(yaw_offset)
-            sin_yaw = math.sin(yaw_offset)
-            offset_x = gt_x - (cos_yaw * estimate_x - sin_yaw * estimate_y)
-            offset_y = gt_y - (sin_yaw * estimate_x + cos_yaw * estimate_y)
+            if self.align_initial_pose:
+                yaw_offset = _wrap_angle(gt_yaw - estimate_yaw)
+                cos_yaw = math.cos(yaw_offset)
+                sin_yaw = math.sin(yaw_offset)
+                offset_x = gt_x - (cos_yaw * estimate_x - sin_yaw * estimate_y)
+                offset_y = gt_y - (sin_yaw * estimate_x + cos_yaw * estimate_y)
+            else:
+                offset_x, offset_y, yaw_offset = 0.0, 0.0, 0.0
             self._alignment = (offset_x, offset_y, yaw_offset)
 
         offset_x, offset_y, yaw_offset = self._alignment
@@ -309,16 +409,19 @@ class NavExperimentLogger(Node):
         position_error = math.hypot(aligned_x - gt_x, aligned_y - gt_y)
         yaw_error = abs(math.degrees(_wrap_angle(aligned_yaw - gt_yaw)))
         sample = {
-            "time_s": stamp_sec, "gt_x_m": gt_x, "gt_y_m": gt_y, "gt_yaw": gt_yaw,
+            "time_s": stamp_sec, "gt_sync_span_s": gt_sync_span,
+            "gt_x_m": gt_x, "gt_y_m": gt_y, "gt_yaw": gt_yaw,
             "estimate_x_m": estimate_x, "estimate_y_m": estimate_y, "estimate_yaw": estimate_yaw,
             "aligned_x_m": aligned_x, "aligned_y_m": aligned_y, "aligned_yaw": aligned_yaw,
             "position_error_m": position_error, "yaw_error_deg": yaw_error,
         }
         self._samples.append(sample)
+        self._last_sample_stamp = stamp_sec
         if len(self._samples) == 1:
             self.get_logger().info("已写入第一个轨迹样本。")
         self._trajectory_writer.writerow({
-            "time_s": f"{stamp_sec:.6f}", "gt_x_m": f"{gt_x:.6f}", "gt_y_m": f"{gt_y:.6f}",
+            "time_s": f"{stamp_sec:.6f}", "gt_sync_span_s": f"{gt_sync_span:.6f}",
+            "gt_x_m": f"{gt_x:.6f}", "gt_y_m": f"{gt_y:.6f}",
             "gt_yaw_deg": f"{math.degrees(gt_yaw):.3f}", "estimate_x_m": f"{estimate_x:.6f}",
             "estimate_y_m": f"{estimate_y:.6f}",
             "estimate_yaw_deg": f"{math.degrees(estimate_yaw):.3f}",
@@ -328,6 +431,15 @@ class NavExperimentLogger(Node):
             "yaw_error_deg": f"{yaw_error:.3f}",
         })
         self._trajectory_file.flush()
+
+    def _goal_reached_callback(self, _msg: Empty) -> None:
+        if self._recording_finished:
+            return
+        self._sample()
+        self._finished_reason = "first_goal_reached"
+        self._recording_finished = True
+        self.get_logger().info("检测到首次到点，已冻结实验数据并生成汇总。")
+        rclpy.shutdown()
 
     def _rpe_values(self) -> tuple[list[float], list[float]]:
         position_errors, yaw_errors = [], []
@@ -343,13 +455,9 @@ class NavExperimentLogger(Node):
             )
             if second is None:
                 continue
-            gt_dx = second["gt_x_m"] - first["gt_x_m"]
-            gt_dy = second["gt_y_m"] - first["gt_y_m"]
-            est_dx = second["aligned_x_m"] - first["aligned_x_m"]
-            est_dy = second["aligned_y_m"] - first["aligned_y_m"]
+            gt_dx, gt_dy, gt_dyaw = _relative_pose(first, second, "gt")
+            est_dx, est_dy, est_dyaw = _relative_pose(first, second, "aligned")
             position_errors.append(math.hypot(est_dx - gt_dx, est_dy - gt_dy))
-            gt_dyaw = _wrap_angle(second["gt_yaw"] - first["gt_yaw"])
-            est_dyaw = _wrap_angle(second["aligned_yaw"] - first["aligned_yaw"])
             yaw_errors.append(abs(math.degrees(_wrap_angle(est_dyaw - gt_dyaw))))
         return position_errors, yaw_errors
 
@@ -377,10 +485,20 @@ class NavExperimentLogger(Node):
             if "elapsed_ms" in event
         ]
         endpoint_error = position_errors[-1] if position_errors else None
+        gt_sync_spans = [sample["gt_sync_span_s"] for sample in self._samples]
         return {
             "run_name": os.path.basename(self.run_dir),
             "experiment_group": self.experiment_group,
             "sample_count": len(self._samples),
+            "finished_reason": self._finished_reason,
+            "estimate_topic": self._active_estimate_topic,
+            "ground_truth_sync": "timestamp_interpolation",
+            "ground_truth_sync_span_mean_s": (
+                None if not gt_sync_spans else sum(gt_sync_spans) / len(gt_sync_spans)
+            ),
+            "ground_truth_sync_span_max_s": (
+                None if not gt_sync_spans else max(gt_sync_spans)
+            ),
             "alignment": "initial_pose" if self.align_initial_pose else "none",
             "ate_rmse_m": _rms(position_errors),
             "ate_mean_m": (

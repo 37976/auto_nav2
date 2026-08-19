@@ -288,28 +288,33 @@ ros2 launch gazebo_modele gazebo_nav_web.launch.py \
 
 ## 定位精度测试
 
-`test_orb_localization.py` 反复随机 spawn 机器人到地图空闲区域，对比 ORB 定位结果与真实 spawn 位姿，统计定位误差。
+论文中的 ORB、AMCL、ICP 初始定位对比统一使用 `test_initial_localization_baselines.py`。三种方法使用相同种子时具有相同出生位姿，并采用相同的 `0.50m/5°` 正确定位判据。
 
 ```bash
-# 100 次测试，每次 ORB 成功后采集 15 秒跟踪数据
-python3 test_orb_localization.py -n 100 -d 15
+# 当前 ORB 全局定位正式测试100次
+python3 test_initial_localization_baselines.py \
+  --method orb --runs 100 --timeout 180 \
+  --seed-base 10001 --fast-cleanup
 
-# 快速验证（5 次）
-python3 test_orb_localization.py -n 5 -d 5
+# 单次冒烟测试
+python3 test_initial_localization_baselines.py \
+  --method orb --runs 1 --timeout 180 \
+  --seed-base 10001 --fast-cleanup --verbose
 
 # 查看测试计划但不执行
-python3 test_orb_localization.py --dry-run
+python3 test_initial_localization_baselines.py \
+  --method orb --runs 100 --seed-base 10001 --dry-run
 ```
 
 | 参数 | 说明 | 默认值 |
 |------|------|--------|
 | `-n, --runs` | 测试次数 | 100 |
-| `-d, --duration` | 每次 ORB 完成后采集跟踪数据时长（秒） | 15 |
-| `-t, --timeout` | 等待 ORB 超时（秒） | 180 |
+| `--seed-base` | 第一组随机种子 | 10001 |
+| `-t, --timeout` | 单组等待定位超时（秒） | 120 |
 | `-v, --verbose` | 打印所有 launch stdout | off |
 | `--fast-cleanup` | 加速清理，跳过端口等待 | off |
 
-输出：`test_results/orb_results_<时间戳>.csv`（逐次详细） + `orb_summary_<时间戳>.csv`（统计汇总）
+输出：`test_results/orb_results_<时间戳>.csv`（逐次详细）和 `orb_summary_<时间戳>.json`（统计汇总）。旧的 `test_orb_localization.py` 仅保留用于复查历史实验，不再用于三方法论文对比。
 
 ## 自动评估
 

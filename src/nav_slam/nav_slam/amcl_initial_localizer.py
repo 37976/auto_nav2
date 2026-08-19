@@ -6,6 +6,7 @@ import math
 from typing import Optional
 
 import rclpy
+from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import PoseWithCovarianceStamped, Twist
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -28,6 +29,9 @@ class AmclInitialLocalizer(Node):
         self.declare_parameter("cmd_vel_topic", "/cmd_vel")
         self.declare_parameter("service_name", "/reinitialize_global_localization")
         self.declare_parameter("result_topic", "/initial_localization/result")
+        self.declare_parameter("ground_truth_topic", "/gazebo/model_states")
+        self.declare_parameter("robot_model_name", "fishbot")
+        self.declare_parameter("max_ground_truth_age_sec", 0.20)
         self.declare_parameter("angular_speed_rps", 0.35)
         self.declare_parameter("timeout_sec", 90.0)
         self.declare_parameter("cov_xy_threshold", 0.05)
@@ -42,8 +46,14 @@ class AmclInitialLocalizer(Node):
         self._required_covariance_count = max(
             2, int(self.get_parameter("consecutive_covariance_samples").value)
         )
+        self._robot_model_name = str(
+            self.get_parameter("robot_model_name").value)
+        self._max_ground_truth_age_sec = max(
+            0.01, float(self.get_parameter("max_ground_truth_age_sec").value)
+        )
 
         self._latest: Optional[PoseWithCovarianceStamped] = None
+        self._latest_ground_truth: Optional[tuple[float, float, float, int]] = None
         self._good_covariance_count = 0
         self._started_ns: Optional[int] = None
         self._requested = False
@@ -59,6 +69,12 @@ class AmclInitialLocalizer(Node):
             PoseWithCovarianceStamped,
             str(self.get_parameter("pose_topic").value),
             self._pose_callback,
+            20,
+        )
+        self.create_subscription(
+            ModelStates,
+            str(self.get_parameter("ground_truth_topic").value),
+            self._ground_truth_callback,
             20,
         )
         self.create_timer(0.1, self._tick)
@@ -102,7 +118,34 @@ class AmclInitialLocalizer(Node):
             return
         self._good_covariance_count += 1
         if self._good_covariance_count >= self._required_covariance_count:
-            self._finish("converged")
+            if self._ground_truth_is_fresh():
+                self._finish("converged")
+            else:
+                self.get_logger().warn(
+                    "AMCL已满足协方差条件，但仍在等待新鲜的Gazebo真值",
+                    throttle_duration_sec=2.0,
+                )
+
+    def _ground_truth_callback(self, msg: ModelStates) -> None:
+        try:
+            index = msg.name.index(self._robot_model_name)
+        except ValueError:
+            return
+        pose = msg.pose[index]
+        self._latest_ground_truth = (
+            pose.position.x,
+            pose.position.y,
+            _yaw(pose.orientation),
+            self.get_clock().now().nanoseconds,
+        )
+
+    def _ground_truth_is_fresh(self) -> bool:
+        if self._latest_ground_truth is None:
+            return False
+        age_sec = (
+            self.get_clock().now().nanoseconds - self._latest_ground_truth[3]
+        ) * 1e-9
+        return 0.0 <= age_sec <= self._max_ground_truth_age_sec
 
     def _publish_rotation(self) -> None:
         command = Twist()
@@ -139,6 +182,17 @@ class AmclInitialLocalizer(Node):
                 cov_x=covariance[0],
                 cov_y=covariance[7],
                 cov_yaw=covariance[35],
+            )
+        if self._latest_ground_truth is not None:
+            gt_x, gt_y, gt_yaw, gt_stamp_ns = self._latest_ground_truth
+            result.update(
+                gt_x=gt_x,
+                gt_y=gt_y,
+                gt_yaw_deg=math.degrees(gt_yaw),
+                gt_age_ms=(
+                    self.get_clock().now().nanoseconds - gt_stamp_ns
+                ) * 1e-6,
+                ground_truth_source="gazebo_model_states_at_result",
             )
         message = String()
         message.data = json.dumps(result, ensure_ascii=False)
