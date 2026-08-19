@@ -33,8 +33,28 @@ def generate_launch_description():
 
     start_orb_matcher = LaunchConfiguration("start_orb_matcher")
     consistent_matches = LaunchConfiguration("orb_required_consistent_matches")
+    match_period = LaunchConfiguration("orb_match_period_sec")
+    consistent_translation = LaunchConfiguration(
+        "orb_consistent_translation_m"
+    )
+    consistent_yaw = LaunchConfiguration("orb_consistent_yaw_deg")
+    max_tracking_innovation_translation = LaunchConfiguration(
+        "orb_max_tracking_innovation_translation_m"
+    )
+    max_tracking_innovation_yaw = LaunchConfiguration(
+        "orb_max_tracking_innovation_yaw_deg"
+    )
+    max_correction_linear = LaunchConfiguration(
+        "orb_max_correction_linear_mps"
+    )
+    max_correction_angular = LaunchConfiguration(
+        "orb_max_correction_angular_degps"
+    )
     goal_relocalization_enabled = LaunchConfiguration(
         "goal_relocalization_enabled")
+    start_nav_rviz = LaunchConfiguration("start_nav_rviz")
+    start_gazebo_gui = LaunchConfiguration("start_gazebo_gui")
+    start_pose_logger = LaunchConfiguration("start_pose_logger")
 
     return LaunchDescription([
         DeclareLaunchArgument("experiment_seed", default_value="10001"),
@@ -42,9 +62,29 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "orb_required_consistent_matches", default_value="2"
         ),
+        DeclareLaunchArgument("orb_match_period_sec", default_value="2.0"),
+        DeclareLaunchArgument(
+            "orb_consistent_translation_m", default_value="0.30"
+        ),
+        DeclareLaunchArgument("orb_consistent_yaw_deg", default_value="5.0"),
+        DeclareLaunchArgument(
+            "orb_max_tracking_innovation_translation_m", default_value="0.0"
+        ),
+        DeclareLaunchArgument(
+            "orb_max_tracking_innovation_yaw_deg", default_value="0.0"
+        ),
+        DeclareLaunchArgument(
+            "orb_max_correction_linear_mps", default_value="0.20"
+        ),
+        DeclareLaunchArgument(
+            "orb_max_correction_angular_degps", default_value="12.0"
+        ),
         DeclareLaunchArgument(
             "goal_relocalization_enabled", default_value="true"
         ),
+        DeclareLaunchArgument("start_nav_rviz", default_value="true"),
+        DeclareLaunchArgument("start_gazebo_gui", default_value="false"),
+        DeclareLaunchArgument("start_pose_logger", default_value="true"),
         OpaqueFunction(function=_seed_spawn_random),
         SetEnvironmentVariable(
             "AUTO_NAV2_GOAL_RELOCALIZATION_ENABLED",
@@ -55,6 +95,20 @@ def generate_launch_description():
             launch_arguments={
                 "start_orb_matcher": start_orb_matcher,
                 "orb_required_consistent_matches": consistent_matches,
+                "orb_match_period_sec": match_period,
+                "orb_consistent_translation_m": consistent_translation,
+                "orb_consistent_yaw_deg": consistent_yaw,
+                "orb_max_tracking_innovation_translation_m": (
+                    max_tracking_innovation_translation
+                ),
+                "orb_max_tracking_innovation_yaw_deg": (
+                    max_tracking_innovation_yaw
+                ),
+                "orb_max_correction_linear_mps": max_correction_linear,
+                "orb_max_correction_angular_degps": max_correction_angular,
+                "start_nav_rviz": start_nav_rviz,
+                "start_gazebo_gui": start_gazebo_gui,
+                "start_pose_logger": start_pose_logger,
             }.items(),
         ),
     ])

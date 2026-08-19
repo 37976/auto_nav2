@@ -36,6 +36,30 @@ def _stamp(msg: Odometry) -> float:
     return float(msg.header.stamp.sec) + float(msg.header.stamp.nanosec) * 1e-9
 
 
+def _correction_innovation(
+    current: tuple[float, float, float],
+    target: tuple[float, float, float],
+) -> tuple[float, float]:
+    """Return target translation and absolute yaw innovation."""
+    return (
+        math.hypot(target[0] - current[0], target[1] - current[1]),
+        abs(_wrap(target[2] - current[2])),
+    )
+
+
+def _tracking_innovation_allowed(
+    reference: tuple[float, float, float],
+    candidate: tuple[float, float, float],
+    max_translation_m: float,
+    max_yaw_rad: float,
+) -> bool:
+    """Apply stage one of the compound consistency gate."""
+    translation, yaw = _correction_innovation(reference, candidate)
+    translation_ok = max_translation_m <= 0.0 or translation <= max_translation_m
+    yaw_ok = max_yaw_rad <= 0.0 or yaw <= max_yaw_rad
+    return translation_ok and yaw_ok
+
+
 class MapOdomCorrector(Node):
     def __init__(self) -> None:
         super().__init__("map_odom_corrector")
@@ -51,6 +75,8 @@ class MapOdomCorrector(Node):
         self.declare_parameter("required_consistent_matches", 2)
         self.declare_parameter("consistent_translation_m", 0.30)
         self.declare_parameter("consistent_yaw_deg", 5.0)
+        self.declare_parameter("max_tracking_innovation_translation_m", 0.0)
+        self.declare_parameter("max_tracking_innovation_yaw_deg", 0.0)
         self.declare_parameter("max_correction_linear_mps", 0.20)
         self.declare_parameter("max_correction_angular_degps", 12.0)
         self.declare_parameter("publish_hz", 20.0)
@@ -72,6 +98,16 @@ class MapOdomCorrector(Node):
             1, int(self.get_parameter("required_consistent_matches").value))
         self._consistent_translation = float(self.get_parameter("consistent_translation_m").value)
         self._consistent_yaw = math.radians(float(self.get_parameter("consistent_yaw_deg").value))
+        self._max_tracking_innovation_translation = max(
+            0.0,
+            float(self.get_parameter(
+                "max_tracking_innovation_translation_m"
+            ).value),
+        )
+        self._max_tracking_innovation_yaw = math.radians(max(
+            0.0,
+            float(self.get_parameter("max_tracking_innovation_yaw_deg").value),
+        ))
         self._max_linear = float(self.get_parameter("max_correction_linear_mps").value)
         self._max_angular = math.radians(float(
             self.get_parameter("max_correction_angular_degps").value))
@@ -101,7 +137,10 @@ class MapOdomCorrector(Node):
         self.create_timer(1.0 / self._publish_hz, self._publish_tf)
         self.get_logger().info(
             f"map->odom corrector: odom={self._odom_topic}, matches={self._match_topic}, "
-            f"consistent_matches={self._required_matches}")
+            f"consistent_matches={self._required_matches}, "
+            "tracking_innovation_gate="
+            f"{self._max_tracking_innovation_translation:.2f}m/"
+            f"{math.degrees(self._max_tracking_innovation_yaw):.1f}deg")
 
     def _odom_cb(self, msg: Odometry) -> None:
         self._history.append(msg)
@@ -151,31 +190,59 @@ class MapOdomCorrector(Node):
         target = self._observation_target(msg)
         if target is None:
             return
+        tracking_innovation = _correction_innovation(self._target, target)
+        if not _tracking_innovation_allowed(
+            self._target,
+            target,
+            self._max_tracking_innovation_translation,
+            self._max_tracking_innovation_yaw,
+        ):
+            self._pending_target = None
+            self._pending_count = 0
+            self._publish_correction_event(
+                "innovation_rejected",
+                "orb",
+                target,
+                msg,
+                tracking_innovation,
+            )
+            self.get_logger().warn(
+                "Rejected implausible ORB tracking innovation: "
+                f"translation={tracking_innovation[0]:.2f}m, "
+                f"yaw={math.degrees(tracking_innovation[1]):.1f}deg"
+            )
+            return
         if self._required_matches == 1:
             self._target = target
             self._pending_target = None
             self._pending_count = 0
             self._tracking_confirmed = True
-            self._publish_correction_event("accepted", "orb", target, msg)
+            self._publish_correction_event(
+                "accepted", "orb", target, msg, tracking_innovation
+            )
             self.get_logger().info("Accepted single-observation ORB tracking update")
             return
         if self._tracking_confirmed and self._targets_consistent(target, self._target):
             self._target = target
-            self._publish_correction_event("accepted", "orb", target, msg)
+            self._publish_correction_event(
+                "accepted", "orb", target, msg, tracking_innovation
+            )
             self.get_logger().info(
                 "Accepted consistent ORB tracking update: "
                 f"yaw_innovation={math.degrees(_wrap(target[2] - self._current[2])):.1f}deg")
             return
 
-        # The first update, and every abrupt target change, needs a second
-        # independent observation.  Once tracking is stable, small corrections
-        # do not wait for another slow ORB solve.
+        # Stage two of the compound gate: the first update, and every abrupt
+        # target change, needs a second independent observation.  Once tracking
+        # is stable, small corrections do not wait for another slow ORB solve.
         self._tracking_confirmed = False
         if (self._pending_target is None
                 or not self._targets_consistent(target, self._pending_target)):
             self._pending_target = target
             self._pending_count = 1
-            self._publish_correction_event("held", "orb", target, msg)
+            self._publish_correction_event(
+                "held", "orb", target, msg, tracking_innovation
+            )
             self.get_logger().info("ORB observation held for consistency confirmation")
             return
         self._pending_count += 1
@@ -186,7 +253,9 @@ class MapOdomCorrector(Node):
         self._pending_count = 0
         self._pending_target = None
         self._tracking_confirmed = True
-        self._publish_correction_event("accepted", "orb", target, msg)
+        self._publish_correction_event(
+            "accepted", "orb", target, msg, tracking_innovation
+        )
         self.get_logger().info(
             f"Accepted ORB map->odom target: x={target[0]:.3f} y={target[1]:.3f} "
             f"yaw={math.degrees(target[2]):.1f}deg "
@@ -198,9 +267,17 @@ class MapOdomCorrector(Node):
         self._global_applied_pub.publish(message)
 
     def _publish_correction_event(
-        self, status: str, source: str, target: tuple[float, float, float], msg: Odometry
+        self,
+        status: str,
+        source: str,
+        target: tuple[float, float, float],
+        msg: Odometry,
+        tracking_innovation: Optional[tuple[float, float]] = None,
     ) -> None:
         event = String()
+        translation_innovation, yaw_innovation = _correction_innovation(
+            self._current, target
+        )
         event.data = json.dumps({
             "stamp_sec": _stamp(msg),
             "status": status,
@@ -208,7 +285,15 @@ class MapOdomCorrector(Node):
             "target_x_m": target[0],
             "target_y_m": target[1],
             "target_yaw_deg": math.degrees(target[2]),
-            "yaw_innovation_deg": math.degrees(_wrap(target[2] - self._current[2])),
+            "translation_innovation_m": translation_innovation,
+            "yaw_innovation_deg": math.degrees(yaw_innovation),
+            "tracking_translation_innovation_m": (
+                None if tracking_innovation is None else tracking_innovation[0]
+            ),
+            "tracking_yaw_innovation_deg": (
+                None if tracking_innovation is None
+                else math.degrees(tracking_innovation[1])
+            ),
         })
         self._correction_event_pub.publish(event)
 

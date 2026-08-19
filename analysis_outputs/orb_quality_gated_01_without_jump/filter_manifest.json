@@ -1,0 +1,13 @@
+{
+  "source_run": "orb_quality_gated_01",
+  "diagnostic_only": true,
+  "paper_statistics_eligible": false,
+  "filter_reason": "Remove the single catastrophic accepted ORB correction and its recovery window for counterfactual diagnosis.",
+  "filter_definition": "From first post-match trajectory jump through the sample before position<=0.30m and yaw<=5deg recovery.",
+  "excluded_start_time_s": 164.67,
+  "recovery_time_s_exclusive": 171.43,
+  "excluded_duration_s": 6.760000000000019,
+  "sample_count_original": 1018,
+  "sample_count_filtered": 984,
+  "sample_count_excluded": 34
+}

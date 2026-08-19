@@ -144,6 +144,10 @@ def _build_timed_actions(context, *args, **kwargs):
                 "consistent_translation_m": LaunchConfiguration(
                     "orb_consistent_translation_m"),
                 "consistent_yaw_deg": LaunchConfiguration("orb_consistent_yaw_deg"),
+                "max_tracking_innovation_translation_m": LaunchConfiguration(
+                    "orb_max_tracking_innovation_translation_m"),
+                "max_tracking_innovation_yaw_deg": LaunchConfiguration(
+                    "orb_max_tracking_innovation_yaw_deg"),
                 "max_correction_linear_mps": LaunchConfiguration(
                     "orb_max_correction_linear_mps"),
                 "max_correction_angular_degps": LaunchConfiguration(
@@ -486,6 +490,10 @@ def generate_launch_description():
         DeclareLaunchArgument("orb_required_consistent_matches", default_value="2"),
         DeclareLaunchArgument("orb_consistent_translation_m", default_value="0.30"),
         DeclareLaunchArgument("orb_consistent_yaw_deg", default_value="5.0"),
+        DeclareLaunchArgument(
+            "orb_max_tracking_innovation_translation_m", default_value="0.0"),
+        DeclareLaunchArgument(
+            "orb_max_tracking_innovation_yaw_deg", default_value="0.0"),
         DeclareLaunchArgument("orb_max_correction_linear_mps", default_value="0.20"),
         DeclareLaunchArgument("orb_max_correction_angular_degps", default_value="12.0"),
         DeclareLaunchArgument("use_amcl", default_value="true"),
