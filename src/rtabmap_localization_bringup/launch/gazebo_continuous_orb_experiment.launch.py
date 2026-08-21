@@ -53,9 +53,15 @@ def _build_experiment(context, *args, **kwargs):
         max_tracking_innovation_yaw = LaunchConfiguration(
             "orb_max_tracking_innovation_yaw_deg"
         )
+        metadata_max_tracking_innovation_translation = (
+            max_tracking_innovation_translation
+        )
+        metadata_max_tracking_innovation_yaw = max_tracking_innovation_yaw
     else:
         max_tracking_innovation_translation = "0.0"
         max_tracking_innovation_yaw = "0.0"
+        metadata_max_tracking_innovation_translation = 0.0
+        metadata_max_tracking_innovation_yaw = 0.0
 
     package_share = get_package_share_directory("rtabmap_localization_bringup")
     navigation_launch = os.path.join(
@@ -129,10 +135,10 @@ def _build_experiment(context, *args, **kwargs):
                 "orb_consistent_yaw_deg"
             ),
             "orb_max_tracking_innovation_translation_m": (
-                max_tracking_innovation_translation
+                metadata_max_tracking_innovation_translation
             ),
             "orb_max_tracking_innovation_yaw_deg": (
-                max_tracking_innovation_yaw
+                metadata_max_tracking_innovation_yaw
             ),
             "orb_max_correction_linear_mps": LaunchConfiguration(
                 "orb_max_correction_linear_mps"
